@@ -84,7 +84,17 @@ function knockClass() {
       setTimeout(() => enterClass(`Wa'alaikumussalam warahmatullah. Silakan masuk, ${state.nama}.`), 1500);
     }, 'main'],
     ['Langsung masuk', () => { closeModal(); paused = true; enterClass(`Lain kali ketuk pintu dan ucapkan salam dulu, ya, ${state.nama}.`); }],
+    ['↩️ Tidak jadi, kembali', () => { closeModal(); stepBackFromDoor(); }, 'small'],
   ]);
+}
+// mundur sedikit dari pintu supaya tidak langsung ditawari masuk lagi
+function stepBackFromDoor() {
+  const d = classDoors[state.cls]; if (!d) return;
+  let dx = player.position.x - d.x, dz = player.position.z - d.z; const L = Math.hypot(dx, dz) || 1;
+  if (L < 0.01) dz = 1;
+  const nx = d.x + dx / L * 3.4, nz = d.z + dz / L * 3.4;
+  if (!blocked(nx, nz)) { player.position.x = nx; player.position.z = nz; }
+  player.rotation.y = Math.atan2(dx, dz);
 }
 // ---------- kelas: pilih pelajaran bebas ----------
 function classHub() {
