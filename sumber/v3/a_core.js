@@ -7,10 +7,10 @@ const P = (x, z) => [x, z]; // koordinat dunia langsung (1 unit ≈ 1 meter)
 
 // ---------- renderer & scene ----------
 const MOBILE0 = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent);
-const renderer = new THREE.WebGLRenderer({ antialias: !MOBILE0, logarithmicDepthBuffer: true, powerPreference: 'high-performance' });   // mencegah lantai berkedip (z-fighting)
+const renderer = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true, powerPreference: 'high-performance' });   // mencegah lantai berkedip (z-fighting)
 const MOBILE = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent) || Math.min(screen.width, screen.height) < 700;
-const PR_MAX = Math.min(window.devicePixelRatio || 1, MOBILE ? 1.35 : 1.6);
-let pixelRatio = PR_MAX;
+const PR_MAX = Math.min(window.devicePixelRatio || 1, 2.5);          // HD: ikuti kerapatan layar (maks 2.5)
+let pixelRatio = Math.min(PR_MAX, 2);
 renderer.setPixelRatio(pixelRatio);
 renderer.setSize(innerWidth, innerHeight);
 renderer.shadowMap.enabled = true;
@@ -32,7 +32,7 @@ scene.add(new THREE.HemisphereLight(0xffffff, 0x88a070, 1.6));
 const sun = new THREE.DirectionalLight(0xffffff, 1.8);
 sun.position.set(-50, 90, 40);
 sun.castShadow = true;
-sun.shadow.mapSize.set(MOBILE ? 1024 : 2048, MOBILE ? 1024 : 2048);
+sun.shadow.mapSize.set(2048, 2048);
 renderer.shadowMap.autoUpdate = false;   // bayangan diperbarui tiap 2 frame (hemat)
 Object.assign(sun.shadow.camera, { left: -115, right: 115, top: 85, bottom: -85, near: 1, far: 260 });
 sun.shadow.bias = -0.0005;

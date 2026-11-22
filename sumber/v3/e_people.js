@@ -21,9 +21,33 @@ function setPlayer(putri) {
   player.position.copy(old.position); player.rotation.y = old.rotation.y;
   scene.add(player); window.__p = player;
 }
+// nama di atas kepala: teks HTML (selalu tajam di layar HD)
+const tagLayer = document.createElement('div'); tagLayer.id = 'tags';
+document.getElementById('app').after(tagLayer);
+const tagged = new Set();
 function nameTag(g, text, size = 0.55, y = 2.75) {
-  if (g.tagSprite) g.remove(g.tagSprite);
-  const s = label(text, 0, 0, 0, size * 0.75); scene.remove(s); s.position.set(0, y, 0); g.add(s); g.tagSprite = s;
+  if (g.tagEl) g.tagEl.remove();
+  const el = document.createElement('div'); el.className = 'ntag'; el.textContent = text;
+  el.style.fontSize = Math.max(9, Math.min(11, size * 21)).toFixed(1) + 'px';
+  g.tagEl = el; g.tagY = y; g.tagGone = 0; tagLayer.appendChild(el); tagged.add(g);
+}
+const _tv = new THREE.Vector3();
+function updateTags() {
+  for (const g of tagged) {
+    const el = g.tagEl; let vis = true, o = g;
+    while (o) { if (!o.visible) { vis = false; break; } if (!o.parent) { vis = o === scene; break; } o = o.parent; }
+    if (!vis && !g.parent) { if (++g.tagGone > 300) { el.remove(); tagged.delete(g); } el.style.display = 'none'; continue; }
+    g.tagGone = 0;
+    if (vis) {
+      g.getWorldPosition(_tv); _tv.y += (g.sitting ? g.tagY - 0.3 : g.tagY) + 0.1;
+      vis = camera.position.distanceTo(_tv) < 60 && !g.bubEl;
+      if (vis) { _tv.project(camera); vis = _tv.z < 1 && Math.abs(_tv.x) < 1.05 && Math.abs(_tv.y) < 1.05; }
+    }
+    if (!vis) { el.style.display = 'none'; continue; }
+    if (!el.parentNode) tagLayer.appendChild(el);
+    el.style.display = '';
+    el.style.transform = `translate(${((_tv.x * 0.5 + 0.5) * innerWidth).toFixed(1)}px,${((-_tv.y * 0.5 + 0.5) * innerHeight).toFixed(1)}px) translate(-50%,-100%)`;
+  }
 }
 
 // ---------- jaringan jalan untuk tokoh yang berjalan ----------

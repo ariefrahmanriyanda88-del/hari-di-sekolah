@@ -129,7 +129,8 @@ function updateBubbles() {
     if (vis) { p.getWorldPosition(_bv); _bv.y += p.sitting ? 2.6 : 2.95; _bv.project(camera); vis = _bv.z < 1 && Math.abs(_bv.x) < 1.1 && Math.abs(_bv.y) < 1.1; }
     if (!vis) { el.style.display = 'none'; continue; }
     el.style.display = '';
-    el.style.transform = `translate(${((_bv.x * 0.5 + 0.5) * innerWidth).toFixed(1)}px,${((-_bv.y * 0.5 + 0.5) * innerHeight).toFixed(1)}px) translate(-50%,-100%)`;
+    const hw = (el.offsetWidth || 120) / 2 + 4, px = Math.min(innerWidth - hw, Math.max(hw, (_bv.x * 0.5 + 0.5) * innerWidth));
+    el.style.transform = `translate(${px.toFixed(1)}px,${Math.max(el.offsetHeight + 8, (-_bv.y * 0.5 + 0.5) * innerHeight).toFixed(1)}px) translate(-50%,-100%)`;
   }
 }
 
