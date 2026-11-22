@@ -16,7 +16,8 @@ const rbox = (x, y, z, w, h, d, c) => { const m = new THREE.Mesh(new THREE.BoxGe
   rbox(7.1, 1.6, 7, 0.8, 3.2, 0.3, WALL);
   rbox(5.6, 2.95, 7, 2.2, 0.5, 0.3, WALL);
   for (let i = 0; i < 4; i++) rbox(-7.33, 1.8, -5 + i * 3.3, 0.06, 1.5, 2.2, 0x7cc3ea);   // jendela
-  const pintu = rbox(5.0, 1.35, 6.2, 0.1, 2.7, 1.5, 0x9b6b3c); pintu.rotation.y = 0.5;     // pintu terbuka
+  addDoor(room, 4.65, 7, 2.05, 2.7, 1);                     // pintu kelas: tertutup setelah masuk
+  const classBag = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.6, 0.25), mat(0x3b7dd8)); classBag.visible = false; room.add(classBag); room.userData.bag = classBag;
   rbox(-0.5, 1.75, 6.8, 6.4, 1.9, 0.12, 0x9aa1a8); rbox(-0.5, 1.75, 6.73, 6.1, 1.65, 0.05, 0xffffff);   // papan tulis
   rbox(-0.5, 0.82, 6.68, 6.2, 0.06, 0.18, 0x9aa1a8);
   rbox(-0.5, 2.95, 6.55, 0.6, 0.25, 0.5, 0x555b63);       // proyektor
@@ -40,6 +41,7 @@ for (let r = 0; r < 6; r++) for (let c = 0; c < 6; c++) {
   SEATS.push({ x, z: z - 0.62, r, c });
 }
 const MY_SEAT = SEATS.find((s) => s.r === 3 && s.c === 5);
+room.userData.bag.position.set(MY_SEAT.x, 0.6, MY_SEAT.z - 0.62);
 let classmates = [], roomTeacher = null, builtFor = '';
 function sitPose(p, on) {
   p.position.y = on ? -0.32 : 0;
@@ -102,7 +104,7 @@ function enterClass(msg) {
     camera.position.copy(classCam); camera.lookAt(classLook);
     bubble(roomTeacher, msg, 2800);
     later(600, () => walkTo([[6.1, 5.4], [6.1, MY_SEAT.z], [MY_SEAT.x, MY_SEAT.z]], () => {
-      player.rotation.y = 0; sitPose(player, true);
+      player.rotation.y = 0; sitPose(player, true); storeBag();
       later(500, () => {
         Audio.sfx('bell');
         bubble(ketua(), 'Berdiri… beri salam!', 1800);
@@ -115,6 +117,17 @@ function enterClass(msg) {
     }));
   });
 }
+// tas: diletakkan di kursi kelas saat tiba, dibawa lagi saat pulang
+function setBags(on) {
+  if (player.bag) player.bag.visible = on;
+  npcs.forEach((n) => { if (n.bag && n.kind === 'siswa') n.bag.visible = on; });
+}
+function storeBag() {
+  if (!player.bag || !player.bag.visible) return;
+  room.userData.bag.material = player.bag.material; room.userData.bag.visible = true;
+  setBags(false); toast('🎒 Tas diletakkan di kursi kelas');
+}
+function takeBag() { room.userData.bag.visible = false; setBags(true); }
 function backToClass(then) {   // kembali dari arena tugas langsung ke kursi
   setClassCam();
   zone = 'kelas'; $('modal').classList.add('low');
@@ -152,7 +165,10 @@ function makeHall(origin, W, D, wall, floorA, floorB) {
   const fl = new THREE.Mesh(new THREE.PlaneGeometry(W, D), new THREE.MeshLambertMaterial({ map: tx })); fl.rotation.x = -Math.PI / 2; fl.position.y = 0.01; fl.receiveShadow = true; g.add(fl);
   add(0, 1.7, -D / 2, W + 0.3, 3.4, 0.3, wall, true);
   add(-W / 2, 1.7, 0, 0.3, 3.4, D, wall, true); add(W / 2, 1.7, 0, 0.3, 3.4, D, wall, true);
-  add(-W / 4 - 0.9, 0.5, D / 2, W / 2 - 1.8, 1.0, 0.3, wall, true); add(W / 4 + 0.9, 0.5, D / 2, W / 2 - 1.8, 1.0, 0.3, wall, true);   // dinding depan rendah, celah pintu di tengah
+  add(-W / 4 - 0.9, 0.5, D / 2, W / 2 - 1.8, 1.0, 0.3, wall, true); add(W / 4 + 0.9, 0.5, D / 2, W / 2 - 1.8, 1.0, 0.3, wall, true);   // dinding depan (bawah)
+  [-1, 1].forEach((s) => { const m = new THREE.Mesh(new THREE.BoxGeometry(W / 2 - 1.8, 2.4, 0.3), glassMat); m.position.set(s * (W / 4 + 0.9), 2.2, D / 2); g.add(m); });   // dinding depan atas (tembus pandang agar isi ruangan terlihat)
+  const top = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.8, 0.3), glassMat); top.position.set(0, 3.0, D / 2); g.add(top);
+  addDoor(g, -1.8, D / 2, 1.8, 2.6, 1); addDoor(g, 1.8, D / 2, 1.8, 2.6, -1);   // pintu ganda: terbuka saat didekati, tertutup setelah masuk
   return { g, add, origin, W, D };
 }
 const KANTIN = new THREE.Vector3(320, 0, 120), RUANG_L = new THREE.Vector3(320, 0, -120), RUANG_P = new THREE.Vector3(420, 0, -120);

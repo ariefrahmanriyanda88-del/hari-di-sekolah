@@ -56,6 +56,7 @@ function enterHall(name, origin, D, out, onEnter, zn) {
   fade(name, 700, () => {
     zone = zn || (name === 'Kantin' ? 'kantin' : 'ruang');
     interior = { origin, D, out };
+    if (player.sitting) sitPose(player, false);
     player.position.set(origin.x, 0, origin.z + D / 2 - 1); player.rotation.y = Math.PI;
     camera.position.copy(intOff()).add(player.position);
     lastTrig = computeHit(); paused = false; leaving = false; hud(); onEnter && onEnter();
@@ -66,6 +67,7 @@ const intOff = () => { const v = innerWidth < innerHeight ? new THREE.Vector3(0,
 
 // ---------- mulai hari ----------
 function startDay() {
+  takeBag();
   today = DATA.sched[state.cls][dayIdx()].blocks;
   dayDone.clear(); phase = 'datang'; minutes = 6 * 60 + 50; dayScore = 0;
   if (crowd.length) afterMasjid(); else walkers.forEach((n) => { n.visible = true; n.goingIn = false; n.path = null; });
@@ -267,6 +269,7 @@ function afterZuhur() {
 }
 // ---------- pulang ----------
 function pulangPhase(outside) {
+  takeBag();
   phase = 'pulang'; minutes = 15 * 60 + 30; Audio.sfx('bell');
   const ashar = today.some((b) => /Ashar/.test(b.act || ''));
   const go = () => ashar

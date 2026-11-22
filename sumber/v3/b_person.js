@@ -22,7 +22,7 @@ function makePerson(o = {}) {
     if (o.peci) add(new THREE.CylinderGeometry(0.34, 0.36, 0.3, 16), o.peci, 0, 2.25, 0);
     else add(new THREE.SphereGeometry(0.4, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2.2), 0x222222, 0, 2.0, -0.03);
   }
-  if (o.bag) add(new THREE.BoxGeometry(0.62, 0.68, 0.28), o.bag, 0, 1.25, -0.4);
+  if (o.bag) g.bag = add(new THREE.BoxGeometry(0.62, 0.68, 0.28), o.bag, 0, 1.25, -0.4);
   const sleeve = o.sleeve ?? shirt;
   g.armL = new THREE.Group(); g.armL.position.set(-0.52, 1.6, 0); g.add(g.armL);
   g.armR = new THREE.Group(); g.armR.position.set(0.52, 1.6, 0); g.add(g.armR);

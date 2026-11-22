@@ -6,8 +6,11 @@ import * as THREE from 'three';
 const P = (x, z) => [x, z]; // koordinat dunia langsung (1 unit ≈ 1 meter)
 
 // ---------- renderer & scene ----------
-const renderer = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true });   // mencegah lantai berkedip (z-fighting)
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+const renderer = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true, powerPreference: 'high-performance' });   // mencegah lantai berkedip (z-fighting)
+const MOBILE = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent) || Math.min(screen.width, screen.height) < 700;
+const PR_MAX = Math.min(window.devicePixelRatio || 1, MOBILE ? 1.5 : 1.75);
+let pixelRatio = PR_MAX;
+renderer.setPixelRatio(pixelRatio);
 renderer.setSize(innerWidth, innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFShadowMap;
@@ -28,7 +31,8 @@ scene.add(new THREE.HemisphereLight(0xffffff, 0x88a070, 1.6));
 const sun = new THREE.DirectionalLight(0xffffff, 1.8);
 sun.position.set(-50, 90, 40);
 sun.castShadow = true;
-sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.mapSize.set(MOBILE ? 1024 : 2048, MOBILE ? 1024 : 2048);
+renderer.shadowMap.autoUpdate = false;   // bayangan diperbarui tiap 2 frame (hemat)
 Object.assign(sun.shadow.camera, { left: -115, right: 115, top: 85, bottom: -85, near: 1, far: 260 });
 sun.shadow.bias = -0.0005;
 scene.add(sun);
@@ -36,6 +40,25 @@ scene.add(sun);
 const matCache = {};
 const mat = (c) => (matCache[c] ||= new THREE.MeshLambertMaterial({ color: c }));
 const colliders = []; // {x1,z1,x2,z2} kotak, atau {cx,cz,r} lingkaran
+// ---------- pintu yang membuka/menutup otomatis ----------
+const DOORS = [];
+const glassMat = new THREE.MeshLambertMaterial({ color: 0xf3e6cf, transparent: true, opacity: 0.28, depthWrite: false });
+function addDoor(parent, hx, z, w, h, dir, color = 0x9b6b3c, swing = 1) {
+  const pivot = new THREE.Object3D(); pivot.position.set(hx, 0, z); parent.add(pivot);
+  const leaf = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.08), new THREE.MeshLambertMaterial({ color, transparent: true, opacity: 0.85 }));
+  leaf.position.set(dir * w / 2, h / 2, 0); pivot.add(leaf);
+  const knob = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 6), mat(0xe0c060)); knob.position.set(dir * (w - 0.15), 1.05, 0.06); pivot.add(knob);
+  const d = { pivot, parent, lx: hx + dir * w / 2, lz: z, open: 0, want: dir * 1.35 * swing }; DOORS.push(d); return d;
+}
+const _dv = new THREE.Vector3();
+function updateDoors(dt, who) {
+  for (const d of DOORS) {
+    _dv.set(d.lx, 0, d.lz); d.parent.localToWorld(_dv);
+    const near = Math.hypot(who.position.x - _dv.x, who.position.z - _dv.z) < 2.3;
+    const target = near ? 1 : 0; d.open += (target - d.open) * Math.min(1, dt * 7);
+    d.pivot.rotation.y = d.want * d.open;
+  }
+}
 
 function plane(x1, y1, x2, y2, color, y = 0.02) {
   const [ax, az] = P(x1, y1), [bx, bz] = P(x2, y2);

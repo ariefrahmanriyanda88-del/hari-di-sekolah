@@ -52,6 +52,20 @@ const marker = new THREE.Group();
   ring.rotation.x = -Math.PI / 2; ring.position.y = 0.08; marker.add(ring);
 }
 scene.add(marker);
+// ---------- performa adaptif: resolusi turun otomatis bila HP berat ----------
+let frameN = 0, perfT0 = 0, perfFrames = 0;
+function tunePerf(now) {
+  if (!perfT0) { perfT0 = now; return; }
+  perfFrames++;
+  const el = now - perfT0; if (el < 2000) return;
+  const fps = perfFrames * 1000 / el; perfT0 = now; perfFrames = 0;
+  if (document.hidden) return;
+  let pr = pixelRatio;
+  if (fps < 40 && pr > 0.7) pr = Math.max(0.7, pr - 0.25);
+  else if (fps > 57 && pr < PR_MAX) pr = Math.min(PR_MAX, pr + 0.125);
+  if (fps < 28 && pr <= 0.7 && sun.castShadow) { sun.castShadow = false; renderer.shadowMap.needsUpdate = true; }
+  if (pr !== pixelRatio) { pixelRatio = pr; renderer.setPixelRatio(pr); renderer.setSize(innerWidth, innerHeight); }
+}
 function loop() {
   const dt = Math.min(clock.getDelta(), 0.05), t = clock.elapsedTime;
   updateNPCs(dt); updateAuto(dt); updateRoom(t); updateQuiz(dt); updateFly(dt); updateKantin(t); updateBattle(dt, t); updateRace(dt); updateSports(dt); checkBreakBell(); updateHome(t); updateSideJamaah(t); updateLate(dt); updateUpacara(dt);
@@ -71,8 +85,9 @@ function loop() {
     if (L > 0.1) {
       const sp = (riding ? 17 : zone === 'luar' ? 11 : 7) * Math.min(1, L) / L;
       const nx = player.position.x + vx * sp * dt, nz = player.position.z + vz * sp * dt;
-      if (!blocked(nx, player.position.z) && !bodyBlocked(player, nx, player.position.z) && !wingBlocked(nx)) player.position.x = nx;
-      if (!blocked(player.position.x, nz) && !bodyBlocked(player, player.position.x, nz)) player.position.z = nz;
+      const stuck = blocked(player.position.x, player.position.z);   // bila terjepit, tetap boleh bergerak keluar
+      if ((stuck || !blocked(nx, player.position.z)) && !bodyBlocked(player, nx, player.position.z) && !wingBlocked(nx)) player.position.x = nx;
+      if ((stuck || !blocked(player.position.x, nz)) && !bodyBlocked(player, player.position.x, nz)) player.position.z = nz;
       let d = Math.atan2(vx, vz) - player.rotation.y; d = Math.atan2(Math.sin(d), Math.cos(d));
       player.rotation.y += d * Math.min(1, dt * 12);
       walkT += dt * 11; minutes += dt * 0.4;
@@ -110,6 +125,9 @@ function loop() {
     camera.lookAt(player.position.x, player.position.y + (eatingCam ? -0.6 : 1.2), player.position.z);
   }
   for (const l of sceneLabels) { if (l.parent !== scene) continue; const d = camera.position.distanceTo(l.position); l.material.opacity = THREE.MathUtils.clamp((d - 16) / 10, 0, 1); }
+  updateDoors(dt, player);
+  frameN++; if (frameN % 2 === 0) renderer.shadowMap.needsUpdate = true;
+  tunePerf(clock.getElapsedTime ? performance.now() : 0);
   renderer.render(scene, camera);
   requestAnimationFrame(loop);
 }
@@ -162,5 +180,5 @@ today = DATA.sched[state.cls][dayIdx()].blocks;
 goOutside(0, 63, Math.PI); paused = true;
 hud();
 window.__audio = Audio;
-window.__dbg = { enterKepsek: () => enterKepsek(), enterTU: () => enterTU(), goOutside: (x, z, r) => goOutside(x, z, r), camera, setZone: (z) => (zone = z),  get paused() { return paused; }, blocked: (x, z) => blocked(x, z), bb: (x, z) => bodyBlocked(player, x, z), get fly() { return fly; }, get race() { return race; }, get battle() { return battle; }, sb: (s) => startBattle(today.find((b) => b.s === s), QBANK[s], () => {}), sr: (s) => startRace(today.find((b) => b.s === s), QBANK[s], () => {}), openLab: () => openLab(), get quiz() { return quiz; }, get state() { return state; }, get zone() { return zone; }, get phase() { return phase; }, get objective() { return objective; }, lessonDone: (a) => lessonDone(today.find((b) => b.a === a)), today: () => today, setPhase: (p) => (phase = p), classDoors, doorsOut, KANTIN, KT_SEAT, QZ };
+window.__dbg = { enterRuang: (p) => enterRuang(p), enterClass: () => enterClass('Silakan masuk'), roomAction: (id) => roomAction(id), enterKepsek: () => enterKepsek(), enterTU: () => enterTU(), goOutside: (x, z, r) => goOutside(x, z, r), camera, setZone: (z) => (zone = z),  get paused() { return paused; }, blocked: (x, z) => blocked(x, z), bb: (x, z) => bodyBlocked(player, x, z), get fly() { return fly; }, get race() { return race; }, get battle() { return battle; }, sb: (s) => startBattle(today.find((b) => b.s === s), QBANK[s], () => {}), sr: (s) => startRace(today.find((b) => b.s === s), QBANK[s], () => {}), openLab: () => openLab(), get quiz() { return quiz; }, get state() { return state; }, get zone() { return zone; }, get phase() { return phase; }, get objective() { return objective; }, lessonDone: (a) => lessonDone(today.find((b) => b.a === a)), today: () => today, setPhase: (p) => (phase = p), classDoors, doorsOut, KANTIN, KT_SEAT, QZ };
 loop();

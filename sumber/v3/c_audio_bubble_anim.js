@@ -128,7 +128,7 @@ function bubble(person, text, ms = 2800) {
   lines.forEach((l, i) => ctx.fillText(l, w / 2, 24 + fs * 0.62 + i * fs * 1.25));
   const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace;
   const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false, transparent: true }));
-  const H = 0.0082 * c.height; sp.scale.set(H * c.width / c.height, H, 1); sp.position.y = 2.9 + H / 2; sp.renderOrder = 20;
+  const H = 0.0062 * c.height; sp.scale.set(H * c.width / c.height, H, 1); sp.position.y = 2.9 + H / 2; sp.renderOrder = 20;
   person.add(sp); person.bub = sp;
   clearTimeout(person.bubT); person.bubT = setTimeout(() => { if (person.bub === sp) { person.remove(sp); person.bub = null; } }, ms);
 }

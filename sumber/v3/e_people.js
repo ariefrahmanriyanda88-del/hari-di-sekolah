@@ -23,7 +23,7 @@ function setPlayer(putri) {
 }
 function nameTag(g, text, size = 0.55, y = 2.75) {
   if (g.tagSprite) g.remove(g.tagSprite);
-  const s = label(text, 0, 0, 0, size); scene.remove(s); s.position.set(0, y, 0); g.add(s); g.tagSprite = s;
+  const s = label(text, 0, 0, 0, size * 0.75); scene.remove(s); s.position.set(0, y, 0); g.add(s); g.tagSprite = s;
 }
 
 // ---------- jaringan jalan untuk tokoh yang berjalan ----------
