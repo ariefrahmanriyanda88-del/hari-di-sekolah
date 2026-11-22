@@ -157,7 +157,11 @@ async function tabSoal() {
   $$('[data-del]').forEach((b) => (b.onclick = () => { if (!confirm('Hapus paket soal ini?')) return; busy(b, async () => { await B.del('soal', b.dataset.del); toast('Paket dihapus'); tabSoal(); }); }));
   $$('[data-aktif]').forEach((i) => (i.onchange = () => busy(null, async () => { const d = S.soal.find((x) => x.id === i.dataset.aktif); d.aktif = i.checked; await saveDoc(d, true); toast(i.checked ? 'Diaktifkan ✓' : 'Dinonaktifkan'); })));
 }
-const blank = (t) => (t === 'bs' ? { t: 'bs', q: '', a: true } : { t: 'pg', q: '', b: '', s: ['', '', ''] });
+const blank = (t) => (t === 'bs' ? { t: 'bs', q: '', a: true } : { t: 'pg', q: '', o: ['', '', '', ''], k: 0 });
+// pilihan ganda: o = pilihan A–D sesuai urutan guru, k = indeks jawaban benar.
+// b/s tetap disimpan (b = benar, s = salah) agar game versi lama tetap bisa membaca.
+const optsOf = (it) => { if (it.o) return { o: it.o.concat(['', '', '', '']).slice(0, 4), k: it.k || 0 }; return { o: [it.b || ''].concat(it.s || []).concat(['', '', '', '']).slice(0, 4), k: 0 }; };
+const fixPG = (it) => { const o = it.o.map((x) => x.trim()); it.o = o; it.b = o[it.k] || ''; it.s = o.filter((x, i) => i !== it.k && x); return it; };
 async function saveDoc(d, quiet) {
   const data = { judul: d.judul || '', mapel: d.mapel, kelas: d.kelas, mode: d.mode || 'auto', aktif: d.aktif !== false, items: d.items,
     guruUid: d.guruUid || S.user.uid, guruNama: d.guruNama || S.guru.panggilan || S.guru.nama, diubah: B.now(), diubahMs: Date.now() };
@@ -187,7 +191,7 @@ function editor() {
     d.kelas = vals('kls'); if (d.kelas.includes('semua')) d.kelas = ['semua'];
     $$('.q', view()).forEach((el, i) => {
       const it = d.items[i]; it.q = $('.qq', el).value.trim();
-      if (it.t === 'pg') { it.b = $('.qb', el).value.trim(); it.s = $$('.qs', el).map((x) => x.value.trim()); }
+      if (it.t === 'pg') { it.o = $$('.qo', el).map((x) => x.value); const c = $('input.qk:checked', el); it.k = c ? +c.value : 0; fixPG(it); }
       else it.a = $('.qa', el).value === 'b';
     });
   };
@@ -199,10 +203,11 @@ function editor() {
           <span class="qbtns"><button data-up="${i}" title="Naik">↑</button><button data-dn="${i}" title="Turun">↓</button><button data-rm="${i}" title="Hapus">✕</button></span></div>
         <textarea class="qq" rows="2" placeholder="Tulis pertanyaan… (huruf Arab boleh)">${esc(it.q)}</textarea>
         ${it.t === 'pg' ? `
-          <input class="qb ok" placeholder="✓ Jawaban yang benar" value="${esc(it.b)}">
-          ${[0, 1, 2].map((j) => `<input class="qs" placeholder="✗ Pilihan salah ${j + 1}${j ? ' (boleh kosong)' : ''}" value="${esc((it.s || [])[j] || '')}">`).join('')}` : `
+          <div class="muted small">Isi pilihan A–D, lalu ketuk ⭕ pada jawaban yang <b>benar</b>. Urutan pilihan diacak otomatis di game.</div>
+          ${optsOf(it).o.map((v, j) => `<label class="opt ${optsOf(it).k === j ? 'right' : ''}"><input type="radio" class="qk" name="k${i}" value="${j}" ${optsOf(it).k === j ? 'checked' : ''}><b>${'ABCD'[j]}</b><input class="qo" placeholder="Pilihan ${'ABCD'[j]}${j > 1 ? ' (boleh kosong)' : ''}" value="${esc(v)}"></label>`).join('')}` : `
           <label>Jawaban<select class="qa"><option value="b" ${it.a ? 'selected' : ''}>✓ Benar</option><option value="s" ${!it.a ? 'selected' : ''}>✗ Salah</option></select></label>`}
       </div>`).join('');
+    $$('input.qk').forEach((rb) => (rb.onchange = () => { $$('label.opt', rb.closest('.q')).forEach((l) => l.classList.toggle('right', l.contains(rb))); }));
     $$('[data-up]').forEach((b) => (b.onclick = () => { pull(); const i = +b.dataset.up; if (i) [d.items[i - 1], d.items[i]] = [d.items[i], d.items[i - 1]]; drawQs(); }));
     $$('[data-dn]').forEach((b) => (b.onclick = () => { pull(); const i = +b.dataset.dn; if (i < d.items.length - 1) [d.items[i + 1], d.items[i]] = [d.items[i], d.items[i + 1]]; drawQs(); }));
     $$('[data-rm]').forEach((b) => (b.onclick = () => { pull(); d.items.splice(+b.dataset.rm, 1); drawQs(); }));
@@ -219,23 +224,28 @@ function editor() {
         const a = (r[1] || '').toLowerCase();
         if (['b', 'benar', 'true', 'ya', 's', 'salah', 'false'].includes(a)) { d.items.push({ t: 'bs', q: r[0], a: ['b', 'benar', 'true', 'ya'].includes(a) }); return; }
       }
-      if (r[1]) d.items.push({ t: 'pg', q: r[0], b: r[1], s: [r[2] || '', r[3] || '', r[4] || ''] });
+      const last = r.slice(1).filter(Boolean), key = (last[last.length - 1] || '').toUpperCase();
+      if (/^[A-D]$/.test(key) && last.length >= 3) {                       // format: Soal · A · B · C · D · Kunci
+        const o = r.slice(1, 5).map((x) => (/^[A-D]$/i.test(x) && x === last[last.length - 1] ? '' : x));
+        const k = 'ABCD'.indexOf(key); if (o[k]) { d.items.push(fixPG({ t: 'pg', q: r[0], o, k })); return; }
+      }
+      if (r[1]) d.items.push(fixPG({ t: 'pg', q: r[0], o: [r[1], r[2] || '', r[3] || '', r[4] || ''], k: 0 }));   // format lama: kolom 2 = jawaban benar
     });
     drawQs(); toast(`${d.items.length - Math.min(n0, d.items.length)} soal ditambahkan`);
   };
   $('#tempel').onclick = () => {
     const box = document.createElement('div'); box.className = 'sheet';
     box.innerHTML = `<div class="card"><b>Tempel dari Excel / Google Sheets</b>
-      <p class="muted">Salin baris dari Excel lalu tempel di sini. Urutan kolom:<br><b>Soal · Jawaban benar · Salah 1 · Salah 2 · Salah 3</b><br>Untuk Benar/Salah: <b>Soal · B</b> atau <b>Soal · S</b></p>
-      <textarea rows="8" id="tsv" placeholder="Apa arti كتاب?	Buku	Pena	Meja	Pintu"></textarea>
+      <p class="muted">Salin baris dari Excel lalu tempel di sini. Urutan kolom:<br><b>Soal · A · B · C · D · Kunci (A/B/C/D)</b><br>Untuk Benar/Salah: <b>Soal · B</b> atau <b>Soal · S</b></p>
+      <textarea rows="8" id="tsv" placeholder="Apa arti كتاب?	Pena	Buku	Meja	Pintu	B"></textarea>
       <div class="tools"><button class="btn main" id="ok">Tambahkan</button><button class="btn" id="tutup">Batal</button></div></div>`;
     document.body.appendChild(box);
     $('#tutup', box).onclick = () => box.remove();
     $('#ok', box).onclick = () => { const t = $('#tsv', box).value; addRows(t.split(/\r?\n/).map((l) => l.split(l.includes('\t') ? '\t' : ';'))); box.remove(); };
   };
   $('#templat').onclick = () => {
-    const ws = XLSX.utils.aoa_to_sheet([['Soal', 'Jawaban benar', 'Salah 1', 'Salah 2', 'Salah 3'], ['Apa arti كِتَابٌ ?', 'Buku', 'Pena', 'Meja', 'Pintu'], ['قَلَمٌ artinya pena.', 'B'], ['Ibu kota Indonesia adalah Bengkulu.', 'S']]);
-    ws['!cols'] = [{ wch: 50 }, { wch: 22 }, { wch: 18 }, { wch: 18 }, { wch: 18 }];
+    const ws = XLSX.utils.aoa_to_sheet([['Soal', 'Pilihan A', 'Pilihan B', 'Pilihan C', 'Pilihan D', 'Kunci (A/B/C/D)'], ['Apa arti كِتَابٌ ?', 'Pena', 'Buku', 'Meja', 'Pintu', 'B'], ['Apa arti مَسْجِدٌ ?', 'Masjid', 'Sekolah', 'Rumah', '', 'A'], ['قَلَمٌ artinya pena.', 'B'], ['Ibu kota Indonesia adalah Bengkulu.', 'S']]);
+    ws['!cols'] = [{ wch: 50 }, { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 16 }];
     const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Soal'); XLSX.writeFile(wb, 'Templat_Soal_Hari_di_Sekolah.xlsx');
   };
   $('#impor').onclick = () => $('#file').click();
@@ -250,7 +260,7 @@ function editor() {
     if (!d.kelas.length) return toast('Pilih minimal satu kelas', true);
     if (!d.items.length) return toast('Tambahkan minimal satu soal', true);
     const bad = d.items.findIndex((x) => !x.q || (x.t === 'pg' && (!x.b || !x.s.some(Boolean))));
-    if (bad >= 0) { drawQs(); toast(`Soal ${bad + 1} belum lengkap (pertanyaan, jawaban benar, dan minimal 1 pilihan salah)`, true); $$('.q')[bad].scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
+    if (bad >= 0) { drawQs(); toast(`Soal ${bad + 1} belum lengkap: isi pertanyaan, minimal 2 pilihan, dan tandai ⭕ jawaban yang benar (pilihannya tidak boleh kosong)`, true); $$('.q')[bad].scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
     busy(ev.target, async () => { await saveDoc(d); toast('Paket soal tersimpan ✓'); S.edit = null; tabSoal(); });
   };
 }

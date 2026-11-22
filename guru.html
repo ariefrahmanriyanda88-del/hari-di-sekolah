@@ -60,7 +60,12 @@ main{max-width:760px;margin:0 auto;padding:14px 14px 100px}
 .sw span{position:absolute;inset:0;background:#cfd8d4;border-radius:20px;transition:.2s}.sw span:after{content:"";position:absolute;left:3px;top:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:.2s}
 .sw input:checked+span{background:var(--pri)}.sw input:checked+span:after{left:21px}
 .q textarea{margin-bottom:6px}.q input{margin-top:6px}
-.q input.ok{border-color:#9fd5b6;background:#f3fbf6}
+.opt{display:flex;align-items:center;gap:8px;margin:6px 0 0;font-weight:600;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:4px 8px 4px 6px;background:#fff}
+.opt input.qo{margin:0;border:0;padding:8px 4px;flex:1;outline:none}
+.opt b{width:22px;text-align:center;color:var(--mut)}
+.opt input.qk{width:22px;height:22px;margin:0;accent-color:#17663a;flex:none}
+.opt.right{border-color:#5cb985;background:#effaf3}.opt.right b{color:#17663a}
+.opt.right:after{content:"✓ benar";font-size:12px;color:#17663a;white-space:nowrap}
 .qbtns{margin-left:auto;display:flex;gap:4px}.qbtns button{width:32px;height:30px;border:1px solid var(--line);background:#fff;border-radius:8px;cursor:pointer}
 .tools{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 12px}
 .savebar{position:fixed;left:0;right:0;bottom:0;padding:12px 16px;padding-bottom:max(12px,env(safe-area-inset-bottom));background:#fffffff0;border-top:1px solid var(--line);display:flex;justify-content:center;z-index:6}
