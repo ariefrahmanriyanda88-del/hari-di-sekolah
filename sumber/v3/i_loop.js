@@ -116,7 +116,7 @@ function loop() {
     if (zone !== 'kuis') for (const n of npcs) { if (!n.visible || !canTalk(n)) continue; const dd = Math.hypot(n.position.x - player.position.x, n.position.z - player.position.z); if (dd < bd) { bd = dd; best = n; } }
     if (best !== nearNPC) { nearNPC = best; const tb = $('talk'); if (best) { tb.textContent = `💬 Sapa ${best.name}`; tb.classList.add('show'); } else tb.classList.remove('show'); }
 
-    checkTriggers();
+    checkTriggers(); checkSportZones();
     if (['kantin', 'ruang', 'perpus', 'room'].includes(zone) && interior && !leaving && player.position.z - interior.origin.z > interior.D / 2 + 0.2) { leaving = true; paused = true; leaveInterior(); }
 
     let near = '';
@@ -151,6 +151,32 @@ function loop() {
 }
 addEventListener('resize', () => { setCam(); setClassCam(); setMsCam(); setHomeCam(); renderer.setSize(innerWidth, innerHeight); });
 
+// ---------- editor avatar (layar awal) ----------
+const AVR = {};
+function avatarEditor() {
+  const putri = isPutri(sel.value), key = putri ? 'P' : 'L';
+  state.avatar = state.avatar || {};
+  const a = state.avatar[key] = { ...defaultAvatar(putri), ...(state.avatar[key] || {}) };
+  if (!AVR.r) {
+    AVR.r = new THREE.WebGLRenderer({ canvas: $('avcv'), antialias: true, alpha: true }); AVR.r.setPixelRatio(Math.min(devicePixelRatio, 2)); AVR.r.setSize(180, 180, false);
+    AVR.s = new THREE.Scene(); AVR.s.add(new THREE.HemisphereLight(0xffffff, 0x99aa99, 2.2)); const d = new THREE.DirectionalLight(0xffffff, 1.6); d.position.set(2, 4, 5); AVR.s.add(d);
+    AVR.c = new THREE.PerspectiveCamera(30, 1, 0.1, 50); AVR.c.position.set(0, 1.9, 5.2); AVR.c.lookAt(0, 1.55, 0);
+  }
+  const rebuild = () => { if (AVR.m) AVR.s.remove(AVR.m); AVR.m = makePerson(avatarModel(putri, a)); AVR.s.add(AVR.m); };
+  const sw = (c) => (c == null ? '#ffffff' : '#' + c.toString(16).padStart(6, '0'));
+  const rows = [['Warna kulit', 'skin', AV.skin.map((c) => ['', sw(c)])]];
+  if (putri) rows.push(['Model jilbab', 'hijab', [['Segi empat (menutup dada)'], ["Syar'i panjang"]]], ['Warna jilbab', 'hijabC', AV.hijabC.map((c) => ['', sw(c)])]);
+  else rows.push(['Model rambut', 'hair', [['Pendek rapi'], ['Cepak'], ['Belah samping'], ['Ikal pendek']]], ['Warna rambut', 'hairC', AV.hairC.map((c) => ['', sw(c)])], ['Peci', 'peci', [['Tanpa peci'], ['Hitam'], ['Putih']]]);
+  rows.push(['Mata', 'eye', [['Bulat'], ['Sipit'], ['Besar']]], ['Alis', 'brow', [['Tipis'], ['Tebal']]], ['Senyum', 'mouth', [['Senyum'], ['Kalem'], ['Ceria']]], ['Kacamata', 'glasses', [['Tanpa'], ['Hitam'], ['Cokelat'], ['Perak']]], ['Warna tas', 'bag', AV.bag.map((c) => ['', sw(c)])]);
+  $('avopts').innerHTML = rows.map(([t, k, opts]) => `<div class="avrow"><b>${t}</b><div class="ch">${opts.map(([lbl, col], i) => `<button type="button" data-k="${k}" data-i="${i}" class="${col ? 'sw' : ''}${a[k] === i ? ' on' : ''}" ${col ? `style="background:${col}" aria-label="${t} ${i + 1}"` : ''}>${lbl}</button>`).join('')}</div></div>`).join('');
+  $('avopts').querySelectorAll('button').forEach((b) => (b.onclick = () => {
+    a[b.dataset.k] = +b.dataset.i; b.parentNode.querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b)); rebuild();
+  }));
+  rebuild(); $('avatar').classList.add('show');
+  const spin = () => { if (!$('avatar').classList.contains('show')) return; AVR.m.rotation.y = Math.sin(performance.now() / 1400) * 0.7; AVR.r.render(AVR.s, AVR.c); requestAnimationFrame(spin); }; spin();
+}
+$('avbtn').onclick = avatarEditor;
+$('avdone').onclick = () => { $('avatar').classList.remove('show'); save(); setPlayer(isPutri(sel.value)); toast('🎨 Avatar tersimpan'); };
 // ---------- layar awal ----------
 const sel = $('clssel');
 sel.innerHTML = DATA.classes.map((c) => `<option ${c === state.cls ? 'selected' : ''}>${c}</option>`).join('');
@@ -183,14 +209,14 @@ $('startbtn').onclick = async () => {
     } else if (!kode) toast('Main tanpa kode kelas: nilai tidak terkirim ke guru');
     state.kode = kode;
   }
-  if (sel.value !== state.cls || nm !== state.nama) state = { day: 1, points: 0, cls: sel.value, kode: state.kode };
+  if (sel.value !== state.cls || nm !== state.nama) state = { day: 1, points: 0, cls: sel.value, kode: state.kode, avatar: state.avatar };
   state.nama = nm;
   state.start = ((+dsel.value - (state.day - 1)) % 5 + 5) % 5;
   Audio.start(); Audio.loadUrl('azan.mp3'); save(); setPlayer(isPutri(state.cls));
   builtFor = ''; populate(); populateRuang(); startDay();
   $('start').classList.add('hide'); paused = false;
 };
-$('resetbtn').onclick = () => { state = { day: 1, points: 0, cls: sel.value, nama: state.nama }; save(); startLabel(); };
+$('resetbtn').onclick = () => { state = { day: 1, points: 0, cls: sel.value, nama: state.nama, avatar: state.avatar }; save(); startLabel(); };
 setPlayer(isPutri(state.cls));
 setClassCam(); setMsCam();
 populate(); populateRuang();

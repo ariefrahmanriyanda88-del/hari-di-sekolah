@@ -221,6 +221,17 @@ function endMatch() {
   modal(`<div class="tag">${SPORT_NAME[k]} · Waktu habis</div><div class="big">${win ? '🏆 Timmu menang!' : draw ? '🤝 Seri' : 'Timmu kalah'}</div><p>Skor akhir <b>${sc[0]} – ${sc[1]}</b>${win ? ' · +5 ⭐' : ''}</p><p class="muted">Sportif: bersalaman dengan teman satu jenis, lalu minum air yang cukup.</p>`, [['Alhamdulillah', closeModal, 'main']]);
 }
 function stopMatchQuiet() { match = null; }
+// masuk ke area lapangan → ditawari ikut bertanding (tidak langsung main)
+let sportAsked = null;
+function checkSportZones() {
+  if (zone !== 'luar' || paused || riding || playingBall || playingSport || match || !VOLI) return;
+  const p = player.position, inside = (A, m = 0) => p.x > A.ax - m && p.x < A.bx + m && p.z > A.az - m && p.z < A.bz + m;
+  const area = inside(FIELD, 0.5) ? 'bola' : inside(VOLI, 0.5) ? 'voli' : inside(BASK, 0.5) ? 'basket' : null;
+  if (area === sportAsked) return;
+  sportAsked = area; if (!area) return;
+  if (!['istirahat1', 'santai', 'pulang'].includes(phase)) return toast('Lapangan bisa dipakai bertanding saat istirahat / waktu santai');
+  if (area === 'bola') joinBall(); else joinSport(area);
+}
 function updateSports(dt) {
   if (!voli) return;
   const active = ['istirahat1', 'santai', 'pulang'].includes(phase) && zone === 'luar';

@@ -3,16 +3,35 @@
 //  ORANG-ORANG: pemain, guru (nama asli), teman sekelas, satpam, pemain bola
 // =====================================================================
 const SKINS = [0xf0c8a0, 0xe2b48c, 0xd6a77a, 0xf3d1b0];
+const HAIRC = [0x222222, 0x3b2a1e, 0x4a3426];
+const faceOf = (i) => ({ eye: i % 3, brow: (i >> 1) % 2, mouth: i % 4 === 3 ? 2 : i % 2, glasses: i % 7 === 3 ? 0x333333 : null });
 const TSHIRT = [0x2e4b80, 0x3a6e4a, 0x5b4a8a, 0x2b6f7a, 0x6b4a2b];
 const HIJAB = [0xe9dfc9, 0xf2e6f0, 0xd7e6f2, 0xe6d3b3, 0xf5f0e6];
 const teacherModel = (g, i = 0) => g === 'P'
-  ? { putri: true, shirt: [0x8a3b5c, 0x3b6fa8, 0x6b4a8a, 0x2f7a6a, 0x9a5b3a][i % 5], bottom: 0x3a3a3a, hijab: HIJAB[i % 5], skin: SKINS[i % 4] }
-  : { shirt: TSHIRT[i % 5], bottom: 0x2b2b2b, peci: 0x1a1a1a, tie: false, skin: SKINS[(i + 1) % 4] };
-const studentModel = (putri, i = 0) => putri ? { putri: true, bag: [0x8f5fb0, 0xe07a3e, 0x3b9ab0, 0xd9577a, 0x58ad4e][i % 5], skin: SKINS[i % 4] } : { bag: [0x2f4f8f, 0x2f8a5c, 0xc0392b, 0x3b7dd8, 0x7a4fb0][i % 5], skin: SKINS[i % 4] };
+  ? { putri: true, shirt: [0x8a3b5c, 0x3b6fa8, 0x6b4a8a, 0x2f7a6a, 0x9a5b3a][i % 5], bottom: 0x3a3a3a, hijab: HIJAB[i % 5], hijabStyle: i % 2, skin: SKINS[i % 4], face: faceOf(i + 2) }
+  : { shirt: TSHIRT[i % 5], bottom: 0x2b2b2b, peci: 0x1a1a1a, tie: false, skin: SKINS[(i + 1) % 4], face: { ...faceOf(i + 1), brow: 1, glasses: i % 3 === 2 ? 0x5a4632 : null } };
+const studentModel = (putri, i = 0) => putri ? { putri: true, bag: [0x8f5fb0, 0xe07a3e, 0x3b9ab0, 0xd9577a, 0x58ad4e][i % 5], skin: SKINS[i % 4], face: faceOf(i), hijabStyle: (i >> 1) % 2 } : { bag: [0x2f4f8f, 0x2f8a5c, 0xc0392b, 0x3b7dd8, 0x7a4fb0][i % 5], skin: SKINS[i % 4], face: faceOf(i), hair: i % 4, hairC: HAIRC[i % 3] };
 const NAMES_PA = ['Fikri', 'Rizki', 'Hafidz', 'Umar', 'Bilal', 'Zaid', 'Hamzah', 'Usman', 'Salman', 'Faiz', 'Rafi', 'Ilham', 'Daffa', 'Naufal', 'Farhan', 'Aqil', 'Yusuf', 'Ihsan', 'Fadhil', 'Akbar'];
 const NAMES_PI = ['Aisyah', 'Nabila', 'Zahra', 'Khadijah', 'Fatimah', 'Salsabila', 'Hana', 'Nadia', 'Syifa', 'Alya', 'Najwa', 'Kayla', 'Azizah', 'Mutiara', 'Hilya', 'Tsabita', 'Qonita', 'Afifah', 'Zulfa', 'Rahma'];
 
-const makePlayer = (putri) => makePerson(putri ? { putri: true, bag: 0xd9577a } : { bag: 0x3b7dd8 });
+// ---------- avatar pemain (diatur di layar awal) ----------
+const AV = {
+  skin: [0xf6d5b8, 0xf0c8a0, 0xe2b48c, 0xd6a77a, 0xb98a5e, 0x8d6240],
+  hairC: [0x1c1c1c, 0x3b2a1e, 0x5a3d26],
+  hijabC: [0xf4f4f4, 0x1f2b38, 0x2f5d8a, 0x2f8a5c, 0xe6d3b3, 0x7a7d82, 0x8a3b5c],
+  bag: [0x3b7dd8, 0x2f8a5c, 0xc0392b, 0x7a4fb0, 0xe07a3e, 0xd9577a, 0x2b2b2b],
+  glasses: [null, 0x222222, 0x6b4a2b, 0x9aa1a8],
+  peci: [null, 0x1a1a1a, 0xf4f4f4],
+};
+const defaultAvatar = (putri) => ({ skin: 1, hair: 0, hairC: 0, eye: 0, brow: 0, mouth: 0, glasses: 0, peci: 0, hijab: 0, hijabC: 0, bag: putri ? 5 : 0 });
+function avatarModel(putri, a) {
+  a = { ...defaultAvatar(putri), ...(a || {}) };
+  const face = { eye: a.eye, brow: a.brow, mouth: a.mouth, glasses: AV.glasses[a.glasses], browC: putri ? 0x2a1d14 : AV.hairC[a.hairC] };
+  return putri ? { putri: true, skin: AV.skin[a.skin], hijab: AV.hijabC[a.hijabC], hijabStyle: a.hijab, bag: AV.bag[a.bag], face }
+    : { skin: AV.skin[a.skin], hair: a.hair, hairC: AV.hairC[a.hairC], peci: AV.peci[a.peci], bag: AV.bag[a.bag], face };
+}
+const avatarOf = (putri) => { try { return (state.avatar && state.avatar[putri ? 'P' : 'L']) || null; } catch (e) { return null; } };   // state belum ada saat awal dimuat
+const makePlayer = (putri) => makePerson(avatarModel(putri, avatarOf(putri)));
 let player = makePlayer(false);
 scene.add(player);
 function setPlayer(putri) {
@@ -169,7 +188,7 @@ function updateFootball(dt, active) {
       }
     });
   });
-  if (zone === 'luar' && player.position.distanceTo(B) < 0.9 && !paused) { const a = player.rotation.y; ball.vel.set(Math.sin(a) * 11, 0, Math.cos(a) * 11); ball.last = player; }
+  if (playingBall && zone === 'luar' && player.position.distanceTo(B) < 0.9 && !paused) { const a = player.rotation.y; ball.vel.set(Math.sin(a) * 11, 0, Math.cos(a) * 11); ball.last = player; }   // hanya menggiring bila ikut bertanding
   B.addScaledVector(ball.vel, dt); ball.vel.multiplyScalar(Math.pow(0.4, dt));
   ball.rotation.x += ball.vel.z * dt * 2; ball.rotation.z -= ball.vel.x * dt * 2;
   if (B.x < FIELD.ax || B.x > FIELD.bx) {
