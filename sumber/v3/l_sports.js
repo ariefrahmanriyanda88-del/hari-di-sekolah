@@ -95,7 +95,10 @@ function updateVoli(dt, active) {
     V.f.t += dt; const k = flyPos(V.f, vBall.position);
     const r = V.recv;
     if (r && r !== player) moveTo(r, V.f.to.x, V.f.to.z + (r.team ? -0.4 : 0.4), 5.2, dt);
-    if (k >= 0.86 && r && Math.hypot(r.position.x - V.f.to.x, r.position.z - V.f.to.z) < (r === player ? 1.8 : 1.1)) {
+    const meHit = r === player && performance.now() - (V.press || 0) < 450 && k >= 0.55 && player.position.distanceTo(vBall.position) < 2.6;
+    if (r === player && k >= 0.55 && !V.hint && player.position.distanceTo(vBall.position) < 4) { V.hint = true; toast('🏐 Tekan PUKUL sekarang!'); }
+    if (meHit || (r !== player && k >= 0.86 && r && Math.hypot(r.position.x - V.f.to.x, r.position.z - V.f.to.z) < 1.1)) {
+      V.hint = false;
       if (r === player) { Audio.sfx('knock'); bubble(player, pick(['Hap!', 'Oper!', 'Smash!']), 800); addPts(1); }
       voliHit(r, r === player ? 0 : r.team);
     } else if (k >= 1) {
@@ -104,6 +107,7 @@ function updateVoli(dt, active) {
       if (playingSport === 'voli' && win === 0) addPts(2);
     }
   }
+  if (!V.f) V.hint = false;
   V.ps.forEach((p) => { if (p !== V.recv || !V.f) moveTo(p, p.home[0], p.home[1], 3, dt); });
 }
 // ---------- basket ----------
@@ -131,7 +135,8 @@ function updateBasket(dt, active) {
   } else if (B.f) {
     B.f.t += dt; const k = flyPos(B.f, bBall.position);
     if (k >= 1) {
-      if (B.f.pass) { B.holder = player; toast('Kamu pegang bola! Tekan 🏀 Tembak'); }
+      if (B.f.passTo) { B.holder = B.f.passTo; }
+      else if (B.f.pass) { B.holder = player; toast('Kamu pegang bola! Tekan 🏀 Tembak'); }
       else if (B.f.make) {
         B.score[B.f.team] += 2; bubble(B.f.by, `Masuk! ${B.score[0]}–${B.score[1]}`, 1400);
         if (B.f.by === player) { addPts(3); toast('🏀 Masuk! +3 ⭐'); Audio.sfx('ok'); }
@@ -158,19 +163,64 @@ function updateBasket(dt, active) {
 function joinSport(kind) {
   if (riding) return toast('🏍️ Parkir motor dulu');
   const info = kind === 'voli' ? ['🏐 Lapangan Voli', 'Kamu masuk tim hijau (sisi selatan net). Berlarilah ke arah jatuhnya bola untuk memukulnya kembali.'] : ['🏀 Lapangan Basket', 'Kamu masuk tim biru, menyerang ke ring utara. Ambil bola atau tunggu operan teman, lalu tekan 🏀 Tembak. Makin dekat ring, makin mudah masuk.'];
-  modal(`<div class="tag">${info[0]}</div><div class="big">Ikut main?</div><p>${info[1]}</p>`, [['Ayo main!', () => {
+  modal(`<div class="tag">${info[0]}</div><div class="big">Ikut bertanding?</div><p>${info[1]}</p><p class="muted">Pertandingan 3 menit. Gerakkan sendiri arah larimu; 🏃 lari & ⤴️ lompat di kanan bawah.</p>`, [['Ayo main!', () => {
     closeModal(); if (playingBall) leaveBall(); playingSport = kind;
-    if (kind === 'voli') { player.position.set(VOLI.cx, 0, VOLI.net + 4); player.rotation.y = Math.PI; ctl([['🚪 Selesai', leaveSport]]); }
-    else { player.position.set(BASK.cx, 0, (BASK.az + BASK.bz) / 2 + 2); player.rotation.y = Math.PI; ctl([['🏀 Tembak', () => { if (basket.holder === player) shootBasket(player, 0); else toast('Ambil bolanya dulu'); }], ['🚪 Selesai', leaveSport]]); }
+    if (kind === 'voli') startMatch('voli', () => { player.position.set(VOLI.cx, 0, VOLI.net + 4); player.rotation.y = Math.PI; },
+      [['🏐 Pukul', () => { voli.press = performance.now(); playAnim(player, 'lambai', 0.35); }], ['🚪 Selesai', () => { stopMatchQuiet(); leaveSport(); }]],
+      'Lari ke bayangan bola, lalu tekan 🏐 Pukul saat bola mendekat');
+    else startMatch('basket', () => { player.position.set(BASK.cx, 0, (BASK.az + BASK.bz) / 2 + 2); player.rotation.y = Math.PI; },
+      [['🏀 Tembak', () => { if (basket.holder === player) shootBasket(player, 0); else toast('Ambil bolanya dulu'); }], ['🔁 Oper', passBasket], ['✋ Rebut', stealBasket], ['🚪 Selesai', () => { stopMatchQuiet(); leaveSport(); }]],
+      'Ambil bola, giring ke ring utara, lalu 🏀 Tembak. ✋ Rebut bola lawan dari dekat');
     bubble(player, 'Aku ikut, ya!', 1400);
   }, 'main'], ['Nanti saja', closeModal, 'small']]);
 }
+function passBasket() {
+  if (basket.holder !== player) return toast('Kamu tidak memegang bola');
+  const mate = basket.ps.filter((p) => p.team === 0).reduce((a, b) => (a.position.distanceTo(player.position) < b.position.distanceTo(player.position) ? a : b));
+  const from = player.position.clone(); from.y = 1.6; basket.f = flight(from, mate.position.clone().setY(1.4), 1.0, 0.6); basket.f.passTo = mate; basket.holder = null; playAnim(player, 'lambai', 0.4);
+}
+function stealBasket() {
+  const h = basket.holder; if (!h || h === player || h.team === 0) return toast('Dekati pemain lawan yang memegang bola');
+  if (h.position.distanceTo(player.position) > 1.8) return toast('Terlalu jauh, dekati lagi');
+  if (Math.random() < 0.55) { basket.holder = player; toast('✋ Berhasil merebut bola!'); Audio.sfx('ok'); } else { bubble(h, 'Eits!', 800); player.busy = 0.5; }
+}
 function leaveSport() {
   if (!playingSport) return;
+  match = null;
   if (basket && basket.holder === player) basket.holder = basket.ps[0];
   const k = playingSport; playingSport = null; ctl([]);
   if (zone === 'luar') { const e = isPutri(state.cls) ? -1 : 1; if (k === 'voli') player.position.set(e > 0 ? VOLI.bx + 4.5 : VOLI.ax - 4.5, 0, VOLI.net); else player.position.set(e > 0 ? BASK.bx + 4 : BASK.ax - 4, 0, (BASK.az + BASK.bz) / 2); player.rotation.y = 0; }
 }
+// ---------- pertandingan resmi: transisi, papan skor, waktu ----------
+let match = null;
+const SPORT_NAME = { bola: '⚽ Sepak Bola', voli: '🏐 Bola Voli', basket: '🏀 Bola Basket' };
+const scoreOf = (k) => (k === 'bola' ? goals : k === 'voli' ? voli.score : basket.score);
+function startMatch(kind, place, buttons, help) {
+  fade(`${SPORT_NAME[kind]} · Pertandingan dimulai!`, 1000, () => {
+    scoreOf(kind)[0] = scoreOf(kind)[1] = 0;
+    place(); match = { kind, t: 180 }; ctl(buttons); Audio.sfx('bell');
+    if (!running) { running = true; $('runbtn').classList.add('on'); }
+    toast(help);
+  });
+}
+function updateMatch(dt) {
+  const el = $('score');
+  if (!match) { if (el.classList.contains('show')) el.classList.remove('show'); return; }
+  if (!paused) match.t -= dt;
+  const sc = scoreOf(match.kind), m = Math.max(0, Math.ceil(match.t)), tim = match.kind === 'bola' ? ['Biru', 'Merah'] : match.kind === 'voli' ? ['Hijau', 'Merah'] : ['Biru', 'Oranye'];
+  el.innerHTML = `${SPORT_NAME[match.kind]} &nbsp; ${tim[0]} <b>${sc[0]} – ${sc[1]}</b> ${tim[1]} &nbsp; ⏱ ${Math.floor(m / 60)}:${String(m % 60).padStart(2, '0')}`;
+  el.classList.add('show');
+  if (match.t <= 0) endMatch();
+}
+function endMatch() {
+  const k = match.kind, sc = scoreOf(k).slice(); match = null;
+  const win = sc[0] > sc[1], draw = sc[0] === sc[1];
+  if (win) addPts(5);
+  if (k === 'bola') leaveBall(); else leaveSport();
+  Audio.sfx(win ? 'ok' : 'bell');
+  modal(`<div class="tag">${SPORT_NAME[k]} · Waktu habis</div><div class="big">${win ? '🏆 Timmu menang!' : draw ? '🤝 Seri' : 'Timmu kalah'}</div><p>Skor akhir <b>${sc[0]} – ${sc[1]}</b>${win ? ' · +5 ⭐' : ''}</p><p class="muted">Sportif: bersalaman dengan teman satu jenis, lalu minum air yang cukup.</p>`, [['Alhamdulillah', closeModal, 'main']]);
+}
+function stopMatchQuiet() { match = null; }
 function updateSports(dt) {
   if (!voli) return;
   const active = ['istirahat1', 'santai', 'pulang'].includes(phase) && zone === 'luar';

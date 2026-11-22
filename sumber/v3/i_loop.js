@@ -1,7 +1,7 @@
 
 // ---------- kontrol ----------
 const keys = new Set();
-addEventListener('keydown', (e) => { if (e.target.tagName === 'INPUT') return; keys.add(e.key.toLowerCase()); if (e.key === 'e' || e.key === 'E' || e.key === 'Enter') openGreet(); });
+addEventListener('keydown', (e) => { if (e.target.tagName === 'INPUT') return; keys.add(e.key.toLowerCase()); if (e.key === ' ') { e.preventDefault(); doJump(); } if (e.key === 'e' || e.key === 'E' || e.key === 'Enter') openGreet(); });
 addEventListener('keyup', (e) => keys.delete(e.key.toLowerCase()));
 $('talk').addEventListener('click', () => openGreet());
 $('cam').addEventListener('click', (e) => { camIdx = (camIdx + 1) % CAMS.length; setCam(); e.currentTarget.textContent = '🎥 ' + CAMS[camIdx][0]; });
@@ -52,6 +52,19 @@ const marker = new THREE.Group();
   ring.rotation.x = -Math.PI / 2; ring.position.y = 0.08; marker.add(ring);
 }
 scene.add(marker);
+// ---------- lari & lompat ----------
+let running = false, jumpV = 0, mvShown = false;
+const canMoveFree = () => zone === 'luar' && !riding && !player.sitting && !paused;
+function doJump() { if (!canMoveFree() || player.position.y > 0.01 || player.busy > 0) return; jumpV = 7.2; }
+$('runbtn').addEventListener('pointerdown', (e) => { e.preventDefault(); running = !running; $('runbtn').classList.toggle('on', running); toast(running ? '🏃 Mode lari' : '🚶 Mode jalan'); });
+$('jumpbtn').addEventListener('pointerdown', (e) => { e.preventDefault(); doJump(); });
+function updateJump(dt) {
+  if (jumpV === 0 && player.position.y <= 0) return false;
+  jumpV -= 22 * dt; player.position.y = Math.max(0, player.position.y + jumpV * dt);
+  if (player.position.y === 0) { jumpV = 0; return false; }
+  player.legL.rotation.x = -0.7; player.legR.rotation.x = 0.35; player.armL.rotation.x = player.armR.rotation.x = -2.4;
+  return true;
+}
 // ---------- performa adaptif: resolusi turun otomatis bila HP berat ----------
 let frameN = 0, perfT0 = 0, perfFrames = 0;
 function tunePerf(now) {
@@ -83,18 +96,21 @@ function loop() {
     let L = Math.hypot(vx, vz);
     if (player.busy > 0) L = 0;
     if (L > 0.1) {
-      const sp = (riding ? 17 : zone === 'luar' ? 11 : 7) * Math.min(1, L) / L;
+      const sprint = zone === 'luar' && !riding && (running || keys.has('shift'));
+      const sp = (riding ? 17 : zone === 'luar' ? (sprint ? 18 : 10) : 6.5) * Math.min(1, L) / L;
       const nx = player.position.x + vx * sp * dt, nz = player.position.z + vz * sp * dt;
       const stuck = blocked(player.position.x, player.position.z);   // bila terjepit, tetap boleh bergerak keluar
       if ((stuck || !blocked(nx, player.position.z)) && !bodyBlocked(player, nx, player.position.z) && !wingBlocked(nx)) player.position.x = nx;
       if ((stuck || !blocked(player.position.x, nz)) && !bodyBlocked(player, player.position.x, nz)) player.position.z = nz;
       let d = Math.atan2(vx, vz) - player.rotation.y; d = Math.atan2(Math.sin(d), Math.cos(d));
       player.rotation.y += d * Math.min(1, dt * 12);
-      walkT += dt * 11; minutes += dt * 0.4;
+      walkT += dt * (sprint ? 17 : 11); minutes += dt * 0.4;
     } else walkT *= 0.85;
-    const sw = Math.sin(walkT) * 0.6 * (L > 0.1 ? 1 : 0);
-    if (!riding) { player.legL.rotation.x = sw; player.legR.rotation.x = -sw; }
-    if (!animating && !riding) { player.armL.rotation.x = -sw; player.armR.rotation.x = sw; }
+    const runK = zone === 'luar' && (running || keys.has('shift')) ? 1.55 : 1;
+    const sw = Math.sin(walkT) * 0.6 * runK * (L > 0.1 ? 1 : 0);
+    const airborne = updateJump(dt);
+    if (!riding && !airborne) { player.legL.rotation.x = sw; player.legR.rotation.x = -sw; }
+    if (!animating && !riding && !airborne) { player.armL.rotation.x = -sw; player.armR.rotation.x = sw; }
 
     let best = null, bd = 3.3;
     if (zone !== 'kuis') for (const n of npcs) { if (!n.visible || !canTalk(n)) continue; const dd = Math.hypot(n.position.x - player.position.x, n.position.z - player.position.z); if (dd < bd) { bd = dd; best = n; } }
@@ -125,7 +141,9 @@ function loop() {
     camera.lookAt(player.position.x, player.position.y + (eatingCam ? -0.6 : 1.2), player.position.z);
   }
   for (const l of sceneLabels) { if (l.parent !== scene) continue; const d = camera.position.distanceTo(l.position); l.material.opacity = THREE.MathUtils.clamp((d - 16) / 10, 0, 1); }
-  updateDoors(dt, player); updateBubbles(); updateTags();
+  updateDoors(dt, player); updateBubbles(); updateTags(); updateMatch(dt);
+  const mvWant = zone === 'luar' && !paused && !riding && !player.sitting;
+  if (mvWant !== mvShown) { mvShown = mvWant; $('mv').classList.toggle('show', mvWant); if (!mvWant && player.position.y > 0) { player.position.y = 0; jumpV = 0; } }
   frameN++; if (frameN % 2 === 0) renderer.shadowMap.needsUpdate = true;
   tunePerf(clock.getElapsedTime ? performance.now() : 0);
   renderer.render(scene, camera);
@@ -180,5 +198,5 @@ today = DATA.sched[state.cls][dayIdx()].blocks;
 goOutside(0, 63, Math.PI); paused = true;
 hud();
 window.__audio = Audio;
-window.__dbg = { upacara: () => upacaraScene(), walkersVis: () => walkers.filter((n) => n.visible).length, enterRuang: (p) => enterRuang(p), enterClass: () => enterClass('Silakan masuk'), roomAction: (id) => roomAction(id), enterKepsek: () => enterKepsek(), enterTU: () => enterTU(), goOutside: (x, z, r) => goOutside(x, z, r), camera, setZone: (z) => (zone = z),  get paused() { return paused; }, blocked: (x, z) => blocked(x, z), bb: (x, z) => bodyBlocked(player, x, z), get fly() { return fly; }, get race() { return race; }, get battle() { return battle; }, sb: (s) => startBattle(today.find((b) => b.s === s), QBANK[s], () => {}), sr: (s) => startRace(today.find((b) => b.s === s), QBANK[s], () => {}), openLab: () => openLab(), get quiz() { return quiz; }, get state() { return state; }, get zone() { return zone; }, get phase() { return phase; }, get objective() { return objective; }, lessonDone: (a) => lessonDone(today.find((b) => b.a === a)), today: () => today, setPhase: (p) => (phase = p), classDoors, doorsOut, KANTIN, KT_SEAT, QZ };
+window.__dbg = { joinBall: () => joinBall(), joinSport: (k) => joinSport(k), match: () => match, jump: () => doJump(), setPhase2: (p) => (phase = p), upacara: () => upacaraScene(), walkersVis: () => walkers.filter((n) => n.visible).length, enterRuang: (p) => enterRuang(p), enterClass: () => enterClass('Silakan masuk'), roomAction: (id) => roomAction(id), enterKepsek: () => enterKepsek(), enterTU: () => enterTU(), goOutside: (x, z, r) => goOutside(x, z, r), camera, setZone: (z) => (zone = z),  get paused() { return paused; }, blocked: (x, z) => blocked(x, z), bb: (x, z) => bodyBlocked(player, x, z), get fly() { return fly; }, get race() { return race; }, get battle() { return battle; }, sb: (s) => startBattle(today.find((b) => b.s === s), QBANK[s], () => {}), sr: (s) => startRace(today.find((b) => b.s === s), QBANK[s], () => {}), openLab: () => openLab(), get quiz() { return quiz; }, get state() { return state; }, get zone() { return zone; }, get phase() { return phase; }, get objective() { return objective; }, lessonDone: (a) => lessonDone(today.find((b) => b.a === a)), today: () => today, setPhase: (p) => (phase = p), classDoors, doorsOut, KANTIN, KT_SEAT, QZ };
 loop();

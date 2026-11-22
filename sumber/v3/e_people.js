@@ -336,21 +336,33 @@ function openGreet() {
 let playingBall = false;
 function joinBall() {
   if (riding) return toast('🏍️ Parkir motor dulu');
-  modal(`<div class="tag">⚽ Lapangan</div><div class="big">Ikut main bola?</div><p>Kamu masuk tim <b>biru</b>, menyerang ke gawang kanan.</p><p class="muted">Geser layar untuk berlari. Sentuh bola untuk menggiring, tekan <b>⚽ Tendang</b> untuk menembak ke gawang.</p>`,
+  modal(`<div class="tag">⚽ Lapangan</div><div class="big">Ikut bertanding?</div><p>Kamu masuk tim <b>biru</b>, menyerang ke gawang kanan (timur).</p><p class="muted">Pertandingan 3 menit. Lari menyentuh bola untuk menggiring. <b>⚽ Tendang</b> = tendang ke arah hadapmu, <b>🔁 Oper</b> = ke teman terdekat.</p>`,
     [['Ayo main!', () => {
       closeModal(); if (playingSport) leaveSport(); playingBall = true;
-      player.position.set(FIELD.cx - 6, 0, FIELD.cz + 3); player.rotation.y = Math.PI / 2;
-      ctl([['⚽ Tendang', kickBall], ['🚪 Selesai', leaveBall]]);
+      startMatch('bola', () => { player.position.set(FIELD.cx - 6, 0, FIELD.cz + 3); player.rotation.y = Math.PI / 2; ball.position.set(FIELD.cx, 0.32, FIELD.cz); ball.vel.set(0, 0, 0); },
+        [['⚽ Tendang', kickBall], ['🔁 Oper', passBall], ['🚪 Selesai', () => { stopMatchQuiet(); leaveBall(); }]],
+        'Giring bola ke gawang kanan, arahkan badan lalu ⚽ Tendang!');
       bubble(player, 'Aku ikut, ya!', 1500);
     }, 'main'], ['Nanti saja', closeModal, 'small']]);
 }
 function kickBall() {
   const B = ball.position; if (player.position.distanceTo(B) > 2.4) { toast('Dekati bola dulu'); return; }
-  const gx = FIELD.bx + 1 - B.x, gz = FIELD.cz + (Math.random() - 0.5) * 3.5 - B.z, gl = Math.hypot(gx, gz);
-  ball.vel.set(gx / gl * 17, 0, gz / gl * 17); ball.last = player; playAnim(player, 'lambai', 0.4); Audio.sfx('knock');
+  let a = player.rotation.y;
+  const ga = Math.atan2(FIELD.bx + 1 - B.x, FIELD.cz - B.z);                    // bantuan bidik kecil ke arah gawang
+  let d = Math.atan2(Math.sin(ga - a), Math.cos(ga - a)); if (Math.abs(d) < 0.45) a += d * 0.6;
+  const pw = player.position.y > 0.2 ? 22 : 19;                                   // tendangan sambil melompat lebih keras
+  ball.vel.set(Math.sin(a) * pw, 0, Math.cos(a) * pw); ball.last = player; playAnim(player, 'lambai', 0.4); Audio.sfx('knock');
+}
+function passBall() {
+  const B = ball.position; if (player.position.distanceTo(B) > 2.4) { toast('Dekati bola dulu'); return; }
+  const mates = ballers.filter((b) => b.team === 0);
+  const m = mates.reduce((x, y) => (x.position.distanceTo(B) + (x.position.x < B.x ? 6 : 0) < y.position.distanceTo(B) + (y.position.x < B.x ? 6 : 0) ? x : y));
+  const dx = m.position.x - B.x, dz = m.position.z - B.z, L = Math.hypot(dx, dz) || 1, pw = Math.min(16, 6 + L * 0.9);
+  ball.vel.set(dx / L * pw, 0, dz / L * pw); ball.last = player; m.cool = 0.6; bubble(m, 'Oke!', 700); playAnim(player, 'lambai', 0.35);
 }
 function leaveBall() {
   if (!playingBall) return;
+  match = null;
   playingBall = false; ctl([]);
   if (zone === 'luar') { player.position.set(0, 0, -32.5); player.rotation.y = 0; }
 }
