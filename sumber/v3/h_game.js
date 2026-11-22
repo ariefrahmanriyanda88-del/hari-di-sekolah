@@ -343,6 +343,7 @@ function checkTriggers() {
   if (hit.startsWith('spot:')) return roomAction(hit.slice(5));
   if (hit === 'uks') { paused = true; return enterUKS(); }
   if (hit === 'kepsek') { paused = true; return enterKepsek(); }
+  if (hit === 'tu') { paused = true; return enterTU(); }
   if (hit.startsWith('shelf:')) return openShelf(+hit.slice(6));
   if (hit === 'voli' || hit === 'basket') return ['istirahat1', 'santai', 'pulang'].includes(phase) ? (playingSport === hit ? null : joinSport(hit)) : toast(`Lapangan ${hit === 'voli' ? 'voli' : 'basket'}: bisa ikut main saat jam istirahat / waktu santai`);
   if (hit === 'bola') return ['istirahat1', 'santai', 'pulang'].includes(phase) ? (playingBall ? null : joinBall()) : toast('Lapangan: bisa ikut main bola saat jam istirahat / waktu santai');

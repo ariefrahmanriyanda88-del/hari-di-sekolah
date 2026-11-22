@@ -24,8 +24,9 @@ function prepCourt(V, B) { V.cx = (V.ax + V.bx) / 2; B.cx = (B.ax + B.bx) / 2; B
     .forEach(([a, b, c, d]) => plane(a, b, c, d, 0xffffff, 0.08));
   const ring = new THREE.Mesh(new THREE.RingGeometry(1.8, 1.95, 36), mat(0xffffff)); ring.rotation.x = -Math.PI / 2; ring.position.set(B.cx, 0.09, bz); scene.add(ring);
   [[B.hN, -1], [B.hS, 1]].forEach(([hz, s]) => {
-    box(B.cx, 1.8, hz - s * 1.1, 0.2, 3.6, 0.2, 0x555b63);
-    box(B.cx, 3.6, hz - s * 0.75, 1.8, 1.1, 0.08, 0xffffff);
+    box(B.cx, 1.8, hz + s * 1.1, 0.2, 3.6, 0.2, 0x555b63);                 // tiang di belakang papan (luar lapangan)
+    box(B.cx, 3.6, hz + s * 0.55, 1.8, 1.1, 0.08, 0xffffff);                // papan pantul di belakang ring
+    box(B.cx, 3.15, hz + s * 0.35, 0.12, 0.08, 0.4, 0xe0623e);             // penyangga ring ke papan
     const hoop = new THREE.Mesh(new THREE.TorusGeometry(0.42, 0.05, 8, 20), mat(0xe0623e)); hoop.rotation.x = Math.PI / 2; hoop.position.set(B.cx, 3.05, hz); scene.add(hoop);
   });
   label('Lapangan Basket ' + nm, B.cx, 5.6, bz, 1.1);
