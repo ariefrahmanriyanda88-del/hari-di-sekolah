@@ -134,7 +134,13 @@ function lessonDone(b) {
 function istirahat1() {
   phase = 'istirahat1'; minutes = 10 * 60; Audio.sfx('bell');
   modal(`<div class="tag">🔔 Bel istirahat pertama</div><div class="big">Waktunya makan!</div><p>Ayo ke <b>Kantin ${side()}</b> untuk makan MBG bersama teman-teman.</p>`,
-    [['Keluar kelas', () => { closeModal(); paused = true; exitClass(() => setObjective(`Istirahat: makan MBG di <b>Kantin ${side()}</b>`, kantinDoor(), enterKantin)); }, 'main']]);
+    [['🍽️ Makan MBG di kantin', () => { closeModal(); paused = true; exitClass(() => setObjective(`Istirahat: makan MBG di <b>Kantin ${side()}</b>`, kantinDoor(), enterKantin)); }, 'main'],
+     ['🙅 Tidak makan MBG', () => { closeModal(); paused = true; exitClass(() => { toast('Tidak apa-apa. Jangan lupa makan bekalmu dan minum yang cukup, ya'); freeBreak(); }); }]]);
+}
+// istirahat bebas (setelah makan, atau bila tidak makan MBG)
+function freeBreak() {
+  breakEnd = performance.now() + 4 * 60 * 1000;
+  setObjective(`Istirahat bebas! Jelajahi sekolah, lalu kembali ke kelas <b>${state.cls}</b>`, classDoors[state.cls], () => { breakEnd = 0; phase = 'kelas2'; Audio.sfx('bell'); knockClass(); });
 }
 const kantinDoor = () => doorsOut.find((d) => d.id === (isPutri(state.cls) ? 'kantinPI' : 'kantinPA'));
 let tray = null;
@@ -147,8 +153,8 @@ function enterKantin() {
   });
 }
 const MBG = [
-  ['pokok', '🍚 Nasi'], ['pokok', '🌽 Jagung rebus'], ['lauk', '🍗 Ayam goreng'], ['lauk', '🐟 Ikan bakar'], ['lauk', '🥚 Telur'], ['lauk', '🟫 Tempe'],
-  ['sayur', '🥬 Sayur bayam'], ['sayur', '🥦 Tumis brokoli'], ['buah', '🍌 Pisang'], ['buah', '🍊 Jeruk'], ['susu', '🥛 Susu'],
+  ['pokok', '🍚 Nasi', 'nasi'], ['pokok', '🌽 Jagung rebus', 'jagung'], ['lauk', '🍗 Ayam goreng', 'ayam'], ['lauk', '🐟 Ikan bakar', 'ikan'], ['lauk', '🥚 Telur', 'telur'], ['lauk', '🟫 Tempe', 'tempe'],
+  ['sayur', '🥬 Sayur bayam', 'bayam'], ['sayur', '🥦 Tumis brokoli', 'brokoli'], ['buah', '🍌 Pisang', 'pisang'], ['buah', '🍊 Jeruk', 'jeruk'], ['susu', '🥛 Susu', 'susu'],
   ['x', '🍟 Keripik'], ['x', '🥤 Minuman soda'], ['x', '🍬 Permen'],
 ];
 function mbgGame() {
@@ -161,18 +167,19 @@ function mbgGame() {
       if (cats.has('x')) { $('fb').textContent = 'Keripik, soda, dan permen bukan bagian dari menu bergizi, ya.'; Audio.sfx('no'); return; }
       if (miss.length) { $('fb').textContent = 'Masih kurang: ' + miss.map((c) => ({ pokok: 'makanan pokok', lauk: 'lauk', sayur: 'sayur', buah: 'buah', susu: 'susu' }[c])).join(', '); Audio.sfx('no'); return; }
       Audio.sfx('ok'); addPts(10); toast('+10 ⭐ 4 Sehat 5 Sempurna!');
+      myMenu = {}; [...picked].sort((a, b) => a - b).forEach((i) => { const [cat, lbl, key] = MBG[i]; if (!myMenu[cat]) myMenu[cat] = { key, lbl }; });
       closeModal(); holdTray(true);
       bubble(npcs.find((n) => n.kind === 'kantin'), `Selamat makan, ${state.nama}!`, 2200);
       setObjective('Duduk di <b>kursi kosong</b> (lingkaran kuning)', { x: KANTIN.x + KT_SEAT.x, z: KANTIN.z + KT_SEAT.z }, eatScene, 'kantin');
     }, 'main']]);
   document.querySelectorAll('.mbg button').forEach((b) => (b.onclick = () => { const i = +b.dataset.i; picked.has(i) ? picked.delete(i) : picked.add(i); b.classList.toggle('on'); }));
 }
+let myMenu = {};
 function holdTray(on) {
   if (tray) { tray.parent && tray.parent.remove(tray); tray = null; }
   if (!on) return;
-  tray = new THREE.Group();
-  const base = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.05, 0.5), mat(0xbfc5cc)); tray.add(base);
-  [[-0.22, -0.1, 0xfff4d6], [0.05, -0.1, 0xd4883a], [0.25, 0.1, 0x58ad4e], [-0.2, 0.12, 0xf2a33a], [0.3, -0.12, 0xffffff]].forEach(([x, z, c]) => { const m = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.08, 0.16), mat(c)); m.position.set(x, 0.06, z); tray.add(m); });
+  const menu = {}; for (const c in myMenu) menu[c] = myMenu[c].key;
+  tray = makeMeal(menu); tray.scale.setScalar(1.1);   // bentuk makanan sama dengan nampan teman-teman
   tray.position.set(0, 1.15, 0.55); player.add(tray);
 }
 function eatScene() {
@@ -188,13 +195,13 @@ function eatScene() {
     ['Langsung makan', () => { bubble(player, 'Eh, lupa…', 1500); toast('Temanmu mengingatkan: baca doa dulu, ya!'); setTimeout(eat, 600); }],
   ]);
   function eat() {
-    const items = ['🍚 Nasi', '🍗 Lauk', '🥬 Sayur', '🍌 Buah', '🥛 Susu'], left = new Set(items);
+    const cats = ['pokok', 'lauk', 'sayur', 'buah', 'susu'].filter((c) => myMenu[c]), left = new Set(cats);
     const draw = () => modal(`<div class="tag">Makan MBG</div><p>Ketuk untuk menghabiskan setiap makanan. Jangan bersisa!</p>`,
-      [...left].map((it) => [`🥄 Suap ${it}`, () => {
+      [...left].map((it) => [`🥄 Suap ${myMenu[it].lbl}`, () => {
         document.querySelectorAll('#mbtns button').forEach((x) => (x.disabled = true));
         playAnim(player, 'suap', 1.6);
         setTimeout(() => { if (Math.random() < 0.5) bubble(player, pick(['Nyam… enak!', 'Alhamdulillah, lezat', 'Mmm…']), 1200); }, 500);
-        setTimeout(() => { left.delete(it); Audio.sfx('greet'); const c = tray && tray.children[items.indexOf(it) + 1]; if (c) c.visible = false; left.size ? draw() : after(); }, 1650);
+        setTimeout(() => { left.delete(it); Audio.sfx('greet'); const c = tray && tray.userData.parts[it]; if (c) c.visible = false; left.size ? draw() : after(); }, 1650);
       }, 'opt']));
     draw();
   }

@@ -192,18 +192,30 @@ const kt = makeHall(KANTIN, 22, 16, 0xf6e1c4, '#f3ead9', '#e7dcc6');
 const KT_SEAT = { x: 6.5 + 1.2, z: 4.5 - 1.15 };      // kursi kosong untuk pemain (menghadap meja)
 const ktMarker = new THREE.Mesh(new THREE.RingGeometry(0.4, 0.6, 24), new THREE.MeshBasicMaterial({ color: 0xffc83d })); ktMarker.rotation.x = -Math.PI / 2; ktMarker.position.set(KT_SEAT.x, 0.06, KT_SEAT.z); kt.g.add(ktMarker);
 let ktPeople = [];
-// nampan MBG 4 sehat 5 sempurna: nasi, lauk, sayur, buah, susu
-const MEAL_GEO = { tray: new THREE.BoxGeometry(0.72, 0.04, 0.46), rice: new THREE.SphereGeometry(0.11, 10, 8), box: new THREE.BoxGeometry(0.16, 0.06, 0.12), veg: new THREE.SphereGeometry(0.055, 8, 6), fruit: new THREE.SphereGeometry(0.06, 10, 8), cup: new THREE.CylinderGeometry(0.045, 0.04, 0.15, 10) };
-function makeMeal() {
-  const g = new THREE.Group(), m = (geo, c, x, y, z, sx = 1, sy = 1, sz = 1) => { const o = new THREE.Mesh(geo, mat(c)); o.position.set(x, y, z); o.scale.set(sx, sy, sz); g.add(o); return o; };
-  m(MEAL_GEO.tray, 0xc9ced4, 0, 0, 0);
-  m(MEAL_GEO.rice, 0xfffdf5, -0.17, 0.05, 0.02, 1.2, 0.55, 1);                  // nasi
-  m(MEAL_GEO.box, 0xb5651d, 0.08, 0.05, -0.1); m(MEAL_GEO.box, 0xe8c26a, 0.08, 0.05, 0.08, 0.8, 0.8, 0.8);   // ayam & tempe/tahu
-  [[0.2, 0.1], [0.25, 0.06], [0.22, 0.14]].forEach(([x, z]) => m(MEAL_GEO.veg, 0x3f9a3a, x, 0.045, z - 0.04));   // sayur
-  m(MEAL_GEO.fruit, 0xff9a1f, 0.27, 0.07, -0.13);                                 // jeruk
-  m(MEAL_GEO.cup, 0xffffff, -0.3, 0.09, -0.15);                                   // susu
+// ---------- makanan 3D (dipakai nampan pemain & teman) ----------
+const FOOD = {
+  nasi: (c) => { const o = new THREE.Mesh(new THREE.SphereGeometry(0.11, 12, 8), mat(0xfffdf5)); o.scale.set(1.2, 0.55, 1); o.position.y = 0.03; c.add(o); },
+  jagung: (c) => { const o = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.04, 0.24, 10), mat(0xf2c632)); o.rotation.z = Math.PI / 2; o.position.y = 0.05; c.add(o); const l = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.01, 0.1), mat(0x7cb342)); l.position.set(0.12, 0.03, 0); c.add(l); },
+  ayam: (c) => { const o = new THREE.Mesh(new THREE.SphereGeometry(0.065, 10, 8), mat(0xb5651d)); o.scale.set(1.3, 0.9, 1); o.position.set(-0.02, 0.05, 0); c.add(o); const t = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.09, 6), mat(0xf5ecd8)); t.rotation.z = Math.PI / 2; t.position.set(0.09, 0.05, 0); c.add(t); },
+  ikan: (c) => { const o = new THREE.Mesh(new THREE.SphereGeometry(0.06, 10, 8), mat(0x9a6a3a)); o.scale.set(2.2, 0.7, 0.9); o.position.y = 0.04; c.add(o); const t = new THREE.Mesh(new THREE.ConeGeometry(0.045, 0.08, 6), mat(0x7a4f28)); t.rotation.z = Math.PI / 2; t.position.set(0.17, 0.04, 0); c.add(t); },
+  telur: (c) => { const o = new THREE.Mesh(new THREE.SphereGeometry(0.055, 12, 10), mat(0xfffaf0)); o.scale.set(1, 1.25, 1); o.position.y = 0.07; c.add(o); const h = new THREE.Mesh(new THREE.SphereGeometry(0.055, 12, 10), mat(0xfffaf0)); h.scale.set(1, 0.6, 1); h.position.set(0.12, 0.035, 0); c.add(h); const y = new THREE.Mesh(new THREE.SphereGeometry(0.03, 10, 8), mat(0xf6b51e)); y.scale.set(1, 0.6, 1); y.position.set(0.12, 0.06, 0); c.add(y); },
+  tempe: (c) => { const o = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.04, 0.1), mat(0xe8c26a)); o.position.y = 0.03; c.add(o); const o2 = o.clone(); o2.position.set(0.02, 0.07, 0.01); o2.rotation.y = 0.4; c.add(o2); },
+  bayam: (c) => [[0, 0], [0.05, 0.03], [-0.05, 0.02], [0.02, -0.04], [-0.03, -0.03]].forEach(([x, z]) => { const o = new THREE.Mesh(new THREE.SphereGeometry(0.04, 8, 6), mat(0x2e7d32)); o.scale.set(1.2, 0.45, 1); o.position.set(x, 0.035, z); c.add(o); }),
+  brokoli: (c) => [[0, 0], [0.06, 0.02], [-0.05, 0.03], [0.01, -0.05]].forEach(([x, z]) => { const s = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.015, 0.05, 6), mat(0x9ccc65)); s.position.set(x, 0.04, z); c.add(s); const h = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 6), mat(0x388e3c)); h.position.set(x, 0.08, z); c.add(h); }),
+  pisang: (c) => { const o = new THREE.Mesh(new THREE.TorusGeometry(0.09, 0.025, 6, 12, Math.PI * 0.8), mat(0xf7d33b)); o.rotation.x = -Math.PI / 2; o.position.y = 0.03; c.add(o); },
+  jeruk: (c) => { const o = new THREE.Mesh(new THREE.SphereGeometry(0.06, 12, 10), mat(0xff9a1f)); o.position.y = 0.06; c.add(o); const d = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.012, 0.02), mat(0x4caf50)); d.position.y = 0.12; c.add(d); },
+  susu: (c) => { const o = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.04, 0.15, 12), mat(0xffffff)); o.position.y = 0.08; c.add(o); },
+};
+// letak di nampan per kelompok
+const MEAL_SLOT = { pokok: [-0.17, 0.02], lauk: [0.06, -0.1], sayur: [0.2, 0.09], buah: [0.25, -0.12], susu: [-0.3, -0.15] };
+function makeMeal(menu = { pokok: 'nasi', lauk: 'ayam', sayur: 'bayam', buah: 'jeruk', susu: 'susu' }) {
+  const g = new THREE.Group(); g.userData.parts = {};
+  g.add(new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.04, 0.46), mat(0xc9ced4)));
+  for (const cat in menu) { if (!FOOD[menu[cat]]) continue; const c = new THREE.Group(); c.position.set(MEAL_SLOT[cat][0], 0.02, MEAL_SLOT[cat][1]); FOOD[menu[cat]](c); g.add(c); g.userData.parts[cat] = c; }
   return g;
 }
+const NPC_MENUS = [['nasi', 'ayam', 'bayam', 'jeruk'], ['nasi', 'telur', 'brokoli', 'pisang'], ['nasi', 'ikan', 'bayam', 'pisang'], ['jagung', 'tempe', 'brokoli', 'jeruk']];
+const npcMeal = (i) => { const m = NPC_MENUS[i % NPC_MENUS.length]; return makeMeal({ pokok: m[0], lauk: m[1], sayur: m[2], buah: m[3], susu: 'susu' }); }
 function populateKantin() {
   ktPeople.forEach((p) => { scene.remove(p); const i = npcs.indexOf(p); if (i >= 0) npcs.splice(i, 1); }); ktPeople = [];
   const putri = isPutri(state.cls);
@@ -220,7 +232,7 @@ function populateKantin() {
       m.position.set(KANTIN.x + x + dx, 0, KANTIN.z + z + side); m.rotation.y = side < 0 ? 0 : Math.PI; sitPose(m, true); m.seated = true; m.position.y = -0.32;
       addSpoon(m); m.eater = true; m.phase = Math.random() * 6; m.rate = 0.8 + Math.random() * 0.6;
       scene.add(m); ktPeople.push(m);
-      const tray = makeMeal(); tray.position.set(KANTIN.x + x + dx, 0.81, KANTIN.z + z + side * 0.45); tray.rotation.y = side < 0 ? 0 : Math.PI; scene.add(tray); ktPeople.push(tray);
+      const tray = npcMeal(k); tray.position.set(KANTIN.x + x + dx, 0.81, KANTIN.z + z + side * 0.45); tray.rotation.y = side < 0 ? 0 : Math.PI; scene.add(tray); ktPeople.push(tray);
     });
   })));
 }
