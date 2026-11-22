@@ -56,6 +56,7 @@ function upacaraScene() {
   paused = true;
   fade('Upacara Bendera Hari Senin', 900, () => {
     zone = 'upacara'; hud(); minutes = 7 * 60 + 20;
+    walkers.forEach((n) => { n.visible = false; n.path = null; });   // semua warga sekolah ikut upacara: tidak ada yang berkeliaran
     cerePeople.forEach((p) => scene.remove(p)); cerePeople = [];
     const add = (m, x, z, r) => { const g = makePerson(m); g.position.set(x, 0, z); g.rotation.y = r; scene.add(g); cerePeople.push(g); return g; };
     const me = isPutri(state.cls);
@@ -68,13 +69,16 @@ function upacaraScene() {
       add(studentModel(true, r * 7 + c), 12 + c * 3, 21 + r * 2, Math.PI);
     }
     for (let i = 0; i < 6; i++) add(teacherModel(i % 2 ? 'P' : 'L', i), 36, 18 + i * 1.6, -Math.PI / 2);
-    const pembina = add(teacherModel('L', 0), 0, 17.2, 0); pembina.position.y = 0.62; nameTag(pembina, 'Pembina Upacara', 0.5);
+    const pembina = add(teacherModel('L', 0), 0, 17.2, 0); pembina.position.y = 0.62; nameTag(pembina, 'Ustadz Rusli · Pembina Upacara', 0.5);
     const pemimpin = add(studentModel(false, 3), 0, 19.6, Math.PI);
     const pas = [-1.2, 0, 1.2].map((dx) => add({ shirt: 0xffffff, bottom: 0xffffff, tie: false }, -9 + dx, 18.4, Math.PI));
     player.position.set(me ? 21 : -21, 0, 23); player.rotation.y = Math.PI;
     const pt = innerWidth < innerHeight; upCam.set(0, pt ? 72 : 30, pt ? 44 : 46); upLook.set(0, 0, pt ? 22 : 21);
     camera.position.copy(upCam); camera.lookAt(upLook);
     flag.position.y = 1.2;
+    const amanat = (t) => { caption(`Amanat Ustadz Rusli (Pembina): "${t}"`); bubble(pembina, t, 4200); };
+    cerePeople.forEach((p) => p.bag && (p.bag.visible = false));
+    if (player.bag && player.bag.visible) { room.userData.bag.material = player.bag.material; room.userData.bag.visible = true; setBags(false); }   // tas sudah ditaruh di kelas sebelum upacara
     const hormat = (on) => [player, ...cerePeople.filter((p) => p !== pembina)].forEach((p) => { p.armR.rotation.x = on ? -2.5 : 0; p.armR.rotation.z = on ? 0.9 : 0; });
     const steps = [
       [0, () => caption('Upacara Bendera Hari Senin · barisan disiapkan')],
@@ -83,10 +87,13 @@ function upacaraScene() {
       [5500, () => { caption('Pengibaran bendera Merah Putih diiringi lagu Indonesia Raya'); hormat(true); flagRise = 0.001; }],
       [15500, () => { hormat(false); caption('Mengheningkan cipta'); cerePeople.forEach((p) => (p.rotation.x = 0.15)); player.rotation.x = 0.15; }],
       [18500, () => { cerePeople.forEach((p) => (p.rotation.x = 0)); player.rotation.x = 0; caption('Pembacaan teks Pancasila, diikuti seluruh peserta'); bubble(pembina, 'Pancasila… Satu: Ketuhanan Yang Maha Esa…', 2600); }],
-      [21500, () => { caption('Amanat pembina upacara'); bubble(pembina, 'Jadilah pelajar yang jujur, disiplin, dan berakhlak mulia. Jaga sholat dan semangat menuntut ilmu!', 3800); }],
-      [26000, () => { caption('Doa'); bubble(pembina, 'Mari berdoa menurut agama Islam… Aamiin.', 2200); }],
-      [29000, () => { caption('Upacara selesai. Barisan dibubarkan.'); bubble(pemimpin, 'Bubar… jalan!', 1600); }],
-      [31500, () => {
+      [21500, () => amanat('Anak-anakku sekalian, jagalah sholat lima waktu tepat pada waktunya, berjamaah di masjid.')],
+      [26000, () => amanat('Hormati guru dan orang tua. Datanglah tepat waktu, karena disiplin adalah awal keberhasilan.')],
+      [30500, () => amanat("Jaga adab: putra dan putri saling menjaga batas, jujur, dan rajin membaca Al-Qur'an. Barakallahu fiikum.")],
+      [35500, () => { caption('Doa'); bubble(pembina, 'Mari berdoa menurut agama Islam… Aamiin.', 2200); }],
+      [38500, () => { caption('Upacara selesai. Barisan dibubarkan.'); bubble(pemimpin, 'Bubar… jalan!', 1600); }],
+      [41000, () => {
+        walkers.forEach((n) => { n.visible = true; });
         caption(''); cerePeople.forEach((p) => scene.remove(p)); cerePeople = []; upacaraDone = true; flagRise = 0; flag.position.y = 9.3;
         addPts(8); toast('+8 ⭐ Mengikuti upacara dengan tertib');
         zone = 'luar'; paused = false; minutes = 8 * 60; camera.position.copy(CAM_OFF).add(player.position);

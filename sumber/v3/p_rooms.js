@@ -179,43 +179,56 @@ function kepsTamu() {
 }
 // ---------- Gedung Tata Usaha, Bendahara (SPP) & LMS ----------
 const TUR = new THREE.Vector3(720, 0, 120);
-const tur = makeHall(TUR, 20, 12, 0xe6eef3, '#dde6ec', '#cfdbe3');
+// [nama, jabatan, L/P, model, x, z, meja belakang?]
+const TU_STAFF = [
+  ['Ustadz Dede', 'Kepala TU', 'L', 1, -4.6, -5.6, true],
+  ['Ustadzah Ridanty', 'Staf TU', 'P', 2, -7.6, -3.2],
+  ['Ustadz Rifzen', 'Staf TU', 'L', 3, -4.4, -3.2],
+  ['Ustadzah Santi', 'Staf TU', 'P', 4, -8.0, -5.6, true],
+  ['Ustadz Sakti', 'Bendahara Sekolah', 'L', 2, 0, -3.2],
+  ['Ustadzah Sakinah', 'Bendahara LMS', 'P', 1, 6, -3.2],
+];
+const tur = makeHall(TUR, 20, 14, 0xe6eef3, '#dde6ec', '#cfdbe3');
 const TU_SPOTS = {};
 {
   const { add } = tur, tag = (t, x, y, z, sz = 0.46) => { const l = label(t, 0, 0, 0, sz); scene.remove(l); l.position.set(x, y, z); tur.g.add(l); };
   add(0, 0.55, -2.2, 18, 1.1, 0.8, 0xb98652, true);                                   // meja loket panjang
   [-6, 0, 6].forEach((x) => add(x, 1.75, -2.2, 5.4, 1.3, 0.05, 0xbfe3f5));             // kaca loket
   [-3, 3].forEach((x) => add(x, 1.5, -2.2, 0.12, 2.0, 0.9, 0x8a9aa6));                 // sekat antarloket
-  [-6, 0, 6].forEach((x) => { add(x, 1.35, -2.4, 0.6, 0.4, 0.06, 0x333a40); chairAt(tur.g, x, -3.2, 0); });   // monitor & kursi petugas
-  add(-8.4, 1.1, -5.6, 2.4, 2.2, 0.6, 0x8a5a2b, true); add(8.4, 1.1, -5.6, 2.4, 2.2, 0.6, 0x8a5a2b, true);   // lemari arsip
+  TU_STAFF.forEach(([, , , , x, z, desk]) => {                                         // kursi (dan meja belakang) setiap petugas
+    chairAt(tur.g, x, z, 0);
+    if (desk) { add(x, 0.4, z + 1.1, 1.9, 0.8, 0.9, 0x8a5a2b, true); add(x + 0.5, 1.05, z + 1.0, 0.5, 0.35, 0.06, 0x333a40); }
+    else add(x, 1.35, -2.4, 0.55, 0.4, 0.06, 0x333a40);
+  });
+  add(-1.5, 1.1, -6.6, 2.4, 2.2, 0.6, 0x8a5a2b, true); add(8.6, 1.1, -6.6, 2.0, 2.2, 0.6, 0x8a5a2b, true);   // lemari arsip
   for (let i = 0; i < 4; i++) { add(-8 + i * 1.1, 0.25, 4.4, 0.9, 0.5, 0.9, 0x3b5e9e); add(5 + i * 1.1, 0.25, 4.4, 0.9, 0.5, 0.9, 0x8a3b5c); }   // kursi tunggu putra | putri
   for (let i = 0; i < 3; i++) { add(-6, 0.04, -0.6 + i * 1.0, 1.0, 0.03, 0.08, 0xffd84d); add(6, 0.04, -0.6 + i * 1.0, 1.0, 0.03, 0.08, 0xffd84d); }
-  tag('Tata Usaha', -6, 3.0, -2.3); tag('Bendahara · SPP', 0, 3.0, -2.3); tag('Admin LMS', 6, 3.0, -2.3);
+  tag('Tata Usaha', -6, 3.0, -2.3); tag('Bendahara Sekolah · SPP', 0, 3.0, -2.3, 0.4); tag('Bendahara LMS', 6, 3.0, -2.3);
   tag('Tunggu Putra', -6.4, 1.6, 4.4, 0.36); tag('Tunggu Putri', 6.6, 1.6, 4.4, 0.36);
   TU_SPOTS.tu = spot(TUR, -6, -1.0, tur.g); TU_SPOTS.spp = spot(TUR, 0, -1.0, tur.g); TU_SPOTS.lms = spot(TUR, 6, -1.0, tur.g);
 }
 let tuPeople = [];
-const TU_STAFF = [['Petugas TU', 'P', 2, -6], ['Bendahara', 'P', 4, 0], ['Admin LMS', 'L', 1, 6]];
+
 function enterTU() {
   tuPeople.forEach((p) => { scene.remove(p); const i = npcs.indexOf(p); if (i >= 0) npcs.splice(i, 1); }); tuPeople = [];
-  TU_STAFF.forEach(([nm, g, look, x]) => {
+  TU_STAFF.forEach(([nm, jab, g, look, x, z]) => {
     const p = makePerson(teacherModel(g, look));
     Object.assign(p, { fixed: true, kind: 'guru', putri: g === 'P', sapaan: g === 'P' ? 'Ustadzah' : 'Ustadz', name: nm, greetDay: 0 });
-    seatPerson(p, TUR.x + x, TUR.z - 3.2, 0); nameTag(p, nm, 0.42, 2.4); scene.add(p); npcs.push(p); tuPeople.push(p);
+    seatPerson(p, TUR.x + x, TUR.z + z, 0); nameTag(p, `${nm} · ${jab}`, 0.38, 2.4); scene.add(p); npcs.push(p); tuPeople.push(p);
   });
   const dd = doorsOut.find((d) => d.id === 'tu');
-  enterHall('Tata Usaha & Bendahara', TUR, 12, { x: dd.x, z: dd.z + 1.5, rot: 0 }, () => {
+  enterHall('Tata Usaha & Bendahara', TUR, 14, { x: dd.x, z: dd.z + 1.5, rot: 0 }, () => {
     roomSpots = [{ ...TU_SPOTS.tu, id: 'tu-tu' }, { ...TU_SPOTS.spp, id: 'tu-spp' }, { ...TU_SPOTS.lms, id: 'tu-lms' }];
     bubble(player, "Assalamu'alaikum…", 1500);
-    setTimeout(() => bubble(tuPeople[0], `Wa'alaikumussalam. Silakan antre di loket, ${state.nama}.`, 2800), 900);
-    toast('Loket: Tata Usaha · Bendahara (SPP) · Admin LMS');
+    setTimeout(() => bubble(tuPeople[1], `Wa'alaikumussalam. Silakan antre di loket, ${state.nama}.`, 2800), 900);
+    toast('Loket: Tata Usaha · Bendahara Sekolah (SPP) · Bendahara LMS');
   }, 'room');
 }
 const BULAN = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 function tuAction(id) {
   if (id === 'tu-tu') {
-    bubble(tuPeople[0], 'Ada keperluan apa?', 1500);
-    return modal(`<div class="tag">🗂️ Tata Usaha</div><div class="big">Layanan administrasi</div><p class="muted">Pilih keperluanmu (simulasi)</p>`,
+    bubble(tuPeople[1], 'Ada keperluan apa?', 1500);
+    return modal(`<div class="tag">🗂️ Tata Usaha · Kepala TU Ustadz Dede</div><div class="big">Layanan administrasi</div><p class="muted">Pilih keperluanmu (simulasi)</p>`,
       [['📄 Minta surat keterangan siswa', () => { modal(`<div class="tag">🗂️ Tata Usaha</div><p>Surat keterangan siswa atas nama <b>${esc(state.nama)}</b> (kelas ${esc(state.cls)}) akan selesai besok. Jangan lupa mengucapkan terima kasih 😊</p>`, [['Jazakumullah khairan', closeModal, 'main']]); }, 'opt'],
         ['🪪 Kartu pelajar hilang', () => { modal(`<div class="tag">🗂️ Tata Usaha</div><p>Isi formulir kehilangan dan bawa pas foto. Kartu baru dicetak dalam 3 hari.</p>`, [['Baik, terima kasih', closeModal, 'main']]); }, 'opt'],
         ['Tidak jadi', closeModal, 'small']]);
@@ -223,19 +236,19 @@ function tuAction(id) {
   if (id === 'tu-spp') {
     state.spp = state.spp || {};
     const bl = BULAN[new Date().getMonth()], key = new Date().getFullYear() + '-' + bl, lunas = state.spp[key];
-    bubble(tuPeople[1], lunas ? 'SPP bulan ini sudah lunas.' : 'Mau bayar SPP?', 1600);
-    return modal(`<div class="tag">💳 Bendahara · Pembayaran bulanan</div><div class="big">SPP ${bl}</div>
+    bubble(tuPeople[4], lunas ? 'SPP bulan ini sudah lunas.' : 'Mau bayar SPP?', 1600);
+    return modal(`<div class="tag">💳 Bendahara Sekolah · Ustadz Sakti</div><div class="big">SPP ${bl}</div>
       <p>${lunas ? '✅ Sudah <b>LUNAS</b>. Terima kasih.' : 'Status: <b>belum dibayar</b>.<br><span class="muted">Ini simulasi; tidak ada uang sungguhan.</span>'}</p>`,
       lunas ? [['Tutup', closeModal, 'main']] : [['💵 Bayar SPP bulan ini', () => {
         state.spp[key] = true; addPts(3); save(); Audio.sfx('ok');
-        bubble(tuPeople[1], 'Barakallahu fiik. Ini kuitansinya.', 2200);
+        bubble(tuPeople[4], 'Barakallahu fiik. Ini kuitansinya.', 2200);
         modal(`<div class="tag">🧾 Kuitansi</div><div class="big">LUNAS</div><p>Telah diterima pembayaran SPP bulan <b>${bl}</b> dari <b>${esc(state.nama)}</b> (${esc(state.cls)}).</p><p class="muted">Simpan kuitansi dengan baik. +3 ⭐ karena tertib administrasi.</p>`, [['Jazakumullah khairan', closeModal, 'main']]);
       }, 'main'], ['Nanti saja', closeModal, 'small']]);
   }
   if (id === 'tu-lms') {
-    bubble(tuPeople[2], 'Ada kendala dengan akun belajar?', 1600);
-    return modal(`<div class="tag">💻 Admin LMS</div><div class="big">Akun belajar daring</div><p>Tugas dari guru di game ini masuk otomatis. Jika lupa <b>kode kelas</b>, tanyakan kepada wali kelas atau guru mapel.</p>`,
-      [['🎮 Latihan di Lab Komputer', () => { closeModal(); toast('Lab Komputer ada di deretan gedung yang sama'); }, 'opt'], ['Terima kasih', closeModal, 'small']]);
+    bubble(tuPeople[5], 'Ada yang bisa dibantu?', 1600);
+    return modal(`<div class="tag">💰 Bendahara LMS · Ustadzah Sakinah</div><div class="big">Pembayaran LMS</div><p>Pembayaran dan administrasi LMS dilayani di loket ini. Simpan bukti pembayaran dengan baik.</p><p class="muted">Simulasi, tidak ada uang sungguhan.</p>`,
+      [['Jazakillah khairan, Ustadzah', closeModal, 'main']]);
   }
 }
 // ---------- Masjid: masuk & jelajahi bagian dalam ----------
