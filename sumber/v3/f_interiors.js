@@ -1,0 +1,249 @@
+// ---------- ruang kelas 3D (sesuai denah kelas) ----------
+const ROOM = new THREE.Vector3(320, 0, 0);
+const room = new THREE.Group(); room.position.copy(ROOM); scene.add(room);
+const rbox = (x, y, z, w, h, d, c) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat(c)); m.position.set(x, y, z); m.castShadow = true; m.receiveShadow = true; room.add(m); return m; };
+{
+  // lantai keramik
+  const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d');
+  x.fillStyle = '#efe7d8'; x.fillRect(0, 0, 128, 128); x.strokeStyle = '#d8ccb6'; x.lineWidth = 3; x.strokeRect(0, 0, 128, 128);
+  const tx = new THREE.CanvasTexture(c); tx.wrapS = tx.wrapT = THREE.RepeatWrapping; tx.repeat.set(15, 14); tx.colorSpace = THREE.SRGBColorSpace;
+  const fl = new THREE.Mesh(new THREE.PlaneGeometry(15, 14), new THREE.MeshLambertMaterial({ map: tx }));
+  fl.rotation.x = -Math.PI / 2; fl.position.y = 0.01; fl.receiveShadow = true; room.add(fl);
+  const WALL = 0xf6e7c8;
+  rbox(0, 1.6, -7, 15.2, 3.2, 0.3, WALL);                 // dinding belakang
+  rbox(-7.5, 1.6, 0, 0.3, 3.2, 14.3, WALL);               // dinding kiri (jendela)
+  rbox(-1.5, 1.6, 7, 12.3, 3.2, 0.3, WALL);               // dinding depan
+  rbox(7.1, 1.6, 7, 0.8, 3.2, 0.3, WALL);
+  rbox(5.6, 2.95, 7, 2.2, 0.5, 0.3, WALL);
+  for (let i = 0; i < 4; i++) rbox(-7.33, 1.8, -5 + i * 3.3, 0.06, 1.5, 2.2, 0x7cc3ea);   // jendela
+  const pintu = rbox(5.0, 1.35, 6.2, 0.1, 2.7, 1.5, 0x9b6b3c); pintu.rotation.y = 0.5;     // pintu terbuka
+  rbox(-0.5, 1.75, 6.8, 6.4, 1.9, 0.12, 0x9aa1a8); rbox(-0.5, 1.75, 6.73, 6.1, 1.65, 0.05, 0xffffff);   // papan tulis
+  rbox(-0.5, 0.82, 6.68, 6.2, 0.06, 0.18, 0x9aa1a8);
+  rbox(-0.5, 2.95, 6.55, 0.6, 0.25, 0.5, 0x555b63);       // proyektor
+  rbox(-4.9, 0.4, 5.1, 2.2, 0.8, 1.0, 0x9b6b3c); rbox(-4.9, 0.84, 5.1, 2.3, 0.08, 1.1, 0xb98652);   // meja guru
+  rbox(-4.9, 0.95, 5.0, 0.6, 0.06, 0.4, 0x3b4048);         // laptop
+  rbox(-5.6, 1.0, 5.2, 0.35, 0.25, 0.45, 0x7a4fb0);        // tumpukan buku
+  rbox(0, 1.9, -6.8, 7, 1.3, 0.08, 0x3a7a4a);              // mading
+  [0x8fd3f0, 0xffc07a, 0xfff2a0, 0x9fe0a0, 0xd1b3ff].forEach((cc, i) => rbox(-2.8 + i * 1.4, 1.9, -6.74, 0.9, 0.9, 0.04, cc));
+  rbox(6.5, 1.1, -6.3, 1.3, 2.2, 0.7, 0x9b6b3c);           // lemari buku
+  [0.5, 1.1, 1.7].forEach((y) => rbox(6.5, y, -5.93, 1.1, 0.4, 0.05, [0xd9577a, 0x3b7dd8, 0x58ad4e][Math.round(y * 2) % 3]));
+  const bin = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.24, 0.6, 12), mat(0x2f9a4a)); bin.position.set(6.8, 0.3, 5.3); room.add(bin);
+  const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.25, 0.5, 12), mat(0xffffff)); pot.position.set(-6.8, 0.25, -6.4); room.add(pot);
+  const leaf = new THREE.Mesh(new THREE.IcosahedronGeometry(0.55, 0), mat(0x3f9a47)); leaf.position.set(-6.8, 0.95, -6.4); room.add(leaf);
+}
+// 36 meja & kursi (6 × 6), menghadap papan tulis
+const SEATS = [];
+for (let r = 0; r < 6; r++) for (let c = 0; c < 6; c++) {
+  const x = -4.5 + c * 1.8, z = -4.4 + r * 1.55;
+  rbox(x, 0.74, z, 1.0, 0.07, 0.6, 0xd59a5c); rbox(x - 0.42, 0.37, z, 0.06, 0.74, 0.5, 0x6d6f73); rbox(x + 0.42, 0.37, z, 0.06, 0.74, 0.5, 0x6d6f73);
+  rbox(x, 0.45, z - 0.62, 0.5, 0.06, 0.45, 0x6d6f73); rbox(x, 0.78, z - 0.85, 0.5, 0.6, 0.05, 0x6d6f73);
+  SEATS.push({ x, z: z - 0.62, r, c });
+}
+const MY_SEAT = SEATS.find((s) => s.r === 3 && s.c === 5);
+let classmates = [], roomTeacher = null, builtFor = '';
+function sitPose(p, on) {
+  p.position.y = on ? -0.32 : 0;
+  p.legL.rotation.x = p.legR.rotation.x = on ? -1.5 : 0;
+  p.armL.rotation.x = p.armR.rotation.x = on ? -0.8 : 0;
+  p.sitting = on;
+}
+function buildClassmates() {
+  if (builtFor === state.cls) return;
+  classmates.forEach((m) => room.remove(m)); classmates = [];
+  const putri = isPutri(state.cls);
+  SEATS.forEach((s, i) => {
+    if (s === MY_SEAT) return;
+    const m = makePerson({ putri, skin: SKINS[i % 4] });
+    m.position.set(s.x, 0, s.z); sitPose(m, true);
+    m.phase = Math.random() * 6; room.add(m); classmates.push(m);
+  });
+  builtFor = state.cls;
+}
+function setRoomTeacher(full) {
+  if (roomTeacher) room.remove(roomTeacher);
+  const info = teacherInfo(full);
+  roomTeacher = makePerson(teacherModel(info.g, full.length));
+  roomTeacher.position.set(-2.2, 0, 5.4); roomTeacher.rotation.y = Math.PI; room.add(roomTeacher);
+  nameTag(roomTeacher, info.p, 0.5);
+  roomTeacher.info = info;
+}
+const ketua = () => classmates[0];
+const classCam = new THREE.Vector3(), classLook = new THREE.Vector3();
+function setClassCam() {
+  const portrait = innerWidth < innerHeight;
+  classCam.set(portrait ? 21 : 12.5, portrait ? 17 : 10.5, portrait ? 0.8 : 0.6).add(ROOM);
+  classLook.set(-0.6, 0.2, 0.6).add(ROOM);
+}
+function walkTo(pts, done, origin = ROOM) { player.auto = { pts: pts.map(([x, z]) => new THREE.Vector3(x, 0, z).add(origin)), i: 0, done }; }
+function updateAuto(dt) {
+  const a = player.auto; if (!a) return;
+  const p = a.pts[a.i], dx = p.x - player.position.x, dz = p.z - player.position.z, L = Math.hypot(dx, dz);
+  if (L < 0.08) { a.i++; if (a.i >= a.pts.length) { player.auto = null; a.done && a.done(); } return; }
+  const sp = Math.min(L, 3.2 * dt);
+  player.position.x += dx / L * sp; player.position.z += dz / L * sp;
+  player.rotation.y = Math.atan2(dx, dz);
+  player.walkT += dt * 10; const sw = Math.sin(player.walkT) * 0.6;
+  player.legL.rotation.x = sw; player.legR.rotation.x = -sw; player.armL.rotation.x = -sw; player.armR.rotation.x = sw;
+}
+function fade(text, ms, mid) {
+  const f = $('fade'); f.querySelector('span').textContent = text; f.classList.add('show');
+  setTimeout(() => { mid(); setTimeout(() => f.classList.remove('show'), 150); }, ms);
+}
+const later = (ms, fn) => setTimeout(fn, ms);
+// masuk kelas: berjalan ke kursi, salam bersama, lalu memilih pelajaran
+function enterClass(msg) {
+  buildClassmates(); setClassCam();
+  const first = today.find((b) => b.s && !dayDone.has(b.a)) || today.find((b) => b.s);
+  setRoomTeacher(first ? first.g[0] : '');
+  fade('Masuk kelas…', 750, () => {
+    zone = 'kelas'; $('modal').classList.add('low');
+    sitPose(player, false);
+    player.position.set(5.6, 0, 6.3).add(ROOM); player.rotation.y = Math.PI;
+    camera.position.copy(classCam); camera.lookAt(classLook);
+    bubble(roomTeacher, msg, 2800);
+    later(600, () => walkTo([[6.1, 5.4], [6.1, MY_SEAT.z], [MY_SEAT.x, MY_SEAT.z]], () => {
+      player.rotation.y = 0; sitPose(player, true);
+      later(500, () => {
+        Audio.sfx('bell');
+        bubble(ketua(), 'Berdiri… beri salam!', 1800);
+        later(1000, () => { classmates.forEach((m) => sitPose(m, false)); sitPose(player, false); });
+        later(1900, () => { bubble(player, "Assalamu'alaikum warahmatullahi wabarakatuh!", 2200); classmates.slice(1, 4).forEach((m) => bubble(m, "Assalamu'alaikum…", 1800)); });
+        later(3700, () => bubble(roomTeacher, "Wa'alaikumussalam warahmatullahi wabarakatuh. Silakan duduk.", 2400));
+        later(5000, () => { classmates.forEach((m) => sitPose(m, true)); sitPose(player, true); });
+        later(5600, classHub);
+      });
+    }));
+  });
+}
+function backToClass(then) {   // kembali dari arena tugas langsung ke kursi
+  setClassCam();
+  zone = 'kelas'; $('modal').classList.add('low');
+  player.position.set(MY_SEAT.x, 0, MY_SEAT.z).add(ROOM); player.rotation.y = 0; sitPose(player, true);
+  camera.position.copy(classCam); camera.lookAt(classLook);
+  then();
+}
+function exitClass(done) {
+  fade('Keluar kelas…', 700, () => {
+    $('modal').classList.remove('low');
+    sitPose(player, false);
+    const d = classDoors[state.cls];
+    goOutside(d.x, d.z + 1.8, 0);
+    done && done();
+  });
+}
+function updateRoom(t) {
+  if (zone !== 'kelas') return;
+  for (const m of classmates) if (m.sitting && !m.bub) m.rotation.z = Math.sin(t * 1.3 + m.phase) * 0.04;
+}
+
+// =====================================================================
+//  RUANGAN YANG BISA DIJELAJAHI: kantin, ruang Ustadz, ruang Ustadzah
+// =====================================================================
+function makeHall(origin, W, D, wall, floorA, floorB) {
+  const g = new THREE.Group(); g.position.copy(origin); scene.add(g);
+  const add = (x, y, z, w, h, d, c, col = false) => {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat(c)); m.position.set(x, y, z); m.castShadow = true; m.receiveShadow = true; g.add(m);
+    if (col) colliders.push({ x1: origin.x + x - w / 2, z1: origin.z + z - d / 2, x2: origin.x + x + w / 2, z2: origin.z + z + d / 2 });
+    return m;
+  };
+  const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d');
+  x.fillStyle = floorA; x.fillRect(0, 0, 64, 64); x.fillStyle = floorB; x.fillRect(0, 0, 32, 32); x.fillRect(32, 32, 32, 32);
+  const tx = new THREE.CanvasTexture(c); tx.wrapS = tx.wrapT = THREE.RepeatWrapping; tx.repeat.set(W / 2, D / 2); tx.colorSpace = THREE.SRGBColorSpace;
+  const fl = new THREE.Mesh(new THREE.PlaneGeometry(W, D), new THREE.MeshLambertMaterial({ map: tx })); fl.rotation.x = -Math.PI / 2; fl.position.y = 0.01; fl.receiveShadow = true; g.add(fl);
+  add(0, 1.7, -D / 2, W + 0.3, 3.4, 0.3, wall, true);
+  add(-W / 2, 1.7, 0, 0.3, 3.4, D, wall, true); add(W / 2, 1.7, 0, 0.3, 3.4, D, wall, true);
+  add(-W / 4 - 0.9, 0.5, D / 2, W / 2 - 1.8, 1.0, 0.3, wall, true); add(W / 4 + 0.9, 0.5, D / 2, W / 2 - 1.8, 1.0, 0.3, wall, true);   // dinding depan rendah, celah pintu di tengah
+  return { g, add, origin, W, D };
+}
+const KANTIN = new THREE.Vector3(320, 0, 120), RUANG_L = new THREE.Vector3(320, 0, -120), RUANG_P = new THREE.Vector3(420, 0, -120);
+// ---------- kantin (dipakai bergantian: kantin putra / kantin putri) ----------
+const kt = makeHall(KANTIN, 22, 16, 0xf6e1c4, '#f3ead9', '#e7dcc6');
+{
+  const { add } = kt;
+  add(0, 0.55, -6.4, 14, 1.1, 1.4, 0xb98652, true);                          // meja saji
+  [[-5.5, 0xfff4d6], [-3, 0xd4883a], [-0.5, 0x58ad4e], [2, 0xf2a33a], [4.5, 0xffffff]].forEach(([x, c]) => { add(x, 1.25, -6.4, 1.8, 0.3, 1.0, 0xbfc5cc); add(x, 1.42, -6.4, 1.5, 0.08, 0.8, c); });
+  add(0, 2.4, -7.6, 9, 1.3, 0.1, 0x2f8a5c);                                    // poster 4 sehat 5 sempurna
+  for (let i = 0; i < 6; i++) add(-6 + i * 2.4, 0.05, -4.4, 1.6, 0.04, 0.6, 0xffd84d);   // garis antre
+  [-6.5, 0, 6.5].forEach((x) => [-0.5, 4.5].forEach((z) => {
+    add(x, 0.75, z, 4.2, 0.1, 1.3, 0xd59a5c, true); add(x, 0.37, z, 0.3, 0.74, 0.8, 0x6d6f73);
+    add(x, 0.45, z - 1.15, 4.2, 0.08, 0.45, 0x9b6b3c); add(x, 0.45, z + 1.15, 4.2, 0.08, 0.45, 0x9b6b3c);
+  }));
+  const s = label('4 Sehat 5 Sempurna', 0, 0, 0, 0.8); scene.remove(s); s.position.set(0, 3.5, -7.4); kt.g.add(s);
+}
+const KT_SEAT = { x: 6.5 + 1.2, z: 4.5 - 1.15 };      // kursi kosong untuk pemain (menghadap meja)
+const ktMarker = new THREE.Mesh(new THREE.RingGeometry(0.4, 0.6, 24), new THREE.MeshBasicMaterial({ color: 0xffc83d })); ktMarker.rotation.x = -Math.PI / 2; ktMarker.position.set(KT_SEAT.x, 0.06, KT_SEAT.z); kt.g.add(ktMarker);
+let ktPeople = [];
+function populateKantin() {
+  ktPeople.forEach((p) => { scene.remove(p); const i = npcs.indexOf(p); if (i >= 0) npcs.splice(i, 1); }); ktPeople = [];
+  const putri = isPutri(state.cls);
+  const ibu = makePerson({ putri: true, shirt: 0xffffff, bottom: 0x3a3a3a, hijab: 0x2f8a5c });
+  ibu.position.set(KANTIN.x, 0, KANTIN.z - 7.4); ibu.rotation.y = 0; scene.add(ibu);
+  Object.assign(ibu, { fixed: true, kind: 'kantin', putri: true, name: 'Ibu Kantin', greetDay: 0, homeRot: 0 });
+  nameTag(ibu, 'Ibu Kantin'); npcs.push(ibu); ktPeople.push(ibu);
+  let k = 0;
+  [-6.5, 0, 6.5].forEach((x) => [-0.5, 4.5].forEach((z) => [-1.15, 1.15].forEach((side) => {
+    [-1.3, 0, 1.3].forEach((dx) => {
+            if (Math.abs(x + dx - KT_SEAT.x) < 0.8 && Math.abs(z + side - KT_SEAT.z) < 0.5) return;
+      if ((k++ % 3) === 2) return;
+      const m = makePerson(studentModel(putri, k));
+      m.position.set(KANTIN.x + x + dx, 0, KANTIN.z + z + side); m.rotation.y = side < 0 ? 0 : Math.PI; sitPose(m, true); m.seated = true; m.position.y = -0.32;
+      addSpoon(m); m.eater = true; m.phase = Math.random() * 6; m.rate = 0.8 + Math.random() * 0.6;
+      scene.add(m); ktPeople.push(m);
+      const tray = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.05, 0.45), mat(0xbfc5cc)); tray.position.set(KANTIN.x + x + dx, 0.83, KANTIN.z + z + side * 0.45); scene.add(tray); ktPeople.push(tray);
+    });
+  })));
+}
+// ---------- ruang Ustadz / ruang Ustadzah ----------
+function buildRuang(origin, putri) {
+  const h = makeHall(origin, 24, 16, 0xf3e0c8, '#ece4d4', '#e2d8c4');
+  const { add } = h;
+  for (let r = 0; r < 2; r++) for (let c = 0; c < 4; c++) {
+    const x = -8 + c * 5.3, z = -3.5 + r * 5;
+    add(x, 0.4, z, 2.6, 0.8, 1.3, 0x9b6b3c, true); add(x, 0.84, z, 2.7, 0.08, 1.4, 0xb98652);
+    add(x - 0.4, 1.2, z - 0.35, 0.9, 0.6, 0.06, 0x2b2f36); add(x - 0.4, 0.95, z - 0.3, 0.2, 0.15, 0.15, 0x2b2f36);   // komputer
+    add(x + 0.8, 1.0, z, 0.4, 0.25, 0.5, [0xd9577a, 0x3b7dd8, 0x58ad4e, 0xf2a33a][(r + c) % 4]);                         // buku
+    add(x, 0.45, z + 1.05, 0.6, 0.08, 0.55, 0x2b2f36); add(x, 0.8, z + 1.3, 0.6, 0.6, 0.06, 0x2b2f36);                  // kursi
+  }
+  add(0, 2.0, -7.7, 6, 1.6, 0.1, 0xffffff); add(-9.5, 1.1, -7.2, 2.2, 2.2, 0.8, 0x7a8590, true); add(9.5, 1.1, -7.2, 2.2, 2.2, 0.8, 0x7a8590, true);
+  add(10.8, 0.6, 2, 0.6, 1.2, 0.6, 0x58b8e8); add(-10.5, 0.4, 3, 1.2, 0.8, 3, putri ? 0xb04a6e : 0x3b5e9e, true);          // dispenser & sofa
+  const s = label(putri ? 'Ruang Ustadzah' : 'Ruang Ustadz', 0, 0, 0, 0.9); scene.remove(s); s.position.set(0, 3.6, -7.6); h.g.add(s);
+  const s2 = label('Jadwal Piket Guru', 0, 0, 0, 0.5); scene.remove(s2); s2.position.set(0, 2.2, -7.55); h.g.add(s2);
+  h.people = [];
+  return h;
+}
+const ruangL = buildRuang(RUANG_L, false), ruangP = buildRuang(RUANG_P, true);
+function populateRuang() {
+  [ruangL, ruangP].forEach((h, k) => {
+    h.people.forEach((p) => { scene.remove(p); const i = npcs.indexOf(p); if (i >= 0) npcs.splice(i, 1); }); h.people = [];
+    const g = k ? 'P' : 'L';
+    const mine = classTeachers(state.cls).filter((t) => teacherInfo(t).g === g);
+    const others = Object.keys(TEACH).filter((t) => TEACH[t].g === g && !mine.includes(t));
+    mine.concat(others).slice(0, 7).forEach((t, i) => {
+      const r = Math.floor(i / 4), c = i % 4, x = -8 + c * 5.3, z = -3.5 + r * 5 + 1.05;
+      const info = teacherInfo(t), m = makePerson(teacherModel(g, i));
+      m.position.set(h.origin.x + x, 0, h.origin.z + z); m.rotation.y = Math.PI; sitPose(m, true);
+      Object.assign(m, { fixed: true, seated: true, kind: 'guru', putri: g === 'P', sapaan: g === 'P' ? 'Ustadzah' : 'Ustadz', name: info.p, greetDay: 0, homeRot: Math.PI });
+      nameTag(m, info.p, 0.5, 2.4);
+      scene.add(m); h.people.push(m); npcs.push(m);
+    });
+  });
+}
+
+// sendok di tangan kanan
+function addSpoon(p) {
+  if (p.spoon) return p.spoon;
+  const s = new THREE.Group();
+  const h = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.05, 0.38), mat(0xd9dde2)); h.position.z = 0.15; s.add(h);
+  const b = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 6), mat(0xd9dde2)); b.scale.set(1, 0.4, 1.3); b.position.z = 0.36; s.add(b);
+  s.position.set(0, -0.82, 0.05); p.armR.add(s); p.spoon = s; return s;
+}
+// teman-teman di kantin menyuap makanan bergantian
+function updateKantin(t) {
+  if (zone !== 'kantin') return;
+  for (const m of ktPeople) {
+    if (!m.eater || m.anim) continue;
+    const c = Math.max(0, Math.sin(t * m.rate * 2.2 + m.phase));
+    m.armR.rotation.x = -0.8 - 1.45 * c; m.armR.rotation.z = 0.3 * c; m.rotation.x = 0.06 * c;
+    m.armL.rotation.x = -0.8;
+  }
+}

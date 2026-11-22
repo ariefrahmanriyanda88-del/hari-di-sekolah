@@ -1,0 +1,153 @@
+
+// =====================================================================
+//  BANK SOAL CONTOH per mapel (nanti diganti soal dari guru lewat panel guru)
+//  pg: pilihan ganda (o[0] = jawaban benar) · ox: benar/salah
+// =====================================================================
+const ar = (t) => `<span class="ar">${t}</span>`;
+const QBANK = {
+  BA: [
+    { t: 'pg', q: `Apa arti ${ar('كِتَابٌ')}?`, o: ['Buku', 'Pena', 'Meja', 'Pintu'] },
+    { t: 'pg', q: 'Bahasa Arabnya "sekolah" adalah…', o: [ar('مَدْرَسَةٌ'), ar('مَسْجِدٌ'), ar('بَيْتٌ'), ar('سُوقٌ')] },
+    { t: 'ox', q: `${ar('قَلَمٌ')} artinya pena.`, a: true },
+    { t: 'pg', q: `Apa arti ${ar('مُعَلِّمٌ')}?`, o: ['Guru', 'Siswa', 'Kepala sekolah', 'Satpam'] },
+    { t: 'pg', q: 'Bahasa Arabnya "pintu" adalah…', o: [ar('بَابٌ'), ar('نَافِذَةٌ'), ar('سَبُّورَةٌ'), ar('كُرْسِيٌّ')] },
+    { t: 'ox', q: `${ar('بَيْتٌ')} artinya masjid.`, a: false },
+    { t: 'pg', q: `Apa arti ${ar('سَبُّورَةٌ')}?`, o: ['Papan tulis', 'Jendela', 'Lemari', 'Lantai'] },
+    { t: 'pg', q: 'Bahasa Arabnya "perpustakaan" adalah…', o: [ar('مَكْتَبَةٌ'), ar('مَقْصَفٌ'), ar('مَلْعَبٌ'), ar('مَطْبَخٌ')] },
+    { t: 'ox', q: `${ar('طَالِبٌ')} artinya siswa.`, a: true },
+    { t: 'pg', q: `Apa arti ${ar('مَلْعَبٌ')}?`, o: ['Lapangan', 'Kantin', 'Kelas', 'Masjid'] },
+  ],
+  BI: [
+    { t: 'pg', q: 'Gagasan utama sebuah paragraf disebut…', o: ['Ide pokok', 'Kalimat penjelas', 'Simpulan', 'Judul'] },
+    { t: 'pg', q: 'Teks yang bertujuan membujuk pembaca disebut teks…', o: ['Persuasi', 'Narasi', 'Deskripsi', 'Prosedur'] },
+    { t: 'ox', q: 'Kata "praktik" adalah bentuk baku, sedangkan "praktek" tidak baku.', a: true },
+    { t: 'pg', q: 'Penulisan kata baku yang benar adalah…', o: ['Apotek', 'Apotik', 'Apotiek', 'Apothek'] },
+    { t: 'ox', q: 'Huruf kapital tidak dipakai pada awal kalimat.', a: false },
+  ],
+  Eng: [
+    { t: 'pg', q: "The past tense of 'go' is…", o: ['went', 'goed', 'gone', 'going'] },
+    { t: 'pg', q: 'She ___ to school every day.', o: ['goes', 'go', 'going', 'gone'] },
+    { t: 'ox', q: "'Children' is the plural form of 'child'.", a: true },
+    { t: 'pg', q: "The antonym of 'difficult' is…", o: ['easy', 'hard', 'heavy', 'tough'] },
+    { t: 'ox', q: "'They was happy' is grammatically correct.", a: false },
+  ],
+  BIL: [
+    { t: 'pg', q: "Passive form of 'They built this house in 1990' is…", o: ['This house was built in 1990.', 'This house built in 1990.', 'This house is built in 1990.', 'This house was build in 1990.'] },
+    { t: 'ox', q: "'If I were you, I would study harder' is a conditional sentence.", a: true },
+    { t: 'pg', q: "A synonym of 'brave' is…", o: ['courageous', 'afraid', 'lazy', 'weak'] },
+    { t: 'ox', q: "'Informations' is the correct plural of 'information'.", a: false },
+  ],
+  MW: [
+    { t: 'pg', q: 'Hasil dari 2³ × 2² adalah…', o: ['32', '16', '64', '10'] },
+    { t: 'pg', q: 'Jika 3x + 5 = 20, maka x = …', o: ['5', '3', '15', '25'] },
+    { t: 'ox', q: '√49 = 7', a: true },
+    { t: 'pg', q: 'Gradien garis y = 4x − 7 adalah…', o: ['4', '−7', '7', '−4'] },
+    { t: 'ox', q: 'Sudut siku-siku besarnya 180°.', a: false },
+  ],
+  MML: [
+    { t: 'pg', q: 'Turunan dari f(x) = x² adalah…', o: ['2x', 'x', '2', 'x³/3'] },
+    { t: 'pg', q: 'Nilai dari log 1000 (basis 10) adalah…', o: ['3', '2', '10', '100'] },
+    { t: 'ox', q: 'sin 90° = 1', a: true },
+    { t: 'ox', q: 'Dua matriks hanya bisa dikalikan jika ordonya sama persis.', a: false },
+  ],
+  PAI: [
+    { t: 'pg', q: 'Rukun Islam yang kedua adalah…', o: ['Mendirikan sholat', 'Syahadat', 'Zakat', 'Puasa Ramadhan'] },
+    { t: 'pg', q: 'Kitab suci yang diturunkan kepada Nabi Musa a.s. adalah…', o: ['Taurat', 'Zabur', 'Injil', "Al-Qur'an"] },
+    { t: 'ox', q: 'Malaikat yang bertugas menyampaikan wahyu adalah Malaikat Jibril.', a: true },
+    { t: 'pg', q: 'Jumlah rakaat sholat Zuhur adalah…', o: ['4', '2', '3', '5'] },
+    { t: 'ox', q: 'Puasa Ramadhan termasuk rukun iman.', a: false },
+  ],
+  T2Q: [
+    { t: 'ox', q: 'Nun sukun atau tanwin bertemu huruf ba dibaca iqlab.', a: true },
+    { t: 'pg', q: 'Nun sukun/tanwin bertemu huruf ي ن م و dibaca…', o: ['Idgham bighunnah', 'Izhar halqi', 'Iqlab', 'Ikhfa haqiqi'] },
+    { t: 'pg', q: 'Jumlah huruf qalqalah ada…', o: ['5', '3', '6', '7'] },
+    { t: 'ox', q: "Mad thabi'i dibaca panjang dua harakat.", a: true },
+    { t: 'pg', q: 'Jumlah huruf izhar halqi ada…', o: ['6', '5', '4', '15'] },
+  ],
+  FIS: [
+    { t: 'pg', q: 'Satuan gaya dalam SI adalah…', o: ['Newton', 'Joule', 'Watt', 'Pascal'] },
+    { t: 'pg', q: 'Rumus kecepatan rata-rata adalah…', o: ['jarak ÷ waktu', 'waktu ÷ jarak', 'jarak × waktu', 'massa × percepatan'] },
+    { t: 'ox', q: 'Percepatan gravitasi bumi kira-kira 9,8 m/s².', a: true },
+    { t: 'pg', q: 'Alat untuk mengukur kuat arus listrik adalah…', o: ['Amperemeter', 'Voltmeter', 'Termometer', 'Barometer'] },
+    { t: 'ox', q: 'Bunyi dapat merambat di ruang hampa.', a: false },
+  ],
+  KIM: [
+    { t: 'pg', q: 'Rumus kimia air adalah…', o: ['H₂O', 'CO₂', 'NaCl', 'O₂'] },
+    { t: 'pg', q: 'Larutan dengan pH kurang dari 7 bersifat…', o: ['Asam', 'Basa', 'Netral', 'Garam'] },
+    { t: 'ox', q: 'Atom tersusun atas proton, neutron, dan elektron.', a: true },
+    { t: 'pg', q: 'Lambang unsur natrium adalah…', o: ['Na', 'N', 'Nt', 'S'] },
+    { t: 'ox', q: 'Rumus kimia garam dapur adalah KCl.', a: false },
+  ],
+  BIO: [
+    { t: 'pg', q: 'Organel tempat berlangsungnya fotosintesis adalah…', o: ['Kloroplas', 'Mitokondria', 'Ribosom', 'Nukleus'] },
+    { t: 'pg', q: 'Satuan struktural terkecil makhluk hidup adalah…', o: ['Sel', 'Jaringan', 'Organ', 'Atom'] },
+    { t: 'ox', q: 'Mitokondria adalah tempat respirasi sel.', a: true },
+    { t: 'pg', q: 'Organ yang memompa darah ke seluruh tubuh adalah…', o: ['Jantung', 'Paru-paru', 'Hati', 'Ginjal'] },
+    { t: 'ox', q: 'Jamur termasuk tumbuhan yang berklorofil.', a: false },
+  ],
+  SJ: [
+    { t: 'pg', q: 'Proklamasi kemerdekaan Indonesia dibacakan pada tanggal…', o: ['17 Agustus 1945', '20 Mei 1908', '28 Oktober 1928', '1 Juni 1945'] },
+    { t: 'pg', q: 'Sumpah Pemuda diikrarkan pada tahun…', o: ['1928', '1908', '1945', '1965'] },
+    { t: 'ox', q: 'Teks Proklamasi dibacakan oleh Ir. Soekarno.', a: true },
+    { t: 'pg', q: 'Kerajaan Islam yang sering disebut sebagai yang pertama di Indonesia adalah…', o: ['Samudera Pasai', 'Majapahit', 'Sriwijaya', 'Kutai'] },
+    { t: 'ox', q: 'Budi Utomo berdiri pada tahun 1945.', a: false },
+  ],
+  GEO: [
+    { t: 'pg', q: 'Garis khayal yang membagi bumi menjadi belahan utara dan selatan disebut…', o: ['Khatulistiwa', 'Garis bujur', 'Meridian', 'Garis balik'] },
+    { t: 'pg', q: 'Lapisan atmosfer yang paling dekat dengan permukaan bumi adalah…', o: ['Troposfer', 'Stratosfer', 'Mesosfer', 'Termosfer'] },
+    { t: 'ox', q: 'Gunung api terbentuk karena aktivitas magma.', a: true },
+    { t: 'pg', q: 'Ibu kota Provinsi Bengkulu adalah…', o: ['Kota Bengkulu', 'Padang', 'Palembang', 'Jambi'] },
+    { t: 'ox', q: 'Skala 1:100.000 berarti 1 cm di peta sama dengan 100 km di lapangan.', a: false },
+  ],
+  EKO: [
+    { t: 'pg', q: 'Kebutuhan yang harus dipenuhi agar manusia dapat hidup layak disebut kebutuhan…', o: ['Primer', 'Sekunder', 'Tersier', 'Rohani'] },
+    { t: 'pg', q: 'Bank sentral di Indonesia adalah…', o: ['Bank Indonesia', 'Bank Mandiri', 'OJK', 'BRI'] },
+    { t: 'ox', q: 'Inflasi adalah kenaikan harga barang secara umum dan terus-menerus.', a: true },
+    { t: 'pg', q: 'Kegiatan menghasilkan barang atau jasa disebut…', o: ['Produksi', 'Distribusi', 'Konsumsi', 'Investasi'] },
+    { t: 'ox', q: 'Pajak bukan termasuk sumber pendapatan negara.', a: false },
+  ],
+  SOS: [
+    { t: 'pg', q: 'Proses seseorang belajar menjadi anggota masyarakat disebut…', o: ['Sosialisasi', 'Mobilitas', 'Akulturasi', 'Stratifikasi'] },
+    { t: 'ox', q: 'Keluarga merupakan agen sosialisasi yang pertama.', a: true },
+    { t: 'pg', q: 'Perpindahan status sosial seseorang disebut…', o: ['Mobilitas sosial', 'Interaksi sosial', 'Konflik', 'Integrasi'] },
+    { t: 'pg', q: 'Perpaduan dua budaya tanpa menghilangkan unsur aslinya disebut…', o: ['Akulturasi', 'Asimilasi', 'Difusi', 'Inovasi'] },
+    { t: 'ox', q: 'Interaksi sosial bisa terjadi tanpa kontak dan komunikasi.', a: false },
+  ],
+  PP: [
+    { t: 'pg', q: 'Dasar negara Indonesia adalah…', o: ['Pancasila', 'UUD 1945', 'Bhinneka Tunggal Ika', 'Proklamasi'] },
+    { t: 'pg', q: 'Bunyi sila ketiga Pancasila adalah…', o: ['Persatuan Indonesia', 'Ketuhanan Yang Maha Esa', 'Kemanusiaan yang adil dan beradab', 'Keadilan sosial bagi seluruh rakyat Indonesia'] },
+    { t: 'ox', q: 'Lambang negara Indonesia adalah Garuda Pancasila.', a: true },
+    { t: 'pg', q: 'Semboyan negara Indonesia adalah…', o: ['Bhinneka Tunggal Ika', 'Tut Wuri Handayani', 'Gotong Royong', 'Merdeka atau Mati'] },
+    { t: 'ox', q: 'Undang-undang dibuat oleh Mahkamah Agung bersama Presiden.', a: false },
+  ],
+  TIK: [
+    { t: 'pg', q: 'Perangkat untuk mengetik teks ke komputer adalah…', o: ['Keyboard', 'Monitor', 'Printer', 'Speaker'] },
+    { t: 'pg', q: '1 byte sama dengan…', o: ['8 bit', '4 bit', '16 bit', '10 bit'] },
+    { t: 'ox', q: 'CPU sering disebut sebagai otak komputer.', a: true },
+    { t: 'pg', q: 'Langkah-langkah logis untuk menyelesaikan masalah disebut…', o: ['Algoritma', 'Hardware', 'Browser', 'Database'] },
+    { t: 'ox', q: 'RAM menyimpan data secara permanen walau listrik mati.', a: false },
+  ],
+  KKA: [
+    { t: 'pg', q: 'Dalam pemrograman, perulangan disebut juga…', o: ['Looping', 'Debugging', 'Compiling', 'Hosting'] },
+    { t: 'ox', q: 'Hasil kecerdasan artifisial (AI) bisa keliru, jadi tetap perlu diperiksa.', a: true },
+    { t: 'pg', q: 'Bilangan biner hanya terdiri dari angka…', o: ['0 dan 1', '0 sampai 9', '1 dan 2', 'A sampai F'] },
+    { t: 'ox', q: 'Kata sandi yang kuat sebaiknya memakai tanggal lahir sendiri.', a: false },
+  ],
+  PJOK: [
+    { t: 'pg', q: 'Jumlah pemain sepak bola satu tim di lapangan adalah…', o: ['11', '9', '7', '12'] },
+    { t: 'ox', q: 'Pemanasan sebelum olahraga dapat mengurangi risiko cedera.', a: true },
+    { t: 'pg', q: 'Induk organisasi sepak bola Indonesia adalah…', o: ['PSSI', 'PBSI', 'PBVSI', 'PERBASI'] },
+    { t: 'pg', q: 'Start yang digunakan pada lari jarak pendek adalah…', o: ['Start jongkok', 'Start melayang', 'Start berdiri', 'Start duduk'] },
+    { t: 'ox', q: 'Bola basket dimainkan dengan cara ditendang.', a: false },
+  ],
+  SB: [
+    { t: 'pg', q: 'Unsur seni rupa yang terbentuk dari titik-titik yang bersambung disebut…', o: ['Garis', 'Bidang', 'Warna', 'Tekstur'] },
+    { t: 'ox', q: 'Angklung adalah alat musik tradisional dari Jawa Barat.', a: true },
+    { t: 'pg', q: 'Tari Saman berasal dari…', o: ['Aceh', 'Bali', 'Papua', 'Bengkulu'] },
+  ],
+  PRK: [
+    { t: 'pg', q: 'Kerajinan dari botol plastik bekas termasuk kerajinan bahan…', o: ['Limbah anorganik', 'Limbah organik', 'Alam hayati', 'Logam'] },
+    { t: 'ox', q: 'Kulit pisang termasuk limbah organik.', a: true },
+    { t: 'pg', q: 'Tahap pertama dalam membuat produk kerajinan adalah…', o: ['Perencanaan', 'Pengemasan', 'Pemasaran', 'Evaluasi'] },
+  ],
+};

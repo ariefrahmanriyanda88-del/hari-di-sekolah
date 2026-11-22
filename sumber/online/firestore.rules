@@ -1,0 +1,76 @@
+rules_version = '2';
+// Aturan keamanan database "Hari di Sekolah"
+// Salin seluruh isi file ini ke Firebase Console > Firestore Database > Rules, lalu Publish.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function isAdmin() {
+      return signedIn() && request.auth.token.email == 'ADMIN_EMAIL'
+        && request.auth.token.email_verified == true;
+    }
+    function guruPath() { return /databases/$(database)/documents/guru/$(request.auth.uid); }
+    function guru() { return get(guruPath()).data; }
+    function isGuru() { return signedIn() && exists(guruPath()) && guru().status == 'aktif'; }
+    function kelasBoleh(k) { return k.hasOnly(guru().kelas.concat(['semua'])); }
+    function validSoal() {
+      let d = request.resource.data;
+      return d.mapel is string && d.kelas is list && d.kelas.size() > 0 && d.kelas.size() <= 40
+        && d.items is list && d.items.size() <= 100
+        && d.mode in ['auto', 'arena', 'battle', 'balap'];
+    }
+
+    // ---- data guru ----
+    match /guru/{uid} {
+      allow read: if isAdmin() || (signedIn() && request.auth.uid == uid);
+      allow create: if signedIn() && request.auth.uid == uid
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.nama is string && request.resource.data.nama.size() <= 80
+        && request.resource.data.mapel is list && request.resource.data.kelas is list
+        && (request.resource.data.status == 'menunggu' || isAdmin());
+      allow update: if isAdmin()
+        || (signedIn() && request.auth.uid == uid
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['nama']));
+      allow delete: if isAdmin();
+    }
+
+    // ---- paket soal: dibaca game murid, ditulis guru aktif ----
+    match /soal/{id} {
+      allow read: if signedIn();
+      allow create: if validSoal() && request.resource.data.guruUid == request.auth.uid
+        && (isAdmin() || (isGuru() && request.resource.data.mapel in guru().mapel
+                          && kelasBoleh(request.resource.data.kelas)));
+      allow update: if validSoal()
+        && (isAdmin() || (isGuru() && resource.data.guruUid == request.auth.uid
+                          && request.resource.data.guruUid == request.auth.uid
+                          && request.resource.data.mapel in guru().mapel
+                          && kelasBoleh(request.resource.data.kelas)));
+      allow delete: if isAdmin() || (isGuru() && resource.data.guruUid == request.auth.uid);
+    }
+
+    // ---- kode kelas: murid hanya bisa mengecek satu kode ----
+    match /kodekelas/{kode} {
+      allow get: if signedIn();
+      allow list: if isAdmin() || isGuru();
+      allow create, update: if isAdmin() && request.resource.data.kelas is string;
+      allow delete: if isAdmin();
+    }
+
+    // ---- nilai: dikirim game murid, dibaca guru kelasnya ----
+    match /nilai/{id} {
+      allow create: if signedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.kode is string
+        && exists(/databases/$(database)/documents/kodekelas/$(request.resource.data.kode))
+        && get(/databases/$(database)/documents/kodekelas/$(request.resource.data.kode)).data.kelas == request.resource.data.kelas
+        && request.resource.data.nama is string && request.resource.data.nama.size() <= 40
+        && request.resource.data.benar is int && request.resource.data.total is int
+        && request.resource.data.total > 0 && request.resource.data.total <= 100
+        && request.resource.data.benar >= 0 && request.resource.data.benar <= request.resource.data.total
+        && request.resource.data.waktu == request.time;
+      allow read: if isAdmin() || (isGuru() && resource.data.kelas in guru().kelas);
+      allow update: if false;
+      allow delete: if isAdmin();
+    }
+  }
+}
