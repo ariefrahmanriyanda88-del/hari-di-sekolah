@@ -57,13 +57,13 @@ let frameN = 0, perfT0 = 0, perfFrames = 0;
 function tunePerf(now) {
   if (!perfT0) { perfT0 = now; return; }
   perfFrames++;
-  const el = now - perfT0; if (el < 2000) return;
+  const el = now - perfT0; if (el < 1500) return;
   const fps = perfFrames * 1000 / el; perfT0 = now; perfFrames = 0;
   if (document.hidden) return;
   let pr = pixelRatio;
-  if (fps < 40 && pr > 0.7) pr = Math.max(0.7, pr - 0.25);
+  if (fps < 42 && pr > 0.9) pr = Math.max(0.9, pr - 0.2);
   else if (fps > 57 && pr < PR_MAX) pr = Math.min(PR_MAX, pr + 0.125);
-  if (fps < 28 && pr <= 0.7 && sun.castShadow) { sun.castShadow = false; renderer.shadowMap.needsUpdate = true; }
+  if (fps < 34 && pr <= 0.9 && sun.castShadow) { sun.castShadow = false; renderer.shadowMap.needsUpdate = true; }
   if (pr !== pixelRatio) { pixelRatio = pr; renderer.setPixelRatio(pr); renderer.setSize(innerWidth, innerHeight); }
 }
 function loop() {
@@ -125,7 +125,7 @@ function loop() {
     camera.lookAt(player.position.x, player.position.y + (eatingCam ? -0.6 : 1.2), player.position.z);
   }
   for (const l of sceneLabels) { if (l.parent !== scene) continue; const d = camera.position.distanceTo(l.position); l.material.opacity = THREE.MathUtils.clamp((d - 16) / 10, 0, 1); }
-  updateDoors(dt, player);
+  updateDoors(dt, player); updateBubbles();
   frameN++; if (frameN % 2 === 0) renderer.shadowMap.needsUpdate = true;
   tunePerf(clock.getElapsedTime ? performance.now() : 0);
   renderer.render(scene, camera);

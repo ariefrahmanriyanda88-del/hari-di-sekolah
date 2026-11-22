@@ -110,27 +110,27 @@ const Audio = (() => {
   };
 })();
 
-// ---------- balon percakapan ----------
+// ---------- balon percakapan (HTML di atas layar: selalu tajam & terbaca) ----------
+const bubLayer = document.createElement('div'); bubLayer.id = 'bubbles';
+document.getElementById('app').after(bubLayer);
+const activeBubs = new Set();
+function dropBubble(el) { el.remove(); activeBubs.delete(el); if (el.person.bubEl === el) { el.person.bubEl = null; el.person.bub = null; } }
 function bubble(person, text, ms = 2800) {
-  if (person.bub) { person.remove(person.bub); person.bub = null; }
-  const c = document.createElement('canvas'), ctx = c.getContext('2d');
-  const fs = 40, font = `800 ${fs}px Nunito, system-ui, sans-serif`;
-  ctx.font = font;
-  const words = text.split(' '), lines = []; let line = '';
-  words.forEach((w) => { const tst = line ? line + ' ' + w : w; if (ctx.measureText(tst).width > 440 && line) { lines.push(line); line = w; } else line = tst; });
-  lines.push(line);
-  const w = Math.ceil(Math.max(...lines.map((l) => ctx.measureText(l).width)) + 50), h = lines.length * fs * 1.25 + 46;
-  c.width = w; c.height = h + 20;
-  ctx.font = font; ctx.fillStyle = '#fff'; ctx.strokeStyle = '#2b2b2b'; ctx.lineWidth = 5;
-  ctx.beginPath(); ctx.roundRect(3, 3, w - 6, h - 6, 22); ctx.moveTo(w / 2 - 14, h - 4); ctx.lineTo(w / 2, h + 16); ctx.lineTo(w / 2 + 14, h - 4); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = '#fff'; ctx.fillRect(w / 2 - 12, h - 9, 24, 8);
-  ctx.fillStyle = '#222'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  lines.forEach((l, i) => ctx.fillText(l, w / 2, 24 + fs * 0.62 + i * fs * 1.25));
-  const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace;
-  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false, transparent: true }));
-  const H = 0.0062 * c.height; sp.scale.set(H * c.width / c.height, H, 1); sp.position.y = 2.9 + H / 2; sp.renderOrder = 20;
-  person.add(sp); person.bub = sp;
-  clearTimeout(person.bubT); person.bubT = setTimeout(() => { if (person.bub === sp) { person.remove(sp); person.bub = null; } }, ms);
+  if (person.bubEl) dropBubble(person.bubEl);
+  const el = document.createElement('div'); el.className = 'bub'; el.textContent = text; el.person = person;
+  bubLayer.appendChild(el); activeBubs.add(el); person.bubEl = el; person.bub = el;
+  clearTimeout(person.bubT); person.bubT = setTimeout(() => { if (person.bubEl === el) dropBubble(el); }, ms);
+}
+const _bv = new THREE.Vector3();
+function updateBubbles() {
+  for (const el of activeBubs) {
+    const p = el.person; let vis = true, o = p;
+    while (o) { if (!o.visible) { vis = false; break; } if (!o.parent) { vis = o === scene; break; } o = o.parent; }
+    if (vis) { p.getWorldPosition(_bv); _bv.y += p.sitting ? 2.6 : 2.95; _bv.project(camera); vis = _bv.z < 1 && Math.abs(_bv.x) < 1.1 && Math.abs(_bv.y) < 1.1; }
+    if (!vis) { el.style.display = 'none'; continue; }
+    el.style.display = '';
+    el.style.transform = `translate(${((_bv.x * 0.5 + 0.5) * innerWidth).toFixed(1)}px,${((-_bv.y * 0.5 + 0.5) * innerHeight).toFixed(1)}px) translate(-50%,-100%)`;
+  }
 }
 
 // ---------- gerakan: salim, salam di dada, melambai ----------

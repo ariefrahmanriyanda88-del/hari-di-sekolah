@@ -160,8 +160,9 @@ function updateFootball(dt, active) {
 }
 
 const bodies = () => npcs.filter((n) => n.visible).concat(ballers.filter((b) => b.visible));
+let frameBodies = [];
 function bodyBlocked(c, x, z) {
-  const list = bodies(); if (c !== player) list.push(player);
+  const list = c === player ? bodies() : frameBodies;
   for (const o of list) {
     if (o === c) continue;
     const dn = Math.hypot(o.position.x - x, o.position.z - z), d0 = Math.hypot(o.position.x - c.position.x, o.position.z - c.position.z);
@@ -171,6 +172,7 @@ function bodyBlocked(c, x, z) {
 }
 
 function updateNPCs(dt) {
+  frameBodies = bodies(); frameBodies.push(player);
   welcomers.forEach((w) => (w.visible = phase === 'datang' && zone === 'luar'));
   for (const n of npcs) {
     if (!n.visible) continue;
@@ -193,7 +195,7 @@ function updateNPCs(dt) {
       continue;
     }
     let vx = dx / L, vz = dz / L, meet = null;
-    const others = bodies(); others.push(player);
+    const others = frameBodies;
     for (const o of others) {
       if (o === n || o.kind === 'bola') continue;
       if (n.goingIn && o !== player) continue;            // rombongan ke masjid: saling memberi jalan, tidak bergerombol

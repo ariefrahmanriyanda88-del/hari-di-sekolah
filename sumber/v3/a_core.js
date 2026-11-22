@@ -6,9 +6,10 @@ import * as THREE from 'three';
 const P = (x, z) => [x, z]; // koordinat dunia langsung (1 unit ≈ 1 meter)
 
 // ---------- renderer & scene ----------
-const renderer = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true, powerPreference: 'high-performance' });   // mencegah lantai berkedip (z-fighting)
+const MOBILE0 = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent);
+const renderer = new THREE.WebGLRenderer({ antialias: !MOBILE0, logarithmicDepthBuffer: true, powerPreference: 'high-performance' });   // mencegah lantai berkedip (z-fighting)
 const MOBILE = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent) || Math.min(screen.width, screen.height) < 700;
-const PR_MAX = Math.min(window.devicePixelRatio || 1, MOBILE ? 1.5 : 1.75);
+const PR_MAX = Math.min(window.devicePixelRatio || 1, MOBILE ? 1.35 : 1.6);
 let pixelRatio = PR_MAX;
 renderer.setPixelRatio(pixelRatio);
 renderer.setSize(innerWidth, innerHeight);

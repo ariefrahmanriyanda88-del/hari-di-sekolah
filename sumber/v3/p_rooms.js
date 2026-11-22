@@ -177,63 +177,96 @@ function kepsTamu() {
     toast('Dipanggil Kepala Sekolah — masuk lewat pintu ruangannya, lalu ketuk 💬 Sapa');
   });
 }
-// ---------- Gedung Tata Usaha, Bendahara (SPP) & LMS ----------
+// ---------- Gedung Tata Usaha & Bendahara (LKMS) ----------
+//  depan: lobi + ruang tamu TU · kiri: Kantor TU (berpintu) · kanan: Ruang Bendahara (berpintu, ada antrean)
 const TUR = new THREE.Vector3(720, 0, 120);
-// [nama, jabatan, L/P, model, x, z, meja belakang?]
+// [nama, jabatan, L/P, model, x, z]  (duduk menghadap +z, meja di depannya)
 const TU_STAFF = [
-  ['Ustadz Dede', 'Kepala TU', 'L', 1, -4.6, -5.6, true],
-  ['Ustadzah Ridanty', 'Staf TU', 'P', 2, -7.6, -3.2],
-  ['Ustadz Rifzen', 'Staf TU', 'L', 3, -4.4, -3.2],
-  ['Ustadzah Santi', 'Staf TU', 'P', 4, -8.0, -5.6, true],
-  ['Ustadz Sakti', 'Bendahara Sekolah', 'L', 2, 0, -3.2],
-  ['Ustadzah Sakinah', 'Bendahara LMS', 'P', 1, 6, -3.2],
+  ['Ustadz Dede', 'Kepala TU', 'L', 1, -3.6, -5.6],
+  ['Ustadzah Ridanty', 'Staf TU', 'P', 2, -9.2, -2.2],
+  ['Ustadz Rifzen', 'Staf TU', 'L', 3, -3.6, -2.2],
+  ['Ustadzah Santi', 'Staf TU', 'P', 4, -9.2, -5.6],
+  ['Ustadz Sakti', 'Bendahara Sekolah', 'L', 2, 3.6, -5.0],
+  ['Ustadzah Sakinah', 'Bendahara LKMS', 'P', 1, 8.6, -5.0],
 ];
-const tur = makeHall(TUR, 20, 14, 0xe6eef3, '#dde6ec', '#cfdbe3');
+const tur = makeHall(TUR, 24, 16, 0xe6eef3, '#dde6ec', '#cfdbe3');
 const TU_SPOTS = {};
 {
-  const { add } = tur, tag = (t, x, y, z, sz = 0.46) => { const l = label(t, 0, 0, 0, sz); scene.remove(l); l.position.set(x, y, z); tur.g.add(l); };
-  add(0, 0.55, -2.2, 18, 1.1, 0.8, 0xb98652, true);                                   // meja loket panjang
-  [-6, 0, 6].forEach((x) => add(x, 1.75, -2.2, 5.4, 1.3, 0.05, 0xbfe3f5));             // kaca loket
-  [-3, 3].forEach((x) => add(x, 1.5, -2.2, 0.12, 2.0, 0.9, 0x8a9aa6));                 // sekat antarloket
-  TU_STAFF.forEach(([, , , , x, z, desk]) => {                                         // kursi (dan meja belakang) setiap petugas
-    chairAt(tur.g, x, z, 0);
-    if (desk) { add(x, 0.4, z + 1.1, 1.9, 0.8, 0.9, 0x8a5a2b, true); add(x + 0.5, 1.05, z + 1.0, 0.5, 0.35, 0.06, 0x333a40); }
-    else add(x, 1.35, -2.4, 0.55, 0.4, 0.06, 0x333a40);
+  const { add } = tur, H = 3.0, wl = 0xd5e0e8, tag = (t, x, y, z, sz = 0.42) => { const l = label(t, 0, 0, 0, sz); scene.remove(l); l.position.set(x, y, z); tur.g.add(l); };
+  // sekat: kantor TU (x -12..-0.3) | ruang bendahara (x 0.3..12), keduanya z -8..1.5; lobi di depan
+  add(0, H / 2, -3.25, 0.5, H, 9.5, wl, true);
+  const front = (x1, x2, g1, g2) => { add((x1 + g1) / 2, H / 2, 1.5, g1 - x1, H, 0.25, wl, true); add((g2 + x2) / 2, H / 2, 1.5, x2 - g2, H, 0.25, wl, true); add((g1 + g2) / 2, 2.85, 1.5, g2 - g1, 0.3, 0.25, wl); addDoor(tur.g, g1, 1.5, g2 - g1, 2.6, 1); };
+  front(-12, -0.25, -7.2, -5.0); front(0.25, 12, 5.0, 7.2);
+  // --- kantor TU: meja & kursi tiap petugas, sekat rendah ustadz | ustadzah ---
+  TU_STAFF.slice(0, 4).forEach(([, jab, , , x, z]) => { chairAt(tur.g, x, z, 0); add(x, 0.4, z + 1.05, 2.0, 0.8, 0.9, 0x8a5a2b, true); add(x + 0.55, 1.05, z + 0.95, 0.5, 0.35, 0.06, 0x333a40); add(x - 0.4, 0.95, z + 1.45, 0.9, 0.18, 0.06, 0xf5f0e0); tag(jab, x - 0.4, 1.35, z + 1.55, 0.24); });
+  add(-6.4, 0.7, -3.6, 0.12, 1.4, 7.6, 0xb9c7d2, true);                 // sekat rendah
+  add(-11.6, 1.1, -7.2, 0.6, 2.2, 1.6, 0x8a5a2b, true); add(-1.2, 1.1, -7.6, 1.6, 2.2, 0.6, 0x8a5a2b, true);   // lemari arsip
+  tag('Kantor Tata Usaha', -6.1, 3.5, 1.4);
+  // --- ruang bendahara: dua loket, kaca, antrean bertali ---
+  add(6.1, 0.55, -3.6, 11, 1.1, 0.8, 0xb98652, true);                    // meja loket
+  [3.6, 8.6].forEach((x) => add(x, 1.75, -3.6, 4.2, 1.3, 0.05, 0xbfe3f5)); add(6.1, 1.5, -3.6, 0.12, 2.0, 0.9, 0x8a9aa6, true);
+  TU_STAFF.slice(4).forEach(([, , , , x, z]) => { chairAt(tur.g, x, z, 0); add(x, 1.35, -3.85, 0.55, 0.4, 0.06, 0x333a40); });
+  [3.6, 8.6].forEach((x) => {                                            // jalur antrean: tiang + tali
+    [-1.3, 1.3].forEach((dx) => { [-2.6, -0.6, 1.0].forEach((z) => add(x + dx, 0.5, z, 0.12, 1.0, 0.12, 0x9aa1a8, true)); add(x + dx, 0.85, -0.8, 0.05, 0.06, 3.6, 0xc0392b); });
+    for (let i = 0; i < 3; i++) add(x, 0.04, -2.2 + i * 1.1, 1.0, 0.03, 0.08, 0xffd84d);
   });
-  add(-1.5, 1.1, -6.6, 2.4, 2.2, 0.6, 0x8a5a2b, true); add(8.6, 1.1, -6.6, 2.0, 2.2, 0.6, 0x8a5a2b, true);   // lemari arsip
-  for (let i = 0; i < 4; i++) { add(-8 + i * 1.1, 0.25, 4.4, 0.9, 0.5, 0.9, 0x3b5e9e); add(5 + i * 1.1, 0.25, 4.4, 0.9, 0.5, 0.9, 0x8a3b5c); }   // kursi tunggu putra | putri
-  for (let i = 0; i < 3; i++) { add(-6, 0.04, -0.6 + i * 1.0, 1.0, 0.03, 0.08, 0xffd84d); add(6, 0.04, -0.6 + i * 1.0, 1.0, 0.03, 0.08, 0xffd84d); }
-  tag('Tata Usaha', -6, 3.0, -2.3); tag('Bendahara Sekolah · SPP', 0, 3.0, -2.3, 0.4); tag('Bendahara LMS', 6, 3.0, -2.3);
-  tag('Tunggu Putra', -6.4, 1.6, 4.4, 0.36); tag('Tunggu Putri', 6.6, 1.6, 4.4, 0.36);
-  TU_SPOTS.tu = spot(TUR, -6, -1.0, tur.g); TU_SPOTS.spp = spot(TUR, 0, -1.0, tur.g); TU_SPOTS.lms = spot(TUR, 6, -1.0, tur.g);
+  tag('Ruang Bendahara', 6.1, 3.5, 1.4); tag('Bendahara Sekolah · SPP', 3.6, 2.9, -3.7, 0.34); tag('Bendahara LKMS', 8.6, 2.9, -3.7, 0.34);
+  // --- lobi & ruang tamu TU (depan kiri) ---
+  add(-11.3, 0.4, 5.0, 1.1, 0.8, 3.4, 0x3b5e9e, true); add(-8.6, 0.4, 2.6, 3.4, 0.8, 1.1, 0x3b5e9e, true);
+  add(-8.4, 0.25, 5.0, 2.2, 0.5, 1.2, 0x9b6b3c, true); add(-8.4, 0.53, 5.0, 2.3, 0.05, 1.3, 0xc9a26b);
+  add(-11.3, 0.6, 7.3, 0.7, 1.2, 0.7, 0x7a4a2a); add(-11.3, 1.6, 7.3, 1.1, 1.0, 1.1, 0x3f8f44);
+  tag('Ruang Tamu TU', -8.6, 2.4, 7.2, 0.4);
+  for (let i = 0; i < 4; i++) add(5.2 + i * 1.1, 0.25, 6.2, 0.9, 0.5, 0.9, 0x8a3b5c, true);   // kursi tunggu bendahara
+  tag('Kursi tunggu', 6.8, 1.5, 6.2, 0.3);
+  TU_SPOTS.tu = spot(TUR, -3.6, 0.3, tur.g); TU_SPOTS.tamu = spot(TUR, -6.0, 5.0, tur.g);
+  TU_SPOTS.spp = spot(TUR, 3.6, 0.4, tur.g); TU_SPOTS.lkms = spot(TUR, 8.6, 0.4, tur.g);
 }
-let tuPeople = [];
-
+let tuPeople = [], tuQueue = [];
 function enterTU() {
-  tuPeople.forEach((p) => { scene.remove(p); const i = npcs.indexOf(p); if (i >= 0) npcs.splice(i, 1); }); tuPeople = [];
+  tuPeople.concat(tuQueue).forEach((p) => { scene.remove(p); const i = npcs.indexOf(p); if (i >= 0) npcs.splice(i, 1); }); tuPeople = []; tuQueue = [];
   TU_STAFF.forEach(([nm, jab, g, look, x, z]) => {
     const p = makePerson(teacherModel(g, look));
     Object.assign(p, { fixed: true, kind: 'guru', putri: g === 'P', sapaan: g === 'P' ? 'Ustadzah' : 'Ustadz', name: nm, greetDay: 0 });
-    seatPerson(p, TUR.x + x, TUR.z + z, 0); nameTag(p, `${nm} · ${jab}`, 0.38, 2.4); scene.add(p); npcs.push(p); tuPeople.push(p);
+    seatPerson(p, TUR.x + x, TUR.z + z, 0); nameTag(p, nm, 0.38, 2.35);
+    scene.add(p); npcs.push(p); tuPeople.push(p);
+  });
+  // murid yang sedang antre di depan loket (sesuai jenis kelamin pemain)
+  const putri = isPutri(state.cls);
+  [3.6, 8.6].forEach((x, i) => {
+    const q = makePerson(studentModel(putri, i + 2)); q.position.set(TUR.x + x, 0, TUR.z - 2.4); q.rotation.y = Math.PI;
+    if (q.bag) q.bag.visible = false;
+    Object.assign(q, { fixed: true, kind: 'siswa', putri, name: (putri ? NAMES_PI : NAMES_PA)[i + 3], homeRot: Math.PI });
+    scene.add(q); npcs.push(q); tuQueue.push(q);
   });
   const dd = doorsOut.find((d) => d.id === 'tu');
-  enterHall('Tata Usaha & Bendahara', TUR, 14, { x: dd.x, z: dd.z + 1.5, rot: 0 }, () => {
-    roomSpots = [{ ...TU_SPOTS.tu, id: 'tu-tu' }, { ...TU_SPOTS.spp, id: 'tu-spp' }, { ...TU_SPOTS.lms, id: 'tu-lms' }];
+  enterHall('Tata Usaha & Bendahara', TUR, 16, { x: dd.x, z: dd.z + 1.5, rot: 0 }, () => {
+    roomSpots = [{ ...TU_SPOTS.tu, id: 'tu-tu' }, { ...TU_SPOTS.tamu, id: 'tu-tamu' }, { ...TU_SPOTS.spp, id: 'tu-spp' }, { ...TU_SPOTS.lkms, id: 'tu-lkms' }];
     bubble(player, "Assalamu'alaikum…", 1500);
-    setTimeout(() => bubble(tuPeople[1], `Wa'alaikumussalam. Silakan antre di loket, ${state.nama}.`, 2800), 900);
-    toast('Loket: Tata Usaha · Bendahara Sekolah (SPP) · Bendahara LMS');
+    toast('Kiri: Kantor TU · Kanan: Ruang Bendahara (antre di garis kuning)');
   }, 'room');
+}
+// maju ke loket setelah murid di depan selesai
+function tuServe(i, then) {
+  const q = tuQueue[i], x = TUR.x + [3.6, 8.6][i];
+  paused = true;
+  if (q && q.visible) { bubble(q, 'Terima kasih, Ustadz/ah.', 1300); setTimeout(() => { q.visible = false; }, 1300); }
+  setTimeout(() => { player.position.set(x, 0, TUR.z - 2.4); player.rotation.y = Math.PI; paused = false; then(); }, q && q.visible ? 1500 : 200);
 }
 const BULAN = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 function tuAction(id) {
+  if (id === 'tu-tamu') { player.position.set(TUR.x - 6.0, 0, TUR.z + 5.0); player.rotation.y = -Math.PI / 2; bubble(tuPeople[2], 'Silakan tunggu sebentar di ruang tamu.', 2200); return; }
   if (id === 'tu-tu') {
-    bubble(tuPeople[1], 'Ada keperluan apa?', 1500);
+    bubble(tuPeople[2], 'Ada keperluan apa?', 1500);
     return modal(`<div class="tag">🗂️ Tata Usaha · Kepala TU Ustadz Dede</div><div class="big">Layanan administrasi</div><p class="muted">Pilih keperluanmu (simulasi)</p>`,
       [['📄 Minta surat keterangan siswa', () => { modal(`<div class="tag">🗂️ Tata Usaha</div><p>Surat keterangan siswa atas nama <b>${esc(state.nama)}</b> (kelas ${esc(state.cls)}) akan selesai besok. Jangan lupa mengucapkan terima kasih 😊</p>`, [['Jazakumullah khairan', closeModal, 'main']]); }, 'opt'],
         ['🪪 Kartu pelajar hilang', () => { modal(`<div class="tag">🗂️ Tata Usaha</div><p>Isi formulir kehilangan dan bawa pas foto. Kartu baru dicetak dalam 3 hari.</p>`, [['Baik, terima kasih', closeModal, 'main']]); }, 'opt'],
         ['Tidak jadi', closeModal, 'small']]);
   }
-  if (id === 'tu-spp') {
+  if (id === 'tu-spp') return tuServe(0, () => sppDialog());
+  if (id === 'tu-lkms') return tuServe(1, () => lkmsDialog());
+}
+function sppDialog() {
+  {
     state.spp = state.spp || {};
     const bl = BULAN[new Date().getMonth()], key = new Date().getFullYear() + '-' + bl, lunas = state.spp[key];
     bubble(tuPeople[4], lunas ? 'SPP bulan ini sudah lunas.' : 'Mau bayar SPP?', 1600);
@@ -245,11 +278,11 @@ function tuAction(id) {
         modal(`<div class="tag">🧾 Kuitansi</div><div class="big">LUNAS</div><p>Telah diterima pembayaran SPP bulan <b>${bl}</b> dari <b>${esc(state.nama)}</b> (${esc(state.cls)}).</p><p class="muted">Simpan kuitansi dengan baik. +3 ⭐ karena tertib administrasi.</p>`, [['Jazakumullah khairan', closeModal, 'main']]);
       }, 'main'], ['Nanti saja', closeModal, 'small']]);
   }
-  if (id === 'tu-lms') {
-    bubble(tuPeople[5], 'Ada yang bisa dibantu?', 1600);
-    return modal(`<div class="tag">💰 Bendahara LMS · Ustadzah Sakinah</div><div class="big">Pembayaran LMS</div><p>Pembayaran dan administrasi LMS dilayani di loket ini. Simpan bukti pembayaran dengan baik.</p><p class="muted">Simulasi, tidak ada uang sungguhan.</p>`,
-      [['Jazakillah khairan, Ustadzah', closeModal, 'main']]);
-  }
+}
+function lkmsDialog() {
+  bubble(tuPeople[5], 'Ada yang bisa dibantu?', 1600);
+  modal(`<div class="tag">💰 Bendahara LKMS · Ustadzah Sakinah</div><div class="big">Layanan LKMS</div><p>Pembayaran dan tabungan melalui LKMS dilayani di loket ini. Simpan bukti transaksi dengan baik.</p><p class="muted">Simulasi, tidak ada uang sungguhan.</p>`,
+    [['💵 Menabung (simulasi)', () => { addPts(2); save(); Audio.sfx('ok'); bubble(tuPeople[5], 'Barakallahu fiik, semoga berkah.', 2000); modal(`<div class="tag">🧾 Bukti setoran LKMS</div><p>Setoran tabungan atas nama <b>${esc(state.nama)}</b> (${esc(state.cls)}) diterima. +2 ⭐ karena rajin menabung.</p>`, [['Jazakillah khairan, Ustadzah', closeModal, 'main']]); }, 'main'], ['Jazakillah khairan, Ustadzah', closeModal, 'small']]);
 }
 // ---------- Masjid: masuk & jelajahi bagian dalam ----------
 const MW = { spawnPA: [-11, -2], spawnPI: [-11, 8.5] };
