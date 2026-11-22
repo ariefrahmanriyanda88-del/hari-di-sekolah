@@ -13,7 +13,11 @@ plane(-200, 56.5, 200, 60, 0xa9a9a9, 0.035);
 // jalur utama
 plane(-4, 14, 4, 56, 0xe9dcc0, 0.05);                    // jalan masuk dari gerbang
 plane(-98, 8, 98, 14, 0xe9dcc0, 0.06);                   // koridor utama timur–barat
-plane(-52, -40, -46, 8, 0xe9dcc0, 0.05); plane(-52, 14, -46, 34, 0xe9dcc0, 0.05); plane(46, -40, 52, 8, 0xe9dcc0, 0.05); plane(46, 14, 52, 34, 0xe9dcc0, 0.05);  // koridor sayap
+plane(-52, -40, -46, 8, 0xe9dcc0, 0.05);
+// jalan utama ke lapangan: dari belakang gedung kelas putra, lewat gerbang di pagar tanaman
+plane(-56, -62, -26, -58, 0xe9dcc0, 0.055); plane(-52, -62, -46, -40, 0xe9dcc0, 0.055);
+// jalan pintas di tengah (antara perpustakaan & lab) dan di sela gedung
+plane(-2.2, -40, 2.2, -14, 0xe9dcc0, 0.055); plane(-31.5, -40, -28, -20, 0xe9dcc0, 0.055); plane(-20, -40, -17, -20, 0xe9dcc0, 0.055); plane(17, -40, 20.5, -20, 0xe9dcc0, 0.055); plane(-52, 14, -46, 34, 0xe9dcc0, 0.05); plane(46, -40, 52, 8, 0xe9dcc0, 0.05); plane(46, 14, 52, 34, 0xe9dcc0, 0.05);  // koridor sayap
 // taman & tempat santai
 [[-40, -20, -32, -4], [32, -20, 40, -4], [8, 44, 30, 54], [-42, -66, -28, -40], [28, -66, 42, -40]]
   .forEach(([a, b, c, d]) => plane(Math.min(a, c), b, Math.max(a, c), d, 0x78bf5e, 0.04));
@@ -39,7 +43,12 @@ fence(-100, 55.5, -6.5, 56.5); fence(6.5, 55.5, 100, 56.5); fence(-101, -72, -10
 
 // pagar tanaman pembatas area putra / putri (ada celah di koridor utama)
 const hedge = (x, z1, z2) => { const b = building(x - 0.6, z1, x + 0.6, z2, 1.3, 0x3f8f44, 0x4fa654); return b; };
-hedge(-WING, -71, 7); hedge(-WING, 15, 55); hedge(WING, -71, 7); hedge(WING, 15, 55);
+hedge(-WING, -71, -64); hedge(-WING, -56, 7);          // celah = gerbang utama ke lapangan dari area putra
+{ // gapura kecil di celah pagar tanaman
+  [-64.4, -55.6].forEach((z) => box(-WING, 1.6, z, 0.7, 3.2, 0.7, 0xf3efe2));
+  box(-WING, 3.35, -60, 0.6, 0.4, 9.4, 0x2f8a5c);
+  label('⚽ Jalan ke Lapangan', -WING, 4.6, -60, 0.9, true);
+} hedge(-WING, 15, 55); hedge(WING, -71, 7); hedge(WING, 15, 55);
 label('AREA PUTRA', -WING - 4, 4.2, 11, 1.6, true);
 label('AREA PUTRI', WING + 4, 4.2, 11, 1.6, true);
 box(-WING, 3.4, 7.2, 0.5, 6.8, 0.5, 0x2e4b80); box(-WING, 3.4, 14.8, 0.5, 6.8, 0.5, 0x2e4b80); box(-WING, 6.8, 11, 0.6, 0.6, 8.2, 0x2e4b80);
@@ -119,7 +128,7 @@ const masjid = building(-14, -14, 14, 4, 5.5, 0xf3e3c3, 0x3a9a6a);
   label('Ruang Ustadzah', b.cx, 6.4, b.cz, 1.4); doorOut('ruangPI', b.cx, b.az - 2);
 }
 // ---------- perpustakaan, lab, UKS, kepala sekolah ----------
-[[-42.6, -31, 'Kantor Kepala Sekolah', 0xf3e0c8, 0xc98a5a], [-29.6, -23.4, 'TU & Bendahara', 0xe6eef3, 0x4a7a99], [-22, -2, 'Perpustakaan', 0xdde8f3, 0x6b7079], [2, 22, 'Lab Komputer', 0xdde8f3, 0x6b7079], [26, 36, 'UKS', 0xffffff, 0xc0392b]]
+[[-42.5, -32, 'Kantor Kepala Sekolah', 0xf3e0c8, 0xc98a5a], [-27.5, -20.5, 'TU & Bendahara', 0xe6eef3, 0x4a7a99], [-16.5, -3, 'Perpustakaan', 0xdde8f3, 0x6b7079], [3, 16.5, 'Lab Komputer', 0xdde8f3, 0x6b7079], [21, 30, 'UKS', 0xffffff, 0xc0392b]]
   .forEach(([x1, x2, n, w, r]) => { const b = building(x1, -30, x2, -22, 4, w, r); windowBand(b, 'S'); door(b.cx, b.bz + 0.05, 'S', 0x9b6b3c); label(n, b.cx, 6.2, b.cz, n.length > 14 ? 1.0 : 1.3); if (n === 'Lab Komputer') { doorOut('lab', b.cx, b.bz + 2); label('🎮 Arcade', b.cx, 4.2, b.bz + 0.8, 0.8, true); }
     if (n === 'Perpustakaan') { doorOut('perpus', b.cx, b.bz + 2); label('📚 Baca', b.cx, 4.2, b.bz + 0.8, 0.8, true); }
     if (n === 'UKS') { doorOut('uks', b.cx, b.bz + 2); label('🩺 Berobat', b.cx, 4.2, b.bz + 0.8, 0.8, true); }
@@ -162,7 +171,7 @@ for (let x = -92; x < 95; x += 9) { tree(x, -69); if (Math.abs(x) > 10) tree(x, 
 const places = [
   ['Gerbang Utama', 0, 50, 8], ['Pos Satpam', 13, 48, 5], ['Ruang Ustadz', -23, 28, 7], ['Ruang Ustadzah', 23, 28, 7],
   ['Masjid', 0, 6, 9], ['Wudhu Putra', -16, -6, 5], ['Wudhu Putri', 16, -6, 5], ['Lapangan Upacara', 0, 22, 30], ['Taman', -35, -50, 8], ['Taman', 35, -50, 8],
-  ['Lapangan Sepak Bola', 0, -50, 22], ['Perpustakaan', -12, -20, 5], ['Lab Komputer', 12, -20, 5], ['UKS', 31, -20, 5], ['Kantor Kepala Sekolah', -37, -20, 5], ['TU & Bendahara', -26.5, -20, 4],
+  ['Lapangan Sepak Bola', 0, -50, 22], ['Perpustakaan', -9.75, -20, 5], ['Lab Komputer', 9.75, -20, 5], ['UKS', 25.5, -20, 4], ['Kantor Kepala Sekolah', -37.25, -20, 5], ['TU & Bendahara', -24, -20, 3.5], ['Gerbang Lapangan (Putra)', -44, -60, 5], ['Jalan ke Lapangan', 0, -34, 4],
   ['Kantin Putra', -85, 35, 8], ['Kantin Putri', 85, 35, 8], ['Toilet Putra', -64, 37, 6], ['Toilet Putri', 64, 37, 6],
   ['Gedung Kelas X Putra', -75, -32, 18], ['Gedung Kelas XI Putra', -75, -10, 18], ['Gedung Kelas XII Putra', -75, 31, 18],
   ['Gedung Kelas X Putri', 75, -32, 18], ['Gedung Kelas XI Putri', 75, -10, 18], ['Gedung Kelas XII Putri', 75, 31, 18],

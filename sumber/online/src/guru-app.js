@@ -121,15 +121,15 @@ async function route() {
   shell();
 }
 function shell() {
-  const tabs = [['soal', '📝', 'Soal'], ['nilai', '📊', 'Nilai'], ['kode', '🔑', 'Kode kelas']];
+  const tabs = [['soal', '📝', 'Soal'], ['materi', '📚', 'Materi'], ['nilai', '📊', 'Nilai'], ['kode', '🔑', 'Kode kelas']];
   if (isAdmin()) tabs.push(['guru', '👥', 'Guru']);
   app.innerHTML = `
   <header><div><b>${esc(S.guru.panggilan || S.guru.nama)}</b><span>${isAdmin() ? 'Admin sekolah' : 'Guru'}${B.demo ? ' · demo' : ''}</span></div><span class="hb"><a class="btn small" href="./">🎮 Game</a><button class="btn small" id="out">Keluar</button></span></header>
   <nav>${tabs.map(([k, i, t]) => `<button data-t="${k}" class="${S.tab === k ? 'on' : ''}"><i>${i}</i>${t}<em id="badge-${k}"></em></button>`).join('')}</nav>
   <main id="view"></main>`;
   $('#out').onclick = () => { S.guru = null; B.logout(); };
-  $$('nav button').forEach((b) => (b.onclick = () => { S.tab = b.dataset.t; S.edit = null; shell(); }));
-  ({ soal: tabSoal, nilai: tabNilai, kode: tabKode, guru: tabGuru })[S.tab]();
+  $$('nav button').forEach((b) => (b.onclick = () => { S.tab = b.dataset.t; S.edit = null; S.editM = null; shell(); }));
+  ({ soal: tabSoal, materi: tabMateri, nilai: tabNilai, kode: tabKode, guru: tabGuru })[S.tab]();
   if (isAdmin()) B.q('guru', [['status', '==', 'menunggu']]).then((g) => { const el = $('#badge-guru'); g = g.filter((x) => (x.email || '').toLowerCase() !== ADMIN); if (el) el.textContent = g.length || ''; }).catch(() => {});
 }
 const view = () => $('#view');
@@ -139,7 +139,7 @@ async function tabSoal() {
   if (S.edit) return editor();
   view().innerHTML = '<p class="muted pad">Memuat paket soal…</p>';
   try { S.soal = await B.q('soal', isAdmin() ? [] : [['guruUid', '==', S.user.uid]]); } catch (e) { view().innerHTML = `<p class="err pad">${esc(pesanError(e))}</p>`; return; }
-  S.soal.sort((a, b) => (b.diubahMs || 0) - (a.diubahMs || 0));
+  S.soal = S.soal.filter((d) => d.jenis !== 'materi').sort((a, b) => (b.diubahMs || 0) - (a.diubahMs || 0));
   view().innerHTML = `
     <div class="bar"><h2>Paket soal ${isAdmin() ? 'semua guru' : 'saya'}</h2><button class="btn main" id="baru">＋ Paket baru</button></div>
     <p class="muted">Soal yang <b>aktif</b> langsung muncul di game murid pada pelajaran yang sama (dan di Lab Komputer).</p>
@@ -163,7 +163,8 @@ const blank = (t) => (t === 'bs' ? { t: 'bs', q: '', a: true } : { t: 'pg', q: '
 const optsOf = (it) => { if (it.o) return { o: it.o.concat(['', '', '', '']).slice(0, 4), k: it.k || 0 }; return { o: [it.b || ''].concat(it.s || []).concat(['', '', '', '']).slice(0, 4), k: 0 }; };
 const fixPG = (it) => { const o = it.o.map((x) => x.trim()); it.o = o; it.b = o[it.k] || ''; it.s = o.filter((x, i) => i !== it.k && x); return it; };
 async function saveDoc(d, quiet) {
-  const data = { judul: d.judul || '', mapel: d.mapel, kelas: d.kelas, mode: d.mode || 'auto', aktif: d.aktif !== false, items: d.items,
+  const data = { judul: d.judul || '', mapel: d.mapel, kelas: d.kelas, mode: d.mode || 'auto', aktif: d.aktif !== false, items: d.items || [],
+    ...(d.jenis === 'materi' ? { jenis: 'materi', isi: d.isi || '' } : {}),
     guruUid: d.guruUid || S.user.uid, guruNama: d.guruNama || S.guru.panggilan || S.guru.nama, diubah: B.now(), diubahMs: Date.now() };
   if (d.id) await B.set('soal', d.id, data); else d.id = await B.add('soal', data);
 }
@@ -262,6 +263,62 @@ function editor() {
     const bad = d.items.findIndex((x) => !x.q || (x.t === 'pg' && (!x.b || !x.s.some(Boolean))));
     if (bad >= 0) { drawQs(); toast(`Soal ${bad + 1} belum lengkap: isi pertanyaan, minimal 2 pilihan, dan tandai ⭕ jawaban yang benar (pilihannya tidak boleh kosong)`, true); $$('.q')[bad].scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
     busy(ev.target, async () => { await saveDoc(d); toast('Paket soal tersimpan ✓'); S.edit = null; tabSoal(); });
+  };
+}
+
+// =============================== MATERI PERPUSTAKAAN ===============================
+// disimpan di koleksi yang sama dengan soal (jenis: 'materi'), sehingga aturan keamanan tidak perlu diubah
+const halaman = (isi) => String(isi || '').split(/\n\s*---+\s*\n/).map((x) => x.trim()).filter(Boolean);
+async function tabMateri() {
+  if (S.editM) return editorMateri();
+  view().innerHTML = '<p class="muted pad">Memuat materi…</p>';
+  let docs; try { docs = await B.q('soal', isAdmin() ? [] : [['guruUid', '==', S.user.uid]]); } catch (e) { view().innerHTML = `<p class="err pad">${esc(pesanError(e))}</p>`; return; }
+  S.materi = docs.filter((d) => d.jenis === 'materi').sort((a, b) => (b.diubahMs || 0) - (a.diubahMs || 0));
+  view().innerHTML = `
+    <div class="bar"><h2>Materi perpustakaan</h2><button class="btn main" id="baruM">＋ Materi baru</button></div>
+    <p class="muted">Materi yang <b>aktif</b> muncul sebagai buku di rak <b>Perpustakaan</b> game, sesuai mapelnya. Murid yang membaca sampai selesai mendapat ⭐.</p>
+    ${S.materi.length ? S.materi.map((d) => `
+      <div class="card item">
+        <div class="ihead"><b>📖 ${esc(d.judul || 'Tanpa judul')}</b><label class="sw"><input type="checkbox" data-aktifm="${d.id}" ${d.aktif !== false ? 'checked' : ''}><span></span></label></div>
+        <div class="meta"><span class="chip">${esc(SUBJ[d.mapel] || d.mapel)}</span><span class="chip">${halaman(d.isi).length} halaman</span>${isAdmin() ? `<span class="chip">👤 ${esc(d.guruNama || '')}</span>` : ''}</div>
+        <div class="meta small">${(d.kelas || []).map((k) => (k === 'semua' ? 'Semua kelas' : esc(k))).join(', ')}</div>
+        <div class="acts"><button class="btn small" data-edm="${d.id}">✏️ Ubah</button><button class="btn small danger" data-delm="${d.id}">🗑 Hapus</button></div>
+      </div>`).join('') : '<div class="empty">Belum ada materi.<br>Ketuk <b>＋ Materi baru</b> untuk menambah buku di perpustakaan.</div>'}`;
+  $('#baruM').onclick = () => { S.editM = { jenis: 'materi', mapel: myMapel()[0], kelas: ['semua'], aktif: true, judul: '', isi: '', items: [] }; editorMateri(); };
+  $$('[data-edm]').forEach((b) => (b.onclick = () => { S.editM = JSON.parse(JSON.stringify(S.materi.find((d) => d.id === b.dataset.edm))); editorMateri(); }));
+  $$('[data-delm]').forEach((b) => (b.onclick = () => { if (!confirm('Hapus materi ini?')) return; busy(b, async () => { await B.del('soal', b.dataset.delm); toast('Materi dihapus'); tabMateri(); }); }));
+  $$('[data-aktifm]').forEach((i) => (i.onchange = () => busy(null, async () => { const d = S.materi.find((x) => x.id === i.dataset.aktifm); d.aktif = i.checked; await saveDoc(d); toast(i.checked ? 'Diaktifkan ✓' : 'Dinonaktifkan'); })));
+}
+function editorMateri() {
+  const d = S.editM, mp = myMapel(), mk = myKelas();
+  if (!mp.includes(d.mapel)) mp.unshift(d.mapel);
+  view().innerHTML = `
+    <div class="bar"><button class="btn small" id="batalM">← Kembali</button><h2>${d.id ? 'Ubah' : 'Tulis'} materi</h2></div>
+    <div class="card">
+      <label>Judul buku<input id="judulM" maxlength="80" value="${esc(d.judul)}" placeholder="mis. Mufradat Bab 3: Di Rumah"></label>
+      <label>Mata pelajaran (menentukan raknya)<select id="mapelM">${mp.map((k) => `<option value="${k}" ${k === d.mapel ? 'selected' : ''}>${esc(SUBJ[k] || k)}</option>`).join('')}</select></label>
+      <div class="sub">Untuk kelas</div>
+      <label class="chk wide"><input type="checkbox" name="klsM" value="semua" ${d.kelas.includes('semua') ? 'checked' : ''}><span>Semua kelas</span></label>
+      ${kelasGroup('klsM', d.kelas, mk)}
+      <label class="chk wide"><input type="checkbox" id="aktifM" ${d.aktif !== false ? 'checked' : ''}><span>Aktif (tampil di perpustakaan)</span></label>
+    </div>
+    <div class="card">
+      <label>Isi materi<textarea id="isiM" rows="14" placeholder="Tulis materi di sini. Huruf Arab boleh.&#10;&#10;Pisahkan halaman dengan baris berisi --- &#10;---&#10;Halaman berikutnya…">${esc(d.isi)}</textarea></label>
+      <p class="muted small">Tips: setiap baris baru tetap tampil sebagai baris baru. Tulis <b>---</b> di baris sendiri untuk pindah halaman. Awali baris dengan <b>#</b> untuk judul kecil, dan <b>-</b> untuk butir daftar.</p>
+      <div class="muted small" id="infoM"></div>
+    </div>
+    <div class="savebar"><button class="btn main" id="simpanM">💾 Simpan materi</button></div>`;
+  const info = () => ($('#infoM').textContent = `${halaman($('#isiM').value).length} halaman · ${$('#isiM').value.length} karakter`);
+  $('#isiM').oninput = info; info();
+  $('#batalM').onclick = () => { if (confirm('Kembali tanpa menyimpan?')) { S.editM = null; tabMateri(); } };
+  $('#simpanM').onclick = (ev) => {
+    d.judul = $('#judulM').value.trim(); d.mapel = $('#mapelM').value; d.aktif = $('#aktifM').checked; d.isi = $('#isiM').value;
+    d.kelas = vals('klsM'); if (d.kelas.includes('semua')) d.kelas = ['semua'];
+    if (!d.judul) return toast('Isi judul buku', true);
+    if (!d.kelas.length) return toast('Pilih minimal satu kelas', true);
+    if (!d.isi.trim()) return toast('Isi materi masih kosong', true);
+    if (d.isi.length > 60000) return toast('Materi terlalu panjang (maks. 60.000 karakter). Bagi menjadi beberapa buku.', true);
+    busy(ev.target, async () => { await saveDoc(d); toast('Materi tersimpan ✓'); S.editM = null; tabMateri(); });
   };
 }
 

@@ -107,7 +107,7 @@ function selectLesson(b) {
   if (bank) {
     const m = modeFor(b), desc = { arena: `jelajahi ${Math.min(5, bank.length)} pos soal sampai garis FINISH`, battle: 'kalahkan Raksasa Lupa dengan jawaban yang benar', balap: 'menangkan balapan dengan memilih jalur jawaban yang benar' }[m];
     modal(head + `<p>${esc(g)} memberi tugas: <b>${MODES[m]}</b><br><span class="muted">${desc}</span></p>`,
-      [[`${MODES[m].split(' ')[0]} Kerjakan tugas`, () => { closeModal(); paused = true; const fin = () => lessonDone(b); if (m === 'battle') startBattle(b, bank, fin); else if (m === 'balap') startRace(b, bank, fin); else startQuiz(b, bank, fin); }, 'main'], ['Kembali', classHub, 'small']]);
+      [[`${MODES[m].split(' ')[0]} Kerjakan tugas`, () => { closeModal(); paused = true; const fin = () => lessonDone(b); if (m === 'battle') startBattle(b, bank, fin); else if (m === 'balap') startRace(b, bank, fin); else startQuiz(b, bank, fin); }, 'main'], ['⏭ Lewati tugas (tetap tercatat hadir)', () => { closeModal(); toast('✓ Tercatat hadir. Tugasnya bisa dilatih lagi di 🎮 Lab Komputer'); lessonDone(b); }], ['Kembali', classHub, 'small']]);
   }
   else modal(head + `<p class="muted">Belum ada tugas dari guru untuk pelajaran ini.<br>Ikuti penjelasan guru di kelas.</p>`,
     [['🙋 Hadir ✓ (+5)', () => { addPts(5); lessonDone(b); }, 'main'], ['Kembali', classHub, 'small']]);
@@ -358,8 +358,10 @@ function checkTriggers() {
 }
 
 // bel masuk otomatis setelah istirahat bebas
+let breakWarned = false;
 function checkBreakBell() {
   if (!breakEnd || phase !== 'istirahat1' || performance.now() < breakEnd || paused || zone === 'pesawat') return;
+  if (match) { if (!breakWarned) { breakWarned = true; toast('🔔 Istirahat hampir selesai — bel berbunyi setelah pertandinganmu'); } return; }   // tunggu pertandingan selesai
   breakEnd = 0; phase = 'kelas2'; minutes = 10 * 60 + 15; Audio.sfx('bell');
   if (playingSport) leaveSport(); if (playingBall) leaveBall();
   const go = () => setObjective(`🔔 Bel masuk! Kembali ke kelas <b>${state.cls}</b>`, classDoors[state.cls], knockClass);

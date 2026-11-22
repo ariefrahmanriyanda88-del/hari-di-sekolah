@@ -133,10 +133,18 @@ function enterLibrary() {
     toast('📚 Dekati rak (lingkaran kuning) untuk memilih buku');
   }, 'perpus');
 }
+// buku tambahan dari guru (Panel Guru → 📚 Materi)
+function addOnlineBooks(list) {
+  (list || []).forEach((b) => {
+    BOOKS[b.id] = { t: b.t + (b.oleh ? ` · ${b.oleh}` : ''), p: b.p, baru: true };
+    const s = SHELVES.find((x) => x.b.includes(b.mapel)) || SHELVES[{ BIL: 1 }[b.mapel] ?? 0];
+    if (!s.b.includes(b.id)) s.b.unshift(b.id);
+  });
+}
 function openShelf(i) {
   const s = SHELVES[i];
   modal(`<div class="tag">📚 Rak ${esc(s.n)}</div><p class="muted">Pilih buku untuk dibaca</p>`,
-    s.b.map((k) => [`📖 ${BOOKS[k].t}${(state.read || {})[k] === state.day ? ' ✓' : ''}`, () => readBook(k, 0), 'opt left']).concat([['Kembali', closeModal, 'small']]));
+    s.b.filter((k) => BOOKS[k]).map((k) => [`${BOOKS[k].baru ? '🆕' : '📖'} ${BOOKS[k].t}${(state.read || {})[k] === state.day ? ' ✓' : ''}`, () => readBook(k, 0), 'opt left']).concat([['Kembali', closeModal, 'small']]));
 }
 function readBook(k, pg) {
   const b = BOOKS[k], n = b.p.length;
