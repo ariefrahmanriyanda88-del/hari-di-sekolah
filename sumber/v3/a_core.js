@@ -126,6 +126,20 @@ function door(x, z, face, color = 0x8a5a2b) {
 
 // ---------- label melayang ----------
 const sceneLabels = [];
+// nama gedung dicat di atas atap (selalu terbaca dari kamera atas, tidak memudar)
+function roofSign(text, b) {
+  const c = document.createElement('canvas'), ctx = c.getContext('2d'), fs = 64;
+  ctx.font = `900 ${fs}px Nunito, system-ui, sans-serif`;
+  const w = Math.ceil(ctx.measureText(text).width + fs * 0.9), h = Math.ceil(fs * 1.5);
+  c.width = w; c.height = h; ctx.font = `900 ${fs}px Nunito, system-ui, sans-serif`;
+  ctx.fillStyle = 'rgba(255,255,255,0.93)'; ctx.strokeStyle = '#2b2b2b'; ctx.lineWidth = 6;
+  ctx.beginPath(); ctx.roundRect(3, 3, w - 6, h - 6, 18); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#222'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, w / 2, h / 2 + 3);
+  const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;
+  const bw = (b.bx - b.ax) * 0.88, bd = (b.bz - b.az) * 0.7, k = Math.min(bw / w, bd / h, 1.7 / h);   // tinggi huruf seragam
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(w * k, h * k), new THREE.MeshBasicMaterial({ map: tex, transparent: true }));
+  m.rotation.x = -Math.PI / 2; m.position.set(b.cx, b.h + 0.62, b.cz); scene.add(m); return m;
+}
 function label(text, x, y, z, size = 1.6, accent = false) {
   const c = document.createElement('canvas');
   const ctx = c.getContext('2d');
