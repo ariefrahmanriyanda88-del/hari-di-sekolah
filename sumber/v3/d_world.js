@@ -95,6 +95,7 @@ function toiletBlock(sign, color) {
   const b = building(sign < 0 ? -70 : 58, 40, sign < 0 ? -58 : 70, 50, 3.5, 0xeef0f5, 0x6b7079);
   door(b.cx, b.az - 0.05, 'N', color);
   label(sign < 0 ? 'Toilet Putra' : 'Toilet Putri', b.cx, 5.4, b.cz, 1.1);
+  doorOut(sign < 0 ? 'toiletPA' : 'toiletPI', b.cx, b.az - 2);
 }
 toiletBlock(-1, 0x3b7dd8); toiletBlock(1, 0xe06aa0);
 

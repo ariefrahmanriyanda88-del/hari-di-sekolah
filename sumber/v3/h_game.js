@@ -250,28 +250,38 @@ const DOA = {
     'Aku bersaksi tiada Tuhan selain Allah Yang Maha Esa, tiada sekutu bagi-Nya, dan aku bersaksi bahwa Muhammad adalah hamba dan utusan-Nya. Ya Allah, jadikanlah aku termasuk orang-orang yang bertaubat dan orang-orang yang menyucikan diri.'],
 };
 const doaBox = (d, title) => `<div class="doa"><b>${title}</b><span class="ar">${d[0]}</span><i>${d[1]}</i>${d[2] ? `<small>Artinya: ${d[2]}</small>` : ''}</div>`;
+// langkah wudhu (dipakai di ruang wudhu): niat → urutan → doa sesudah
+function wudhuSteps(done) {
+  modal(`<div class="tag">Wudhu ${side()} · sebelum berwudhu</div>${doaBox(DOA.basmalah, 'Membaca basmalah')}${doaBox(DOA.niat, 'Niat wudhu (dalam hati)')}`,
+    [['🤲 Aamiin, mulai berwudhu', () => {
+      const steps = ['Membasuh kedua telapak tangan', 'Berkumur-kumur', 'Membersihkan hidung', 'Membasuh wajah', 'Membasuh tangan sampai siku', 'Mengusap sebagian kepala', 'Membasuh kedua telinga', 'Membasuh kaki sampai mata kaki'];
+      let i = 0;
+      const step = () => {
+        modal(`<div class="tag">Wudhu ${side()} · urutan wudhu</div><ol class="wudhu">${steps.map((s, k) => `<li class="${k < i ? 'ok' : k === i ? 'now' : ''}">${k < i ? '✓ ' : ''}${s}</li>`).join('')}</ol>`,
+          i < steps.length ? [[`💧 ${steps[i]}`, () => { Audio.sfx('greet'); playAnim(player, 'suap', 0.6); i++; step(); }, 'main']]
+            : [['Lanjut: doa sesudah wudhu', () => {
+              modal(`<div class="tag">Wudhu ${side()} · sesudah berwudhu</div>${doaBox(DOA.setelah, 'Doa sesudah wudhu')}`,
+                [['🤲 Aamiin (+5)', () => { addPts(5); toast('+5 ⭐ Wudhu sempurna'); closeModal(); hasWudhu = true; done(); }, 'main']]);
+            }, 'main']]);
+      };
+      step();
+    }, 'main'], ['Nanti saja', closeModal, 'small']]);
+}
+// wudhu untuk sholat/mengaji: masuk ruang wudhu dulu, lalu ke masjid
+let pendingWudhu = null;
 function doWudhu(sholat = 'Zuhur', after = afterZuhur, enter = null) {
-  paused = true;
-  fade('Menuju tempat wudhu…', 700, () => {
-    modal(`<div class="tag">Wudhu ${side()} · sebelum berwudhu</div>${doaBox(DOA.basmalah, 'Membaca basmalah')}${doaBox(DOA.niat, 'Niat wudhu (dalam hati)')}`,
-      [['🤲 Aamiin, mulai berwudhu', () => {
-        const steps = ['Membasuh kedua telapak tangan', 'Berkumur-kumur', 'Membersihkan hidung', 'Membasuh wajah', 'Membasuh tangan sampai siku', 'Mengusap sebagian kepala', 'Membasuh kedua telinga', 'Membasuh kaki sampai mata kaki'];
-        let i = 0;
-        const step = () => {
-          modal(`<div class="tag">Wudhu ${side()} · urutan wudhu</div><ol class="wudhu">${steps.map((s, k) => `<li class="${k < i ? 'ok' : k === i ? 'now' : ''}">${k < i ? '✓ ' : ''}${s}</li>`).join('')}</ol>`,
-            i < steps.length ? [[`💧 ${steps[i]}`, () => { Audio.sfx('greet'); i++; step(); }, 'main']]
-              : [['Lanjut: doa sesudah wudhu', () => {
-                modal(`<div class="tag">Wudhu ${side()} · sesudah berwudhu</div>${doaBox(DOA.setelah, 'Doa sesudah wudhu')}`,
-                  [['🤲 Aamiin (+5)', () => {
-                    addPts(5); toast('+5 ⭐ Wudhu sempurna'); closeModal(); hasWudhu = true;
-                    const md = doorsOut.find((d) => d.id === (isPutri(state.cls) ? 'masjidPI' : 'masjidPA'));
-                    setObjective(`Masuk masjid lewat <b>Pintu ${side()}</b> untuk ${sholat === 'mengaji' ? 'mengaji' : 'sholat ' + sholat}`, md, () => { paused = true; (enter || masjidScene)(after); });
-                  }, 'main']]);
-              }, 'main']]);
-        };
-        step();
-      }, 'main']]);
-  });
+  pendingWudhu = { sholat, after, enter };
+  paused = true; enterWudhuRoom();
+}
+function afterWudhuDone() {
+  const p = pendingWudhu; pendingWudhu = null;
+  setTimeout(() => {
+    paused = true;
+    leaveInterior();
+    if (!p) { toast('Sudah berwudhu ✓ Masjid bisa dimasuki untuk sholat Dhuha atau mengaji'); return; }
+    const md = doorsOut.find((d) => d.id === (isPutri(state.cls) ? 'masjidPI' : 'masjidPA'));
+    setObjective(`Masuk masjid lewat <b>Pintu ${side()}</b> untuk ${p.sholat === 'mengaji' ? 'mengaji' : 'sholat ' + p.sholat}`, md, () => { paused = true; (p.enter || masjidScene)(p.after); });
+  }, 300);
 }
 function afterZuhur() {
   caption('');
@@ -370,7 +380,11 @@ function checkTriggers() {
   if (hit === 'bola') return ['istirahat1', 'santai', 'pulang'].includes(phase) ? (playingBall ? null : joinBall()) : toast('Lapangan: bisa ikut main bola saat jam istirahat / waktu santai');
   if (hit.startsWith('kantin')) return toast('Kantin dibuka saat jam istirahat pertama');
   if (hit.startsWith('masjid')) { if (phase === 'zuhur' || (phase === 'pulang' && objective && /Ashar/.test(objective.text))) return toast('Berwudhu dulu sebelum masuk masjid'); if (hit !== (isPutri(state.cls) ? 'masjidPI' : 'masjidPA')) return toast(`Gunakan Pintu ${side()}`); paused = true; return enterMasjidWalk(); }
-  if (hit.startsWith('wudhu')) return toast('Tempat wudhu');
+  if (hit.startsWith('wudhu') || hit.startsWith('toilet')) {
+    const mine = hit.endsWith(isPutri(state.cls) ? 'PI' : 'PA');
+    if (!mine) return toast(`Ini ${hit.startsWith('wudhu') ? 'tempat wudhu' : 'toilet'} ${hit.endsWith('PI') ? 'putri' : 'putra'}. Gunakan yang ${side().toLowerCase()}`);
+    paused = true; return hit.startsWith('wudhu') ? enterWudhuRoom() : enterToilet();
+  }
   if (hit.startsWith('cls:')) return toast(`Ini kelas ${hit.slice(4)}. Kelasmu ${state.cls}`);
 }
 

@@ -320,6 +320,8 @@ function enterMasjidWalk() {
   });
 }
 function roomAction(id) {
+  if (id === 'wudhu') return wudhuSteps(afterWudhuDone);
+  if (id.startsWith('toilet-')) return toiletAction(id);
   if (id === 'keps-tamu') return kepsTamu();
   if (id.startsWith('tu-')) return tuAction(id);
   if (id === 'uks-petugas') return uksPetugas();
@@ -331,4 +333,72 @@ function roomAction(id) {
       [['Ke tempat wudhu', () => { closeModal(); paused = true; sideJamaah.forEach((p) => ms.remove(p)); sideJamaah = []; fade('Keluar masjid…', 600, () => { goOutside(interior.out.x, interior.out.z, 0); goWudhuFor(id === 'm-dhuha' ? 'Dhuha' : 'mengaji'); }); }, 'main'], ['Nanti', closeModal, 'small']]);
     paused = true; return id === 'm-dhuha' ? dhuhaScene() : mengajiScene();
   }
+}
+
+// ---------- Tempat wudhu & toilet (bisa dimasuki kapan saja) ----------
+const WDR = new THREE.Vector3(820, 0, 120), TLR = new THREE.Vector3(820, 0, -120);
+const wdr = makeHall(WDR, 18, 12, 0xdfeef6, '#d3e6f0', '#c4dbe8');
+const WD_SPOTS = {};
+{
+  const { add } = wdr, tag = (t, x, y, z, sz = 0.45) => { const l = label(t, 0, 0, 0, sz); scene.remove(l); l.position.set(x, y, z); wdr.g.add(l); };
+  add(0, 0.45, -5.2, 16, 0.9, 1.2, 0xbfcbd3, true);                         // bak/talang wudhu
+  add(0, 0.92, -5.2, 16, 0.06, 1.0, 0x9ec7e0);                              // air
+  for (let i = 0; i < 7; i++) {
+    const x = -7.2 + i * 2.4;
+    add(x, 1.75, -5.7, 0.12, 0.5, 0.12, 0xc0c6cc); add(x, 1.95, -5.45, 0.1, 0.1, 0.5, 0xc0c6cc);   // keran
+    add(x, 1.4, -5.25, 0.05, 0.8, 0.05, 0x7fc4ea);                          // pancuran air
+    add(x, 0.25, -3.9, 0.7, 0.5, 0.7, 0x8a9aa6, true);                      // bangku kecil
+  }
+  add(0, 2.9, -5.9, 8, 0.9, 0.05, 0xffffff); tag('Hemat air · Basuh 3 kali · Doa sesudah wudhu', 0, 2.95, -5.8, 0.3);
+  add(-7.5, 0.04, 2, 2.6, 0.03, 4, 0x6b8f71); add(7.5, 0.04, 2, 2.6, 0.03, 4, 0x6b8f71);   // keset
+  tag('Tempat Wudhu', 0, 3.4, 5.6, 0.5);
+  WD_SPOTS.wudhu = spot(WDR, 0, -3.0, wdr.g);
+}
+function enterWudhuRoom() {
+  const id = isPutri(state.cls) ? 'wudhuPI' : 'wudhuPA', dd = doorsOut.find((d) => d.id === id), s = id === 'wudhuPA' ? 1 : -1;
+  enterHall(`Tempat Wudhu ${side()}`, WDR, 12, { x: dd.x + s * 1.2, z: dd.z, rot: s * Math.PI / 2 }, () => {
+    roomSpots = [{ ...WD_SPOTS.wudhu, id: 'wudhu' }];
+    toast(pendingWudhu ? `Berwudhu di keran (lingkaran kuning) sebelum ${pendingWudhu.sholat === 'mengaji' ? 'mengaji' : 'sholat ' + pendingWudhu.sholat}` : 'Tempat wudhu · berwudhu di keran (lingkaran kuning)');
+  }, 'room');
+}
+const tlr = makeHall(TLR, 16, 12, 0xeef0f5, '#e6e9ef', '#d9dee6');
+const TL_SPOTS = {};
+{
+  const { add } = tlr, H = 2.6, tag = (t, x, y, z, sz = 0.42) => { const l = label(t, 0, 0, 0, sz); scene.remove(l); l.position.set(x, y, z); tlr.g.add(l); };
+  // tiga bilik di belakang, berpintu
+  [-5, 0, 5].forEach((x, i) => {
+    add(x - 2.4, H / 2, -3.7, 0.12, H, 4.6, 0x9aa7b4, true); if (i === 2) add(x + 2.4, H / 2, -3.7, 0.12, H, 4.6, 0x9aa7b4, true);
+    add(x - 1.45, H / 2, -1.4, 1.8, H, 0.12, 0x9aa7b4, true); add(x + 1.45, H / 2, -1.4, 1.8, H, 0.12, 0x9aa7b4, true);
+    addDoor(tlr.g, x - 0.55, -1.4, 1.1, 2.2, 1, 0x6f8fb0);
+    add(x, 0.3, -5.0, 0.9, 0.6, 1.2, 0xffffff, true);                       // kloset jongkok/duduk
+    add(x + 1.6, 0.5, -4.8, 0.8, 1.0, 0.8, 0x7fc4ea); add(x + 1.6, 0.1, -3.9, 0.35, 0.2, 0.35, 0x3b7dd8);   // bak air & gayung
+    tag(`Bilik ${i + 1}`, x, 2.9, -1.3, 0.34);
+  });
+  add(-7.6, 0.85, 3, 0.8, 0.1, 3.6, 0xffffff, true); add(-7.6, 0.45, 3, 0.7, 0.8, 3.4, 0xcfd6dd, true);   // wastafel
+  add(-7.95, 1.8, 3, 0.05, 1.0, 3.2, 0xbfe3f5);                             // cermin
+  [2, 3, 4].forEach((z) => add(-7.6, 1.1, z, 0.08, 0.3, 0.08, 0xc0c6cc));
+  tag('Masuk dengan kaki kiri · keluar dengan kaki kanan', 2, 3.3, 5.6, 0.36);
+  TL_SPOTS.bilik = spot(TLR, 0, 0.2, tlr.g); TL_SPOTS.cuci = spot(TLR, -6.4, 3, tlr.g);
+}
+function enterToilet() {
+  const id = isPutri(state.cls) ? 'toiletPI' : 'toiletPA', dd = doorsOut.find((d) => d.id === id);
+  enterHall(`Toilet ${side()}`, TLR, 12, { x: dd.x, z: dd.z - 1.2, rot: Math.PI }, () => {
+    roomSpots = [{ ...TL_SPOTS.bilik, id: 'toilet-bilik' }, { ...TL_SPOTS.cuci, id: 'toilet-cuci' }];
+    toast('Bilik toilet di belakang · wastafel di kiri');
+  }, 'room');
+}
+const DOA_WC = {
+  masuk: ['اَللّٰهُمَّ إِنِّيْ أَعُوْذُ بِكَ مِنَ الْخُبُثِ وَالْخَبَائِثِ', "Allaahumma innii a'uudzu bika minal khubutsi wal khabaa-its", 'Ya Allah, aku berlindung kepada-Mu dari setan laki-laki dan setan perempuan.'],
+  keluar: ['غُفْرَانَكَ', 'Ghufraanaka', 'Aku memohon ampunan-Mu.'],
+};
+function toiletAction(id) {
+  if (id === 'toilet-cuci') { Audio.sfx('greet'); playAnim(player, 'suap', 0.8); return toast('🧼 Mencuci tangan dengan sabun. Bersih itu sebagian dari iman'); }
+  modal(`<div class="tag">🚻 Toilet · adab masuk</div>${doaBox(DOA_WC.masuk, 'Doa masuk toilet (dibaca sebelum masuk)')}<p class="muted">Masuk dengan <b>kaki kiri</b>. Jangan berbicara di dalam toilet.</p>`,
+    [['🦶 Masuk dengan kaki kiri', () => {
+      closeModal(); paused = true;
+      fade('… (di dalam bilik)', 1600, () => {
+        modal(`<div class="tag">🚻 Toilet · adab keluar</div><p>Siram hingga bersih dan bersuci dengan air.</p>${doaBox(DOA_WC.keluar, 'Doa keluar toilet')}<p class="muted">Keluar dengan <b>kaki kanan</b>, lalu cuci tangan.</p>`,
+          [['🦶 Keluar dengan kaki kanan (+2)', () => { closeModal(); addPts(2); toast('+2 ⭐ Adab ke toilet'); hasWudhu = false; }, 'main']]);
+      });
+    }, 'main'], ['Tidak jadi', closeModal, 'small']]);
 }
