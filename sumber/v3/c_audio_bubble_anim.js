@@ -105,6 +105,7 @@ const Audio = (() => {
       if (kind === 'no') { tone(mtof(57), t, 0.3, 'square', 0.06, master); tone(mtof(53), t + 0.12, 0.35, 'square', 0.06, master); }
       if (kind === 'greet') { tone(mtof(72), t, 0.3, 'sine', 0.18, master); tone(mtof(79), t + 0.12, 0.45, 'sine', 0.18, master); }
       if (kind === 'bell') [0, 0.35, 0.7].forEach((d, i) => tone(mtof([84, 79, 84][i]), t + d, 0.9, 'sine', 0.16, master));
+      if (kind === 'tick') tone(mtof(88 + Math.floor(Math.random() * 3)), t, 0.04, 'square', 0.035, master);
       if (kind === 'knock') [0, 0.16].forEach((d) => tone(180, t + d, 0.08, 'square', 0.12, master));
     },
   };
@@ -133,6 +134,74 @@ function updateBubbles() {
     el.style.transform = `translate(${px.toFixed(1)}px,${Math.max(el.offsetHeight + 8, (-_bv.y * 0.5 + 0.5) * innerHeight).toFixed(1)}px) translate(-50%,-100%)`;
   }
 }
+
+// ---------- percakapan ala Harvest Moon: potret berekspresi + teks mengetik + pilihan ----------
+const POR = { cache: new Map() };
+function portrait(person, expr = '') {
+  const model = person.model || {}, key = JSON.stringify(model) + '|' + expr;
+  if (POR.cache.has(key)) return POR.cache.get(key);
+  if (!POR.r) {
+    const cv = document.createElement('canvas'); cv.width = cv.height = 256;
+    POR.r = new THREE.WebGLRenderer({ canvas: cv, antialias: true, alpha: true, preserveDrawingBuffer: true }); POR.r.setSize(256, 256, false);
+    POR.s = new THREE.Scene(); POR.s.add(new THREE.HemisphereLight(0xffffff, 0x9aa89a, 2.4)); const d = new THREE.DirectionalLight(0xffffff, 1.5); d.position.set(1.5, 3, 4); POR.s.add(d);
+    POR.c = new THREE.PerspectiveCamera(24, 1, 0.1, 20);
+  }
+  const face = { ...(model.face || {}), expr };
+  const m = makePerson({ ...model, face, bag: null }); POR.s.add(m);
+  POR.c.position.set(0, 1.95, model.putri ? 3.0 : 2.85); POR.c.lookAt(0, 1.78, 0);
+  POR.r.render(POR.s, POR.c); POR.s.remove(m);
+  const url = POR.r.domElement.toDataURL(); POR.cache.set(key, url); return url;
+}
+const DLG = { el: null, q: [], typing: false, full: '', i: 0, timer: 0, done: null, speed: 1 };
+try { DLG.speed = +(localStorage.getItem('hds-dlg-speed') || 1); } catch (e) { /* abaikan */ }
+const DLG_SPEEDS = [[1, '▶'], [2, '⏩'], [3, '⏭']];
+function dlgEl() {
+  if (DLG.el) return DLG.el;
+  const el = document.createElement('div'); el.id = 'dlg';
+  el.innerHTML = '<div class="dpor"><img alt=""></div><div class="dbox"><div class="dname"></div><div class="dtext"></div><div class="dch"></div><span class="dnext">▼</span><button type="button" class="dspd" aria-label="Kecepatan teks"></button></div>';
+  document.getElementById('app').after(el);
+  el.querySelector('.dbox').addEventListener('pointerdown', (e) => { if (e.target.closest('.dch button') || e.target.closest('.dspd')) return; e.preventDefault(); dlgTap(); });
+  el.querySelector('.dspd').onclick = (e) => { e.stopPropagation(); DLG.speed = DLG.speed % 3 + 1; try { localStorage.setItem('hds-dlg-speed', DLG.speed); } catch (er) { /* abaikan */ } dlgSpd(); };
+  addEventListener('keydown', (e) => { if (DLG.el && DLG.el.classList.contains('show') && (e.key === ' ' || e.key === 'Enter')) { e.preventDefault(); dlgTap(); } });
+  DLG.el = el; dlgSpd(); return el;
+}
+function dlgSpd() { const sp = DLG_SPEEDS.find((x) => x[0] === DLG.speed) || DLG_SPEEDS[0]; DLG.el.querySelector('.dspd').textContent = sp[1] + ' ' + ['Normal', 'Cepat', 'Langsung'][sp[0] - 1]; }
+// say([{ p: orang, t: 'teks', e: 'senang'|'kaget'|'sedih'|'marah', name, ch: [['pilihan', fn], ...] }], selesai)
+function say(lines, done) {
+  const el = dlgEl(); DLG.q = lines.slice(); DLG.done = done || null;
+  DLG.wasPaused = DLG.wasPaused ?? paused; paused = true;
+  el.classList.add('show'); dlgNext();
+}
+function dlgNext() {
+  const el = DLG.el, L = DLG.q.shift();
+  if (!L) { el.classList.remove('show'); const d = DLG.done; DLG.done = null; paused = !!DLG.wasPaused; DLG.wasPaused = undefined; if (d) d(); return; }
+  DLG.cur = L;
+  const p = L.p || player;
+  el.querySelector('.dname').textContent = L.name || (p === player ? state.nama : p.name || '');
+  el.classList.toggle('me', p === player);
+  el.querySelector('.dpor img').src = portrait(p, L.e || '');
+  el.querySelector('.dch').innerHTML = ''; el.querySelector('.dnext').style.visibility = 'hidden';
+  DLG.full = L.t; DLG.i = 0; DLG.typing = true; clearInterval(DLG.timer);
+  const tx = el.querySelector('.dtext'); tx.textContent = '';
+  if (DLG.speed === 3) return dlgFinish();
+  DLG.timer = setInterval(() => {
+    DLG.i += DLG.speed === 2 ? 3 : 1; tx.textContent = DLG.full.slice(0, DLG.i);
+    if (DLG.i % 3 === 0) Audio.sfx('tick');
+    if (DLG.i >= DLG.full.length) dlgFinish();
+  }, 32);
+}
+function dlgFinish() {
+  clearInterval(DLG.timer); DLG.typing = false;
+  const el = DLG.el; el.querySelector('.dtext').textContent = DLG.full;
+  const ch = DLG.cur.ch;
+  if (ch && ch.length) {
+    el.querySelector('.dch').innerHTML = ch.map(([t], i) => `<button type="button" data-i="${i}">${t}</button>`).join('');
+    el.querySelectorAll('.dch button').forEach((b) => (b.onclick = () => { const f = ch[+b.dataset.i][1]; DLG.q = []; DLG.cur.ch = null; dlgClose(); if (f) f(); }));
+  } else el.querySelector('.dnext').style.visibility = 'visible';
+}
+function dlgTap() { if (DLG.typing) return dlgFinish(); if (DLG.cur && DLG.cur.ch && DLG.cur.ch.length) return; dlgNext(); }
+function dlgClose() { clearInterval(DLG.timer); DLG.el.classList.remove('show'); paused = !!DLG.wasPaused; DLG.wasPaused = undefined; DLG.done = null; }
+const dlgOpen = () => DLG.el && DLG.el.classList.contains('show');
 
 // ---------- gerakan: salim, salam di dada, melambai ----------
 function playAnim(p, type, dur) { p.anim = { type, t: 0, dur }; }

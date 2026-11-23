@@ -12,16 +12,22 @@ const darker = (c, k = 0.82) => { const o = new THREE.Color(c); o.multiplyScalar
 function addFace(g, head, cz, r, skin, f = {}, s = 1) {
   const fz = (x, y) => cz + Math.sqrt(Math.max(0, r * r - x * x - y * y)) - 0.012;
   const m = (geo, c, x, y, z, sx = 1, sy = 1, sz = 1, rz = 0) => { const o = new THREE.Mesh(geo, mat(c)); o.position.set(x, head + y, z); o.scale.set(sx * s, sy * s, sz * s); o.rotation.z = rz; g.add(o); return o; };
-  const ex = 0.13 * s, ey = 0.04 * s, eyS = f.eye === 1 ? 0.55 : f.eye === 2 ? 1.2 : 1;
+  const ex = 0.13 * s, ey = 0.04 * s, X = f.expr || '', eyS = (f.eye === 1 ? 0.55 : f.eye === 2 ? 1.2 : 1) * (X === 'kaget' ? 1.35 : 1);
   [-1, 1].forEach((k) => {
-    m(FG.eyeW, 0xffffff, k * ex, ey, fz(ex, ey), 1, eyS, 0.6);
-    m(FG.pupil, 0x2a1d14, k * ex, ey - 0.005, fz(ex, ey) + 0.025, 1, eyS * (f.eye === 1 ? 1.1 : 1), 0.6);
-    m(FG.brow, f.browC ?? 0x2a1d14, k * ex, ey + 0.1 * s, fz(ex, ey + 0.1 * s), 1, f.brow ? 1.6 : 1, 1, k * -0.12);
+    if (X === 'senang') { const o = m(FG.smile, 0x2a1d14, k * ex, ey + 0.01 * s, fz(ex, ey) + 0.01, 0.8, 0.8, 1); o.rotation.z = 0; }   // mata tersenyum ^ ^
+    else {
+      m(FG.eyeW, 0xffffff, k * ex, ey, fz(ex, ey), 1, eyS, 0.6);
+      m(FG.pupil, 0x2a1d14, k * ex, ey - 0.005, fz(ex, ey) + 0.025, X === 'kaget' ? 0.8 : 1, eyS * (f.eye === 1 ? 1.1 : 1) * (X === 'kaget' ? 0.8 : 1), 0.6);
+    }
+    const bt = X === 'sedih' ? k * 0.35 : X === 'marah' ? k * -0.4 : k * -0.12, by = X === 'kaget' ? 0.13 : 0.1;
+    m(FG.brow, f.browC ?? 0x2a1d14, k * ex, ey + by * s, fz(ex, ey + by * s), 1, f.brow ? 1.6 : 1, 1, bt);
   });
   m(FG.nose, darker(skin, 0.9), 0, -0.03 * s, fz(0, -0.03 * s) + 0.015);
   const my = -0.13 * s;
-  if (f.mouth === 1) m(FG.mouth, 0x8a3b3b, 0, my, fz(0, my));
-  else { const o = m(FG.smile, 0x8a3b3b, 0, my + 0.03 * s, fz(0, my), f.mouth === 2 ? 1.3 : 1, 1, 1); o.rotation.z = Math.PI; }
+  if (X === 'kaget') m(FG.ring, 0x8a3b3b, 0, my, fz(0, my), 0.55, 0.7, 1);
+  else if (X === 'sedih') m(FG.smile, 0x8a3b3b, 0, my - 0.02 * s, fz(0, my), 0.9, 0.8, 1);
+  else if (f.mouth === 1 && X !== 'senang') m(FG.mouth, 0x8a3b3b, 0, my, fz(0, my));
+  else { const o = m(FG.smile, 0x8a3b3b, 0, my + 0.03 * s, fz(0, my), f.mouth === 2 || X === 'senang' ? 1.35 : 1, X === 'senang' ? 1.3 : 1, 1); o.rotation.z = Math.PI; }
   if (f.glasses) { [-1, 1].forEach((k) => m(FG.ring, f.glasses, k * ex, ey, fz(ex, ey) + 0.04)); m(FG.bar, f.glasses, 0, ey + 0.01, fz(0, ey) + 0.03); }
 }
 // rambut putra: 0 pendek rapi · 1 cepak · 2 belah samping · 3 ikal pendek
@@ -34,7 +40,7 @@ function addHair(g, style = 0, c = 0x222222) {
   if (style === 0) m(new THREE.BoxGeometry(0.5, 0.08, 0.12), 0, 2.24, 0.3).rotation.x = 0.4;
 }
 function makePerson(o = {}) {
-  const g = new THREE.Group();
+  const g = new THREE.Group(); g.model = o;
   g.rotation.order = 'YXZ';
   const add = (geo, c, x, y, z, parent = g) => { const m = new THREE.Mesh(geo, mat(c)); m.position.set(x, y, z); m.castShadow = true; parent.add(m); return m; };
   const shirt = o.shirt ?? 0xffffff, bottom = o.bottom ?? 0x6d6f73, skin = o.skin ?? 0xf0c8a0;

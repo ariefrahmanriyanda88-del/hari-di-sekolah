@@ -333,22 +333,32 @@ function doGreet(n, act) {
   const mine = { salimPagi: `Assalamu'alaikum, ${n.name}. Selamat pagi.`, dadaPagi: `Assalamu'alaikum, ${n.name}.`, salim: `Assalamu'alaikum, ${n.name}.`, dada: `Assalamu'alaikum, ${n.name}.`,
     tanya: `${n.sapaan}, tugas hari ini apa saja?`, salamPak: "Assalamu'alaikum, Pak!", pagi: 'Selamat pagi, Pak Satpam!', kantin: "Assalamu'alaikum, Bu. Terima kasih!",
     salamTeman: "Assalamu'alaikum!", masjid: 'Nanti Zuhur bareng, yuk!', tugas: 'Sudah kerjakan tugas?' }[act];
-  bubble(player, mine, 2200);
   if (act.startsWith('salim')) { playAnim(player, 'salim', 1.5); playAnim(n, 'beritangan', 1.5); }
   else if (act.startsWith('dada')) { playAnim(player, 'dada', 1.4); setTimeout(() => playAnim(n, 'dada', 1.4), 400); }
   else { playAnim(player, 'lambai', 1.2); setTimeout(() => playAnim(n, 'lambai', 1.2), 500); }
   Audio.sfx('greet');
-  setTimeout(() => bubble(n, pick(reply), 3000), 900);
+  const ex = { salim: 'senang', salimPagi: 'senang', tugas: pick(['senang', 'sedih', '']), masjid: 'senang', salamTeman: 'senang', pagi: 'senang' }[act] || '';
+  say([{ p: player, t: mine, e: act.startsWith('salim') || act.startsWith('dada') ? '' : 'senang' }, { p: n, t: pick(reply), e: ex }],
+    () => { if (n.fixed && n.homeRot !== undefined) n.rotation.y = n.homeRot; });
   if (n.greetDay !== state.day && act !== 'tanya' && act !== 'tugas') {
     n.greetDay = state.day; addPts(2);
     setTimeout(() => toast(n.kind === 'guru' ? '+2 ⭐ Adab menyapa guru' : '+2 ⭐ Adab menyapa'), 900);
   }
 }
 let nearNPC = null;
+// sapaan pembuka (baku) dari NPC saat didekati
+function greetOpen(n) {
+  const nm = state.nama;
+  if (n.kind === 'guru') return n.welcome ? pick([`Selamat pagi, ${nm}! Ayo masuk, sebentar lagi bel.`, `Pagi, ${nm}. Sudah sarapan?`]) : pick([`Eh, ${nm}. Ada yang bisa dibantu?`, `${nm}, sudah siap belajar hari ini?`, `Hm? Ada apa, ${nm}?`]);
+  if (n.kind === 'satpam') return pick([`Pagi, Dik ${nm}! Rapi sekali hari ini.`, 'Hati-hati, jangan lari-lari di dekat gerbang, ya.']);
+  if (n.kind === 'kantin') return `Mau ambil makan, ${nm}?`;
+  return pick([`Hai, ${nm}!`, `${nm}! Dari mana saja?`, `Eh, ${nm}. Sudah dengar tugas hari ini?`]);
+}
 function openGreet() {
   const n = nearNPC; if (!n || paused) return;
-  modal(`<div class="tag">Menyapa</div><div class="big">${esc(n.name)}</div>`,
-    greetOptions(n).map(([t, act]) => [t, () => doGreet(n, act), 'opt left']).concat([['Lewat saja', closeModal, 'small']]));
+  faceTo(n, player); faceTo(player, n); n.talk = 4;
+  say([{ p: n, t: greetOpen(n), e: n.kind === 'guru' ? '' : 'senang',
+    ch: greetOptions(n).map(([t, act]) => [t, () => doGreet(n, act)]).concat([['Tidak jadi', () => { if (n.fixed && n.homeRot !== undefined) n.rotation.y = n.homeRot; }]]) }]);
 }
 
 // ---------- ikut main bola ----------

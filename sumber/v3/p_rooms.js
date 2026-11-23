@@ -164,8 +164,7 @@ function enterKepsek() {
   const dd = doorsOut.find((d) => d.id === 'kepsek');
   enterHall('Kantor Kepala Sekolah', KEPS, 16, { x: dd.x, z: dd.z + 1.5, rot: 0 }, () => {
     roomSpots = [{ ...KEPS_SPOTS.tamu, id: 'keps-tamu' }];
-    bubble(player, "Assalamu'alaikum… permisi.", 1600);
-    setTimeout(() => bubble(r, `Wa'alaikumussalam, ${state.nama}. Silakan duduk dulu di ruang tamu.`, 3000), 900);
+    say([{ p: player, t: "Assalamu'alaikum… permisi." }, { p: r, t: `Wa'alaikumussalam, ${state.nama}. Silakan duduk dulu di ruang tamu, ya.`, e: 'senang' }]);
     toast('Ruang tamu di kiri · ruangan Kepala Sekolah & Waka di belakang');
   }, 'room');
 }
@@ -174,7 +173,8 @@ function kepsTamu() {
   paused = true;
   fade('Duduk di ruang tamu…', 900, () => {
     player.position.set(KEPS.x - 6.6, 0, KEPS.z + 4.2); player.rotation.y = -Math.PI / 2; paused = false;
-    setTimeout(() => bubble(kepsPeople[0], `${state.nama}, silakan masuk ke ruangan saya.`, 2600), 600);
+    setTimeout(() => say([{ p: kepsPeople[0], t: `${state.nama}, silakan masuk ke ruangan saya.`, e: 'senang',
+      ch: [['"Baik, Ustadz. Terima kasih."', () => {}], ['"Afwan Ustadz, saya hanya mampir."', () => say([{ p: kepsPeople[0], t: 'Tidak apa-apa. Belajar yang rajin, ya!', e: 'senang' }])]] }]), 600);
     toast('Dipanggil Kepala Sekolah — masuk lewat pintu ruangannya, lalu ketuk 💬 Sapa');
   });
 }
@@ -243,8 +243,7 @@ function enterTU() {
   const dd = doorsOut.find((d) => d.id === 'tu');
   enterHall('Tata Usaha & Bendahara', TUR, 16, { x: dd.x, z: dd.z + 1.5, rot: 0 }, () => {
     roomSpots = [{ ...TU_SPOTS.tu, id: 'tu-tu' }, { ...TU_SPOTS.tamu, id: 'tu-tamu' }, { ...TU_SPOTS.spp, id: 'tu-spp' }, { ...TU_SPOTS.lkms, id: 'tu-lkms' }];
-    bubble(player, "Assalamu'alaikum…", 1500);
-    toast('Kiri: Kantor TU · Kanan: Ruang Bendahara (antre di garis kuning)');
+    say([{ p: player, t: "Assalamu'alaikum…" }, { p: tuPeople[0], t: `Wa'alaikumussalam. Urusan surat ke kantor TU di kiri, bayar SPP atau LKMS di ruang bendahara sebelah kanan.`, e: '' }]);
   }, 'room');
 }
 // maju ke loket setelah murid di depan selesai
