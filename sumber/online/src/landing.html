@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#1f7a52">
+<title>Hari di Sekolah · Game edukatif 3D SMAIT IQRA' Kota Bengkulu</title>
+<meta name="description" content="Game 3D simulasi satu hari penuh di SMAIT IQRA' Kota Bengkulu: jadwal asli, adab islami, tugas guru jadi permainan. Bisa dimainkan di HP dan laptop.">
+<meta property="og:title" content="Hari di Sekolah · SMAIT IQRA' Kota Bengkulu">
+<meta property="og:description" content="Game 3D simulasi kehidupan siswa: masuk kelas, sholat berjamaah, makan MBG, olahraga, dan mengerjakan tugas guru sebagai permainan.">
+<meta property="og:image" content="img/hero.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@500;700;800&family=Noto+Naskh+Arabic:wght@600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#23272b; --green:#1f7a52; --green-d:#145c3d; --sun:#ffd84d; --sky:#cfeaf7; --paper:#f4f9f5; --wall:#efe3c8;
+  --line:3px solid var(--ink); --pop:0 4px 0 var(--ink);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{margin:0;background:var(--paper);color:var(--ink);font:500 17px/1.6 Nunito,system-ui,sans-serif}
+img{display:block;max-width:100%;height:auto}
+a{color:inherit}
+h1,h2,h3{font-family:"Baloo 2",Nunito,sans-serif;line-height:1.08;margin:0}
+h2{font-size:clamp(30px,4.4vw,46px);font-weight:800}
+h3{font-size:21px;font-weight:800}
+p{margin:0}
+.wrap{max-width:1160px;margin:0 auto;padding:0 20px}
+:focus-visible{outline:3px solid var(--sun);outline-offset:3px;box-shadow:0 0 0 6px var(--ink)}
+
+/* tombol "stiker" seperti tombol di dalam game */
+.btn{display:inline-flex;align-items:center;gap:10px;font:800 18px/1 Nunito,sans-serif;text-decoration:none;color:var(--ink);background:#fff;border:var(--line);border-radius:16px;padding:15px 22px;box-shadow:var(--pop);transition:transform .08s,box-shadow .08s}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.btn.play{background:var(--sun);font-size:20px;padding:17px 26px}
+.btn.green{background:var(--green);color:#fff}
+
+/* ---------- bilah atas ---------- */
+.top{position:sticky;top:0;z-index:20;background:rgba(244,249,245,.92);backdrop-filter:blur(8px);border-bottom:var(--line)}
+.top .wrap{display:flex;align-items:center;gap:16px;height:64px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;font:800 21px "Baloo 2",sans-serif}
+.brand i{width:36px;height:36px;border:var(--line);border-radius:11px;background:var(--green);display:grid;place-items:center;font-style:normal;font-size:19px;box-shadow:0 2px 0 var(--ink)}
+.top nav{margin-left:auto;display:flex;gap:4px}
+.top nav a{text-decoration:none;font-weight:800;font-size:15px;padding:8px 12px;border-radius:10px}
+.top nav a:hover{background:#e3efe7}
+.top .btn{padding:10px 16px;font-size:15px;box-shadow:0 3px 0 var(--ink)}
+@media (max-width:860px){.top nav{display:none}.top .btn{margin-left:auto}}
+
+/* ---------- pembuka ---------- */
+.hero{position:relative;overflow:hidden;background:linear-gradient(var(--sky) 0 62%,#8fd07c 62% 100%);border-bottom:var(--line)}
+.hero .wrap{display:grid;grid-template-columns:1fr 1.15fr;gap:40px;align-items:center;padding-top:56px;padding-bottom:64px}
+.hero h1{font-size:clamp(52px,8vw,96px);font-weight:800;letter-spacing:-.01em;color:#fff;-webkit-text-stroke:3px var(--ink);paint-order:stroke fill;text-shadow:0 6px 0 var(--ink)}
+.hero .school{display:inline-block;margin:0 0 14px;font:800 16px Nunito,sans-serif;background:#fff;border:var(--line);border-radius:999px;padding:6px 14px;box-shadow:0 3px 0 var(--ink)}
+.hero .lead{font-size:20px;font-weight:700;max-width:30ch;margin:18px 0 26px}
+.hero .ctas{display:flex;flex-wrap:wrap;gap:14px}
+.hero .note{margin-top:16px;font-size:14.5px;font-weight:700;opacity:.8}
+.shotframe{position:relative;border:var(--line);border-radius:22px;overflow:hidden;box-shadow:0 8px 0 var(--ink);transform:rotate(1.2deg);background:#fff}
+.shotframe img{width:100%;aspect-ratio:15/8;object-fit:cover}
+.chip{position:absolute;z-index:2;font:800 14px Nunito,sans-serif;background:#fff;border:var(--line);border-radius:12px;padding:6px 11px;box-shadow:0 3px 0 var(--ink);white-space:nowrap}
+.hero .c1{top:-14px;left:7%}.hero .c2{top:-14px;left:44%}.hero .c3{bottom:-16px;right:8%;background:var(--sun)}
+.figwrap{position:relative;padding:14px 4px 18px}
+.ayat{margin-top:26px;display:flex;flex-direction:column;gap:2px;max-width:34ch}
+.ayat .ar{font:600 26px/1.6 "Noto Naskh Arabic",serif;direction:rtl}
+.ayat small{font-size:14px;font-weight:700;opacity:.75}
+@media (max-width:900px){.hero .wrap{grid-template-columns:1fr;gap:34px;padding-top:36px}.hero{background:linear-gradient(var(--sky) 0 70%,#8fd07c 70%)}}
+
+/* ---------- satu hari ---------- */
+section{padding:84px 0}
+.sec-head{display:flex;justify-content:space-between;align-items:end;gap:24px;flex-wrap:wrap;margin-bottom:30px}
+.sec-head p{max-width:52ch;font-size:18px}
+.day{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;counter-reset:none}
+.slot{background:#fff;border:var(--line);border-radius:18px;overflow:hidden;box-shadow:var(--pop);display:flex;flex-direction:column}
+.slot img{aspect-ratio:16/10;object-fit:cover;border-bottom:var(--line)}
+.slot div{padding:14px 16px 18px}
+.slot time{display:inline-block;font:800 15px Nunito,sans-serif;background:var(--sun);border:2px solid var(--ink);border-radius:8px;padding:1px 8px;margin-bottom:8px}
+.slot h3{margin-bottom:6px}
+.slot p{font-size:15.5px}
+.slot.big{grid-column:span 2}
+.slot.big img{aspect-ratio:16/8}
+@media (max-width:980px){.day{grid-template-columns:1fr 1fr}.slot.big{grid-column:span 2}}
+@media (max-width:600px){.day{grid-template-columns:1fr}.slot.big{grid-column:auto}}
+
+/* ---------- denah ---------- */
+.mapsec{background:var(--green);color:#fff;border-top:var(--line);border-bottom:var(--line)}
+.mapsec .sec-head p{color:#e6f4ec}
+.mapgrid{display:grid;grid-template-columns:1.35fr 1fr;gap:30px;align-items:start}
+.map{position:relative;border:var(--line);border-radius:20px;overflow:hidden;box-shadow:0 6px 0 var(--ink);background:#7fc46e}
+.map img{width:100%}
+.pin{position:absolute;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;border:3px solid var(--ink);background:var(--sun);font:800 14px Nunito,sans-serif;display:grid;place-items:center;cursor:pointer;box-shadow:0 3px 0 var(--ink);color:var(--ink);padding:0}
+.pin[aria-pressed=true]{background:#fff;transform:scale(1.25);z-index:3}
+.place{background:#fff;color:var(--ink);border:var(--line);border-radius:20px;padding:22px;box-shadow:0 6px 0 var(--ink);min-height:220px}
+.place .kind{font-weight:800;font-size:14px;color:var(--green)}
+.place h3{font-size:28px;margin:4px 0 10px}
+.place img{border:2px solid var(--ink);border-radius:12px;margin-top:14px;aspect-ratio:16/9;object-fit:cover;width:100%}
+.legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.legend button{font:800 14px Nunito,sans-serif;border:2px solid var(--ink);background:#fff;border-radius:999px;padding:5px 11px;cursor:pointer;color:var(--ink)}
+.legend button[aria-pressed=true]{background:var(--sun)}
+@media (max-width:900px){.mapgrid{grid-template-columns:1fr}}
+@media (max-width:600px){.pin{width:24px;height:24px;margin:-12px 0 0 -12px;font-size:11px;border-width:2px}.hero .ayat{display:none}}
+
+/* ---------- fitur ---------- */
+.feat{display:grid;grid-template-columns:repeat(12,1fr);gap:20px}
+.tile{border:var(--line);border-radius:20px;background:#fff;box-shadow:var(--pop);overflow:hidden;display:flex;flex-direction:column}
+.tile .t{padding:18px 20px 22px}
+.tile h3{margin-bottom:6px}
+.tile p{font-size:16px}
+.tile img{border-bottom:var(--line);object-fit:cover;width:100%}
+.t-adab{grid-column:span 7}.t-adab img{aspect-ratio:16/8}
+.t-games{grid-column:span 5;background:var(--sun)}
+.t-games ul{margin:12px 0 0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:8px}
+.t-games li{background:#fff;border:2px solid var(--ink);border-radius:10px;padding:4px 10px;font-weight:800;font-size:15px}
+.ox{margin-top:18px;background:#fff;border:var(--line);border-radius:16px;padding:16px;box-shadow:0 4px 0 var(--ink)}
+.ox .oq{font-weight:800;font-size:18px}.ox .oq span{font:600 30px "Noto Naskh Arabic",serif;vertical-align:-4px}
+.ox div{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0 8px}
+.ox div span{border:var(--line);border-radius:14px;padding:16px 8px;text-align:center;font:800 20px Nunito,sans-serif}
+.ox .o{background:#cdeedb}.ox .x{background:#fbd2c8}
+.ox small{font-weight:700;opacity:.75}
+.t-mbg{grid-column:span 4}.t-mbg img{aspect-ratio:4/3}
+.t-sport{grid-column:span 4}.t-sport img{aspect-ratio:4/3}
+.t-avatar{grid-column:span 4;background:var(--sky)}.t-avatar img{aspect-ratio:4/3;object-position:top;background:#fffaf0}
+.t-lib{grid-column:span 6}.t-lib img{aspect-ratio:16/8}
+.t-rooms{grid-column:span 6}.t-rooms img{aspect-ratio:16/8}
+@media (max-width:900px){.feat>*{grid-column:span 12!important}}
+
+/* ---------- guru ---------- */
+.guru{background:var(--wall);border-top:var(--line);border-bottom:var(--line)}
+.gurugrid{display:grid;grid-template-columns:1fr 1fr;gap:36px;align-items:center}
+.checks{list-style:none;margin:22px 0 28px;padding:0;display:grid;gap:12px}
+.checks li{display:grid;grid-template-columns:34px 1fr;gap:12px;align-items:start;font-size:17px}
+.checks b{display:block}
+.checks i{font-style:normal;width:34px;height:34px;border:2px solid var(--ink);border-radius:10px;background:#fff;display:grid;place-items:center;font-size:18px}
+.panelmock{background:#fff;border:var(--line);border-radius:20px;box-shadow:0 6px 0 var(--ink);overflow:hidden}
+.panelmock .bar{background:var(--green);color:#fff;padding:12px 16px;font-weight:800;display:flex;justify-content:space-between}
+.panelmock .tabs{display:flex;border-bottom:2px solid var(--ink)}
+.panelmock .tabs span{flex:1;text-align:center;padding:8px 2px;font-weight:800;font-size:13px}
+.panelmock .tabs span.on{background:var(--sun)}
+.panelmock .body{padding:16px;display:grid;gap:10px}
+.q{border:2px solid var(--ink);border-radius:12px;padding:10px 12px}
+.q .ar{font:600 20px "Noto Naskh Arabic",serif}
+.opt{display:flex;gap:8px;align-items:center;border:1.5px solid #c9d3cd;border-radius:9px;padding:5px 9px;margin-top:6px;font-weight:700;font-size:15px}
+.opt.ok{border-color:var(--green);background:#e8f6ee}
+.opt em{margin-left:auto;font-style:normal;color:var(--green);font-size:13px}
+.score{display:grid;grid-template-columns:1fr auto;font-size:15px;font-weight:700;border-top:1.5px dashed #c9d3cd;padding-top:8px}
+@media (max-width:900px){.gurugrid{grid-template-columns:1fr}}
+
+/* ---------- cara main ---------- */
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:30px}
+.step{background:#fff;border:var(--line);border-radius:18px;padding:20px;box-shadow:var(--pop)}
+.step .n{width:40px;height:40px;border:var(--line);border-radius:12px;background:var(--sun);display:grid;place-items:center;font:800 20px "Baloo 2";margin-bottom:12px}
+.keys{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.keys>div{border:var(--line);border-radius:18px;padding:20px;background:var(--sky)}
+.keys ul{margin:10px 0 0;padding-left:20px}
+kbd{font:800 14px Nunito,sans-serif;background:#fff;border:2px solid var(--ink);border-bottom-width:4px;border-radius:7px;padding:1px 7px}
+@media (max-width:800px){.steps,.keys{grid-template-columns:1fr}}
+
+/* ---------- penutup ---------- */
+.final{text-align:center;padding:90px 0;background:linear-gradient(#8fd07c,#6fb85f);border-top:var(--line)}
+.final h2{color:#fff;-webkit-text-stroke:2.5px var(--ink);paint-order:stroke fill;text-shadow:0 5px 0 var(--ink);margin-bottom:24px}
+footer{background:var(--ink);color:#e9efe9;padding:30px 0;font-size:15px}
+footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+footer a{color:var(--sun)}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#"><i>🏫</i>Hari di Sekolah</a>
+    <nav aria-label="Navigasi">
+      <a href="#sehari">Sehari di sekolah</a><a href="#denah">Denah</a><a href="#fitur">Isi game</a><a href="#guru">Untuk guru</a><a href="#cara">Cara main</a>
+    </nav>
+    <a class="btn play" href="main.html">▶ Main</a>
+  </div>
+</header>
+
+<main>
+<!-- ===== pembuka ===== -->
+<section class="hero" aria-labelledby="judul">
+  <div class="wrap">
+    <div>
+      <span class="school">SMAIT IQRA' Kota Bengkulu</span>
+      <h1 id="judul">Hari di Sekolah</h1>
+      <p class="lead">Jalani satu hari penuh sebagai siswa dalam game 3D: masuk kelas, sholat berjamaah, makan MBG, dan kerjakan tugas guru sambil bermain.</p>
+      <div class="ctas">
+        <a class="btn play" href="main.html">▶ Main sekarang</a>
+        <a class="btn" href="guru.html">👩‍🏫 Panel Guru</a>
+      </div>
+      <p class="note">Gratis · langsung di browser HP atau laptop · tanpa instal</p>
+      <div class="ayat">
+        <span class="ar">طَلَبُ الْعِلْمِ فَرِيْضَةٌ عَلَى كُلِّ مُسْلِمٍ</span>
+        <small>"Menuntut ilmu itu wajib bagi setiap muslim." (HR. Ibnu Majah)</small>
+      </div>
+    </div>
+    <div class="figwrap">
+      <span class="chip c1">Hari ke-1 · Senin</span><span class="chip c2">06.50</span><span class="chip c3">⭐ Adab +3</span>
+      <figure class="shotframe" style="margin:0"><img src="img/hero.webp" width="1500" height="800" alt="Pemandangan 3D sekolah dalam game: gedung kelas putra dan putri, masjid, lapangan, dan jalan di depan gerbang"></figure>
+    </div>
+  </div>
+</section>
+
+<!-- ===== satu hari ===== -->
+<section id="sehari" aria-labelledby="h-sehari">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2 id="h-sehari">Sehari di sekolah,<br>dari gerbang sampai pulang</h2>
+      <p>Jadwal pelajaran dan nama guru diambil dari jadwal asli sekolah. Setiap kelas X–XII, putra dan putri, punya harinya sendiri.</p>
+    </div>
+    <div class="day">
+      <article class="slot big"><img src="img/gerbang.webp" alt="Ustadz dan Ustadzah menyambut murid di gerbang sekolah" ><div><time>06.30</time><h3>Berangkat dan disambut di gerbang</h3><p>Sarapan, salim kepada orang tua, lalu jalan kaki atau naik motor. Lewat pukul 07.15 gerbang ditutup, dan yang terlambat berdzikir pagi sambil berdiri.</p></div></article>
+      <article class="slot"><img src="img/upacara.webp" alt="Upacara bendera hari Senin di lapangan" ><div><time>07.20 · Senin</time><h3>Upacara bendera</h3><p>Barisan tertib, bendera dikibarkan, dan amanat dari pembina upacara.</p></div></article>
+      <article class="slot"><img src="img/kelas.webp" alt="Suasana kelas dengan murid duduk dan guru di depan" ><div><time>07.30</time><h3>Masuk kelas</h3><p>Ketuk pintu, ucapkan salam, taruh tas, lalu pilih pelajaran. Tugasnya berupa permainan.</p></div></article>
+      <article class="slot"><img src="img/kantin.webp" alt="Murid makan MBG bersama di kantin" ><div><time>Istirahat</time><h3>Makan MBG bersama</h3><p>Susun nampan 4 sehat 5 sempurna, berdoa, lalu habiskan tanpa sisa.</p></div></article>
+      <article class="slot"><img src="img/wudhu.webp" alt="Tempat wudhu dengan deretan keran" ><div><time>12.15</time><h3>Wudhu dan Zuhur</h3><p>Azan berkumandang. Berwudhu dengan niat dan doa, lalu sholat berjamaah.</p></div></article>
+      <article class="slot big"><img src="img/masjid.webp" alt="Masjid sekolah dengan pintu putra dan putri" ><div><time>15.30</time><h3>Ashar, lalu pulang</h3><p>Sholat Ashar berjamaah, ambil tas di kelas, dan pulang. Tidur di rumah untuk menyimpan permainan dan lanjut ke hari berikutnya.</p></div></article>
+    </div>
+  </div>
+</section>
+
+<!-- ===== denah ===== -->
+<section id="denah" class="mapsec" aria-labelledby="h-denah">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2 id="h-denah">Denah sekolah</h2>
+      <p>Area putra di barat, area putri di timur. Ketuk titik kuning untuk melihat setiap tempat.</p>
+    </div>
+    <div class="mapgrid">
+      <div class="map" id="map"><img src="img/denah.webp" width="1040" height="840" alt="Denah sekolah dari atas: gedung kelas putra di kiri, gedung kelas putri di kanan, masjid di tengah, lapangan bola di atas, dan gerbang di bawah"></div>
+      <div>
+        <div class="place" id="place" aria-live="polite"></div>
+        <div class="legend" id="legend" aria-label="Daftar tempat"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== fitur ===== -->
+<section id="fitur" aria-labelledby="h-fitur">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2 id="h-fitur">Belajar sambil bermain,<br>dengan adab seorang muslim</h2>
+      <p>Bukan sekadar berjalan-jalan. Setiap kegiatan mengajarkan kebiasaan baik yang biasa dilakukan di sekolah.</p>
+    </div>
+    <div class="feat">
+      <article class="tile t-adab"><img src="img/masjid.webp" alt="" ><div class="t"><h3>Adab dalam setiap langkah</h3><p>Salam dan salim kepada guru sejenis. Kepada lawan jenis cukup salam dari jauh. Doa masuk toilet, doa makan, niat wudhu, Dhuha, dan mengaji. Putra dan putri tidak saling bercakap atau berjalan berdampingan.</p></div></article>
+      <article class="tile t-games"><div class="t"><h3>Tugas guru jadi permainan</h3><p>Soal yang dibuat guru dimainkan dalam berbagai bentuk, bergantian setiap pelajaran.</p><ul><li>🗺️ Arena kuis O/X</li><li>⚔️ Battle melawan monster</li><li>🐉 Naga penjaga ilmu</li><li>🏎️ Balapan</li><li>✈️ Pesawat ilmu</li></ul>
+        <div class="ox" aria-hidden="true"><p class="oq">Huruf <span>ب</span> dibaca "ba".</p><div><span class="o">⭕ Benar</span><span class="x">❌ Salah</span></div><small>⏱ 6 detik · lari ke jawabanmu!</small></div></div></article>
+      <article class="tile t-mbg"><img src="img/kantin.webp" alt="" ><div class="t"><h3>MBG 4 sehat 5 sempurna</h3><p>Pilih nasi atau jagung, lauk, sayur, buah, dan susu. Keripik dan soda tidak termasuk.</p></div></article>
+      <article class="tile t-sport"><img src="img/bola.webp" alt="" ><div class="t"><h3>Olahraga sungguhan</h3><p>Sepak bola, voli, dan basket dengan papan skor 3 menit. Lari, lompat, tendang, oper, dan rebut bola sendiri.</p></div></article>
+      <article class="tile t-avatar"><img src="img/avatar.webp" alt="" ><div class="t"><h3>Avatar sesuai aturan sekolah</h3><p>Atur warna kulit, rambut rapi, peci, jilbab yang menutup dada, mata, dan kacamata.</p></div></article>
+      <article class="tile t-lib"><img src="img/perpus.webp" alt="" ><div class="t"><h3>Perpustakaan berisi materi guru</h3><p>Rak buku per mata pelajaran. Materi yang ditulis guru di Panel Guru langsung tampil sebagai buku baru.</p></div></article>
+      <article class="tile t-rooms"><img src="img/upacara.webp" alt="" ><div class="t"><h3>Semua ruangan bisa dimasuki</h3><p>Ruang Ustadz dan Ustadzah, kantor kepala sekolah dan para waka, TU dan bendahara SPP/LKMS, UKS, lab komputer, kantin, wudhu, dan toilet.</p></div></article>
+    </div>
+  </div>
+</section>
+
+<!-- ===== guru ===== -->
+<section id="guru" class="guru" aria-labelledby="h-guru">
+  <div class="wrap gurugrid">
+    <div>
+      <h2 id="h-guru">Untuk Ustadz dan Ustadzah</h2>
+      <p style="margin-top:14px;font-size:18px;max-width:46ch">Daftar sendiri dengan email di Panel Guru. Setelah disetujui admin sekolah, Anda bisa langsung memberi tugas.</p>
+      <ul class="checks">
+        <li><i>📝</i><span><b>Buat soal sendiri</b>Pilihan ganda A–D atau benar/salah, tandai sendiri jawaban yang benar. Bisa tempel dari Excel.</span></li>
+        <li><i>📚</i><span><b>Tulis materi perpustakaan</b>Materi tampil sebagai buku di rak mapel Anda.</span></li>
+        <li><i>📊</i><span><b>Lihat nilai murid</b>Rekap per kelas dan mapel, unduh ke Excel.</span></li>
+        <li><i>🔑</i><span><b>Bagikan kode kelas</b>Kirim tautan dan kode ke grup kelas lewat WhatsApp.</span></li>
+      </ul>
+      <a class="btn green" href="guru.html">👩‍🏫 Buka Panel Guru</a>
+    </div>
+    <div class="panelmock" aria-hidden="true">
+      <div class="bar"><span>Panel Guru</span><span>Bahasa Arab · XII PA 2</span></div>
+      <div class="tabs"><span class="on">📝 Soal</span><span>📚 Materi</span><span>📊 Nilai</span><span>🔑 Kode</span></div>
+      <div class="body">
+        <div class="q"><div>Soal 1 · <span class="ar">مَا مَعْنَى كِتَابٌ؟</span></div>
+          <div class="opt"><b>A</b>Pena</div><div class="opt ok"><b>B</b>Buku<em>✓ benar</em></div><div class="opt"><b>C</b>Meja</div></div>
+        <div class="score"><span>Fikri · Battle ⚔️</span><span>90</span></div>
+        <div class="score"><span>Hafidz · Arena 🗺️</span><span>80</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== cara main ===== -->
+<section id="cara" aria-labelledby="h-cara">
+  <div class="wrap">
+    <div class="sec-head"><h2 id="h-cara">Cara mulai bermain</h2><p>Tidak perlu akun. Cukup nama, kelas, dan kode kelas dari guru.</p></div>
+    <div class="steps">
+      <div class="step"><div class="n">1</div><h3>Buka game</h3><p>Ketuk <b>Main sekarang</b> di HP atau laptop.</p></div>
+      <div class="step"><div class="n">2</div><h3>Isi nama dan kelas</h3><p>Atur avatarmu, lalu masukkan <b>kode kelas</b> dari guru agar nilaimu terkirim.</p></div>
+      <div class="step"><div class="n">3</div><h3>Ikuti panah kuning</h3><p>Panah menunjukkan tugas berikutnya. Tidur di rumah untuk menyimpan.</p></div>
+    </div>
+    <div class="keys">
+      <div><h3>📱 Di HP</h3><ul><li>Sentuh dan geser layar untuk berjalan</li><li>🏃 lari dan ⤴️ lompat di kanan bawah</li><li>Ketuk 💬 Sapa di dekat guru atau teman sejenis</li></ul></div>
+      <div><h3>💻 Di laptop</h3><ul><li><kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> atau tombol panah untuk berjalan</li><li><kbd>Shift</kbd> untuk lari, <kbd>Spasi</kbd> untuk lompat</li><li>🎥 ganti sudut kamera, termasuk tampilan denah</li></ul></div>
+    </div>
+  </div>
+</section>
+
+<section class="final" aria-labelledby="h-final">
+  <div class="wrap">
+    <h2 id="h-final">Siap berangkat sekolah?</h2>
+    <a class="btn play" href="main.html">▶ Main sekarang</a>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>Hari di Sekolah · game edukatif SMAIT IQRA' Kota Bengkulu</span>
+    <span>Dikembangkan oleh Ustadz Arief · <a href="guru.html">Panel Guru</a></span>
+  </div>
+</footer>
+
+<script>
+// titik denah: posisi dalam persen gambar
+const PLACES = [
+  ['Gerbang Utama', 'Pintu masuk', 'gerbang', 0, 56, 'Ustadz dan Ustadzah menyambut murid setiap pagi. Pos satpam di samping gerbang, parkir motor di dalam sebelah kiri.'],
+  ['Lapangan Upacara', 'Lapangan', 'upacara', 0, 22, 'Upacara bendera setiap Senin pukul 07.20, lengkap dengan amanat pembina.'],
+  ['Masjid', 'Ibadah', 'masjid', 0, -5, 'Pintu putra di barat, pintu putri di timur, dengan tabir di dalam. Untuk Dhuha, mengaji, Zuhur, dan Ashar.'],
+  ['Tempat Wudhu', 'Ibadah', 'wudhu', -23, -6, 'Wudhu putra di sisi barat masjid, wudhu putri di sisi timur. Bisa dimasuki kapan saja.'],
+  ['Lapangan Sepak Bola', 'Olahraga', 'bola', 0, -53, 'Satu lapangan untuk bersama. Jalan utamanya lewat gapura di belakang gedung kelas putra.'],
+  ['Gedung Kelas Putra', 'Kelas', 'kelas', -75, -14, 'Kelas X, XI, dan XII putra di sisi barat sekolah.'],
+  ['Gedung Kelas Putri', 'Kelas', 'kelas', 75, -14, 'Kelas X, XI, dan XII putri di sisi timur sekolah.'],
+  ['Kantin', 'Istirahat', 'kantin', -85, 44, 'Kantin putra dan putri terpisah, tempat makan MBG 4 sehat 5 sempurna.'],
+  ['Perpustakaan', 'Belajar', 'perpus', -10, -26, 'Rak buku per mata pelajaran, termasuk materi tulisan guru.'],
+  ['Lab Komputer', 'Belajar', 'bola', 10, -26, 'Latihan soal dengan game pilihan: pesawat, battle, naga, balap, atau arena.'],
+  ['Kantor Kepala Sekolah', 'Kantor', 'gerbang', -37, -26, 'Ruang tamu, ruang kepala sekolah, ruang waka ustadz, dan ruang waka ustadzah.'],
+  ['TU & Bendahara', 'Kantor', 'gerbang', -24, -26, 'Kantor Tata Usaha, Bendahara Sekolah untuk SPP, dan Bendahara LKMS, lengkap dengan antrean.'],
+  ['Lapangan Voli & Basket', 'Olahraga', 'bola', -80, -58, 'Lapangan voli dan basket putra di barat, milik putri di timur.'],
+];
+const X0 = 280, Y0 = 150, W = 1040, H = 840, K = 4.579;
+const map = document.getElementById('map'), place = document.getElementById('place'), legend = document.getElementById('legend');
+const pins = [], tags = [];
+function show(i) {
+  const [n, kind, img, , , d] = PLACES[i];
+  place.innerHTML = `<div class="kind">${kind}</div><h3>${n}</h3><p>${d}</p><img src="img/${img}.webp" alt="" >`;
+  pins.forEach((p, k) => p.setAttribute('aria-pressed', k === i)); tags.forEach((p, k) => p.setAttribute('aria-pressed', k === i));
+}
+PLACES.forEach(([n, , , x, z], i) => {
+  const b = document.createElement('button'); b.className = 'pin'; b.type = 'button'; b.textContent = i + 1; b.setAttribute('aria-label', n);
+  b.style.left = ((800 + x * K - X0) / W * 100) + '%'; b.style.top = ((500 + z * K - Y0) / H * 100) + '%';
+  b.onclick = () => show(i); map.appendChild(b); pins.push(b);
+  const t = document.createElement('button'); t.type = 'button'; t.textContent = `${i + 1}. ${n}`; t.onclick = () => show(i); legend.appendChild(t); tags.push(t);
+});
+show(2);
+</script>
+</body>
+</html>

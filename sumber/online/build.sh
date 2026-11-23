@@ -10,6 +10,6 @@ python3 - <<'PY'
 s=open('/home/claude/game/hari3.html').read()
 i=s.rfind('<script>')
 s=s[:i]+'<script src="config.js"></script>\n<script src="online.js"></script>\n'+s[i:]
-open('dist/index.html','w').write(s)
+open('dist/main.html','w').write(s)
 PY
-ls -la dist
+cp src/landing.html dist/index.html; mkdir -p dist/img; cp src/img/*.webp dist/img/; ls dist

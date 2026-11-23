@@ -16,7 +16,7 @@ const S = { user: null, guru: null, tab: 'soal', soal: [], edit: null, kode: {},
 const isAdmin = () => S.user && S.user.email && S.user.email.toLowerCase() === ADMIN;
 const myMapel = () => (isAdmin() ? Object.keys(SUBJ) : S.guru.mapel || []);
 const myKelas = () => (isAdmin() ? KELAS : S.guru.kelas || []);
-const gameUrl = () => location.href.replace(/[^/]*$/, '');
+const gameUrl = () => location.href.split('#')[0].replace(/[^/]*$/, '') + 'main.html';   // langsung ke game
 
 function toast(t, bad) {
   const el = $('#toast'); el.textContent = t; el.className = 'show' + (bad ? ' bad' : '');
