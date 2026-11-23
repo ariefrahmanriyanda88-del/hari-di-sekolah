@@ -192,12 +192,15 @@ function startLabel() {
   $('resetbtn').style.display = same ? '' : 'none';
 }
 sel.onchange = startLabel; $('nama').addEventListener('input', startLabel); startLabel();
-if (window.HDS) { $('kodewrap').style.display = ''; $('gurulink').style.display = 'block'; $('kode').value = state.kode || ''; $('kode').oninput = () => { $('kodeerr').textContent = ''; }; }
+$('schoolsub').textContent = `Simulasi keseharian siswa ${SCHOOL.nama}`;
+$('schoolname').textContent = `🏫 ${SCHOOL.nama} · ${SCHOOL.sub}`;
+$('schoolswap').onclick = () => $('schoollist').classList.toggle('show');
+if (window.HDS && !SCHOOL.demo) { $('kodewrap').style.display = ''; $('gurulink').style.display = 'block'; $('kode').value = state.kode || ''; $('kode').oninput = () => { $('kodeerr').textContent = ''; }; }
 let onlineDone = '';
 $('startbtn').onclick = async () => {
   const nm = $('nama').value.trim();
   if (!nm) { $('nama').classList.add('err'); $('nama').focus(); return; }
-  if (window.HDS) {
+  if (window.HDS && !SCHOOL.demo) {
     const kode = $('kode').value.trim().toUpperCase().replace(/\s/g, ''), key = kode + '|' + sel.value + '|' + nm;
     if (kode && onlineDone !== key) {
       const btn = $('startbtn'); btn.disabled = true; btn.textContent = '⏳ Menghubungkan ke sekolah…';

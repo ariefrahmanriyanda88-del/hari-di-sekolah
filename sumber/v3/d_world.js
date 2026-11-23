@@ -141,7 +141,7 @@ const masjid = building(-14, -14, 14, 4, 5.5, 0xf3e3c3, 0x3a9a6a);
   box(-6.6, 2.4, 56, 1.3, 4.8, 1.3, 0xf1e2c2); box(6.6, 2.4, 56, 1.3, 4.8, 1.3, 0xf1e2c2);
   colliders.push({ x1: -7.3, z1: 55.3, x2: -5.9, z2: 56.7 }, { x1: 5.9, z1: 55.3, x2: 7.3, z2: 56.7 });
   box(0, 5, 56, 15, 0.7, 1.8, 0x3b7dd8);
-  label("Gerbang Utama SMAIT IQRA'", 0, 6.9, 56, 1.2);
+  label(`Gerbang Utama ${SCHOOL.nama}`, 0, 6.9, 56, 1.2);
   const s = building(10, 45, 16, 52, 3, 0xffffff, 0x3b7dd8); windowBand(s, 'W'); label('Pos Satpam', s.cx, 5, s.cz, 0.9);
 }
 // ---------- lapangan upacara (lapangan utama) ----------

@@ -2,6 +2,23 @@ import DATA from '../sched.json';
 import TEACH from '../teachers.json';
 import * as THREE from 'three';
 
+// ---------- sekolah yang dimainkan: SMAIT IQRA' (warga sekolah) atau Sekolah Umum (demo terbuka) ----------
+const SCHOOL_ID = (() => {
+  let s = new URLSearchParams(location.search).get('s');
+  try { if (!s) s = localStorage.getItem('hds-sekolah'); localStorage.setItem('hds-sekolah', s === 'umum' ? 'umum' : 'iqra'); } catch (e) { /* abaikan */ }
+  return s === 'umum' ? 'umum' : 'iqra';
+})();
+const SCHOOL = SCHOOL_ID === 'umum'
+  ? { id: 'umum', nama: 'SMA Nusantara', sub: 'Sekolah Umum · versi demo', demo: true }
+  : { id: 'iqra', nama: "SMAIT IQRA'", sub: 'Kota Bengkulu', demo: false };
+// versi demo: semua nama guru diganti nama fiktif (jenis kelamin tetap)
+if (SCHOOL.demo) {
+  const LA = ['Ahmad', 'Budi', 'Fauzan', 'Hasan', 'Irfan', 'Jamal', 'Kamil', 'Luthfi', 'Munir', 'Nasir', 'Rahman', 'Salim', 'Taufik', 'Wahyu', 'Yahya', 'Zainal', 'Arif', 'Bayu', 'Dimas', 'Fajar', 'Hendra', 'Iqbal', 'Joko', 'Rizal', 'Sofyan', 'Teguh', 'Umar', 'Yusril', 'Zaki', 'Anwar', 'Darman', 'Galih'];
+  const PR = ['Aminah', 'Bariroh', 'Fitri', 'Hafsah', 'Indah', 'Jamilah', 'Khoirun', 'Laila', 'Maryam', 'Nur', 'Rahmah', 'Saidah', 'Tari', 'Ulfa', 'Wardah', 'Yuni', 'Zahro', 'Anisa', 'Dewi', 'Eka', 'Fatma', 'Halimah', 'Intan', 'Kartika', 'Lestari', 'Mila', 'Ratna', 'Sari', 'Tsuraya', 'Wulan', 'Yasmin', 'Zulfa'];
+  let a = 0, b = 0;
+  Object.keys(TEACH).forEach((k) => { const t = TEACH[k]; t.p = t.g === 'P' ? 'Ustadzah ' + PR[b++ % PR.length] : 'Ustadz ' + LA[a++ % LA.length]; });
+}
+
 // ---------- konversi koordinat denah (piksel) ke dunia 3D ----------
 const P = (x, z) => [x, z]; // koordinat dunia langsung (1 unit ≈ 1 meter)
 

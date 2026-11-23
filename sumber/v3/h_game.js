@@ -6,7 +6,7 @@ const SUBJ = DATA.subjects;
 const HARI = ['Senin', 'Selasa', 'Rabu', 'Kamis', "Jum'at"];
 const toMin = (t) => { const [h, m] = t.split('.').map(Number); return h * 60 + m; };
 const isPutri = (c) => / PI /.test(c + ' ');
-const SAVE_KEY = 'hari-di-sekolah-v3';
+const SAVE_KEY = 'hari-di-sekolah-v3' + (SCHOOL.demo ? '-umum' : '');
 let state = { day: 1, points: 0, cls: 'X PA 1', nama: '', start: 0 };
 try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); if (s && s.day && DATA.sched[s.cls]) state = s; } catch (e) {}
 const save = () => { try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); } catch (e) {} };

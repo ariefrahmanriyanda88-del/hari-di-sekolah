@@ -75,6 +75,11 @@
   .avrow button.on{background:#ffd84d;box-shadow:0 0 0 3px #2f8a5c}
   .avrow button.sw.on{box-shadow:0 0 0 3px #2f8a5c, inset 0 0 0 2px #fff}
   .avnote{font-size:12px;color:#5d6f6a;margin:8px 0 2px;text-align:center}
+  .schoolpick{display:flex;align-items:center;justify-content:space-between;gap:8px;background:#e8f4ec;border:2px solid #2b2b2b;border-radius:12px;padding:6px 8px 6px 12px;margin:8px 0 4px;font-weight:800;font-size:14px}
+  #schoollist{display:none;gap:6px;flex-direction:column;margin:4px 0 6px}#schoollist.show{display:flex}
+  #schoollist a{display:block;text-decoration:none;color:#222;background:#fff;border:2px solid #2b2b2b;border-radius:12px;padding:8px 12px;text-align:left}
+  #schoollist a span{display:block;font-size:12.5px;font-weight:600;color:#5d6f6a}
+  .schoolpick button{font:inherit;font-size:13px;border:2px solid #2b2b2b;border-radius:9px;background:#fff;padding:4px 9px;cursor:pointer}
   #toast{position:fixed;top:104px;left:50%;transform:translate(-50%,-10px);background:#2f8a5c;color:#fff;font-weight:900;border-radius:18px;padding:7px 16px;opacity:0;transition:.3s;pointer-events:none;width:max-content;max-width:92vw;text-align:center;font-size:14px;line-height:1.3;border:3px solid #1d5c3b}
   #toast.show{opacity:1;transform:translate(-50%,0)}
   #mbtns button.left{text-align:left;font-size:15px}
@@ -164,7 +169,9 @@
 <div id="start"><div class="card">
   <div class="tag">Prototipe · Game Edukatif</div>
   <h1>Hari di Sekolah</h1>
-  <div class="sub">Simulasi keseharian siswa SMAIT IQRA'</div>
+  <div class="sub" id="schoolsub">Simulasi keseharian siswa SMAIT IQRA'</div>
+  <div class="schoolpick"><span id="schoolname">🏫 SMAIT IQRA' · Kota Bengkulu</span><button type="button" id="schoolswap">Ganti sekolah</button></div>
+  <div id="schoollist"><a href="?s=iqra"><b>🏫 SMAIT IQRA' Kota Bengkulu</b><span>Untuk warga sekolah · guru & jadwal asli · pakai kode kelas</span></a><a href="?s=umum"><b>🌐 SMA Nusantara (Sekolah Umum)</b><span>Terbuka untuk siapa saja · guru fiktif · soal contoh</span></a></div>
   <label class="pick">Nama kamu<input id="nama" type="text" maxlength="18" placeholder="Ketik namamu…" autocomplete="off"></label>
   <label class="pick">Pilih kelasmu<select id="clssel"></select></label>
   <button class="sbtn" id="avbtn" type="button" style="width:100%;margin:6px 0 4px">🎨 Atur avatarku</button>

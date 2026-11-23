@@ -53,7 +53,7 @@ p{margin:0}
 .hero .school{display:inline-block;margin:0 0 14px;font:800 16px Nunito,sans-serif;background:#fff;border:var(--line);border-radius:999px;padding:6px 14px;box-shadow:0 3px 0 var(--ink)}
 .hero .lead{font-size:20px;font-weight:700;max-width:30ch;margin:18px 0 26px}
 .hero .ctas{display:flex;flex-wrap:wrap;gap:14px}
-.hero .note{margin-top:16px;font-size:14.5px;font-weight:700;opacity:.8}
+.hero .note{margin-top:16px;font-size:14.5px;font-weight:700;opacity:.8;max-width:46ch}
 .shotframe{position:relative;border:var(--line);border-radius:22px;overflow:hidden;box-shadow:0 8px 0 var(--ink);transform:rotate(1.2deg);background:#fff}
 .shotframe img{width:100%;aspect-ratio:15/8;object-fit:cover}
 .chip{position:absolute;z-index:2;font:800 14px Nunito,sans-serif;background:#fff;border:var(--line);border-radius:12px;padding:6px 11px;box-shadow:0 3px 0 var(--ink);white-space:nowrap}
@@ -182,10 +182,10 @@ footer a{color:var(--sun)}
       <h1 id="judul">Hari di Sekolah</h1>
       <p class="lead">Jalani satu hari penuh sebagai siswa dalam game 3D: masuk kelas, sholat berjamaah, makan MBG, dan kerjakan tugas guru sambil bermain.</p>
       <div class="ctas">
-        <a class="btn play" href="main.html">▶ Main sekarang</a>
-        <a class="btn" href="guru.html">👩‍🏫 Panel Guru</a>
+        <a class="btn play" href="main.html?s=iqra">▶ Main di SMAIT IQRA'</a>
+        <a class="btn" href="main.html?s=umum">🌐 Coba versi Sekolah Umum</a>
       </div>
-      <p class="note">Gratis · langsung di browser HP atau laptop · tanpa instal</p>
+      <p class="note">Warga SMAIT IQRA' masuk dengan kode kelas dari guru. Versi Sekolah Umum (SMA Nusantara) terbuka untuk siapa saja, dengan guru fiktif dan soal contoh. Gratis, langsung di browser HP atau laptop.</p>
       <div class="ayat">
         <span class="ar">طَلَبُ الْعِلْمِ فَرِيْضَةٌ عَلَى كُلِّ مُسْلِمٍ</span>
         <small>"Menuntut ilmu itu wajib bagi setiap muslim." (HR. Ibnu Majah)</small>
@@ -285,7 +285,7 @@ footer a{color:var(--sun)}
   <div class="wrap">
     <div class="sec-head"><h2 id="h-cara">Cara mulai bermain</h2><p>Tidak perlu akun. Cukup nama, kelas, dan kode kelas dari guru.</p></div>
     <div class="steps">
-      <div class="step"><div class="n">1</div><h3>Buka game</h3><p>Ketuk <b>Main sekarang</b> di HP atau laptop.</p></div>
+      <div class="step"><div class="n">1</div><h3>Pilih sekolah</h3><p><b>SMAIT IQRA'</b> untuk warga sekolah, atau <b>Sekolah Umum</b> untuk mencoba. Bisa diganti di layar awal.</p></div>
       <div class="step"><div class="n">2</div><h3>Isi nama dan kelas</h3><p>Atur avatarmu, lalu masukkan <b>kode kelas</b> dari guru agar nilaimu terkirim.</p></div>
       <div class="step"><div class="n">3</div><h3>Ikuti panah kuning</h3><p>Panah menunjukkan tugas berikutnya. Tidur di rumah untuk menyimpan.</p></div>
     </div>
@@ -299,7 +299,7 @@ footer a{color:var(--sun)}
 <section class="final" aria-labelledby="h-final">
   <div class="wrap">
     <h2 id="h-final">Siap berangkat sekolah?</h2>
-    <a class="btn play" href="main.html">▶ Main sekarang</a>
+    <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap"><a class="btn play" href="main.html?s=iqra">▶ Main di SMAIT IQRA'</a><a class="btn" href="main.html?s=umum">🌐 Coba versi Sekolah Umum</a></div>
   </div>
 </section>
 </main>

@@ -109,6 +109,7 @@ const KEPS_STAFF = [
   { n: 'Rustiyani', p: 'Ustadzah Rustiyani', j: 'Waka Kurikulum', g: 'P', x: 7.0, look: 1 },
   { n: 'Retmi Hartati, S.Sos', p: 'Ustadzah Retmi', j: 'Waka Kesiswaan', g: 'P', x: 10.6, look: 3 },
 ];
+if (SCHOOL.demo) [['Ustadz Hasyim', 'L'], ['Ustadz Mahmud', 'L'], ['Ustadz Ridwan', 'L'], ['Ustadz Syamsul', 'L'], ['Ustadzah Khadijah', 'P'], ['Ustadzah Rosidah', 'P']].forEach(([p], i) => { KEPS_STAFF[i].p = p; KEPS_STAFF[i].n = p; });
 const KEPS_Z = -6.5;   // posisi duduk di belakang meja
 const keps = makeHall(KEPS, 26, 16, 0xf3e6cf, '#e8dcc4', '#dccfb4');
 {
@@ -189,6 +190,7 @@ const TU_STAFF = [
   ['Ustadz Sakti', 'Bendahara Sekolah', 'L', 2, 3.6, -5.0],
   ['Ustadzah Sakinah', 'Bendahara LKMS', 'P', 1, 8.6, -5.0],
 ];
+if (SCHOOL.demo) ['Ustadz Darmawan', 'Ustadzah Nurul', 'Ustadz Hanafi', 'Ustadzah Siti', 'Ustadz Bahar', 'Ustadzah Mutia'].forEach((p, i) => (TU_STAFF[i][0] = p));
 const tur = makeHall(TUR, 24, 16, 0xe6eef3, '#dde6ec', '#cfdbe3');
 const TU_SPOTS = {};
 {
