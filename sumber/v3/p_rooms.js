@@ -442,50 +442,82 @@ function makeCar2(color) {
 const ADULTS = [{ shirt: 0x5a6b7d, bottom: 0x333333, peci: 0x222222, face: { brow: 1 } }, { putri: true, shirt: 0x7a4a6a, bottom: 0x3a3a3a, hijab: 0x3b5e9e, face: { eye: 2 } },
   { shirt: 0x3f6f4a, bottom: 0x2b2b2b, face: { brow: 1, glasses: 0x333333 } }, { putri: true, shirt: 0x9a6b3a, bottom: 0x4a3a2a, hijab: 0x2f2f2f, face: { mouth: 2 } }];
 const TRF = { veh: [], peds: [], waiting: [], t: 0, k: 0, on: false };
-const LANE_IN = 62.6, LANE_FAR = 68.6, KERB = 59.2;
+// lalu lintas ala Indonesia: lajur KIRI. Arah timur (+x) di lajur dekat sekolah, arah barat (-x) di lajur seberang.
+// mobil bersetir kanan. Di depan sekolah ada ZONA ANTAR-JEMPUT (teluk berhenti) supaya tidak menghalangi lajur.
+const LANE_E = 63.8, LANE_W = 68.4, BAY_Z = 61.0, KERB = 59.2;
+const BAY = [12, 18.5, 25, 31.5].map((x) => ({ x, v: null }));
+{ // marka zona antar-jemput
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(26, 2.1), new THREE.MeshLambertMaterial({ color: 0xd9b84a, transparent: true, opacity: 0.35 }));
+  m.rotation.x = -Math.PI / 2; m.position.set(21.7, 0.03, 61.0); scene.add(m);
+  [[8.7, 61, 0.15, 2.1], [34.7, 61, 0.15, 2.1], [21.7, 62.05, 26, 0.12]].forEach(([x, z, w, d]) => { const l = new THREE.Mesh(new THREE.PlaneGeometry(w, d), new THREE.MeshLambertMaterial({ color: 0xf2d04a })); l.rotation.x = -Math.PI / 2; l.position.set(x, 0.035, z); scene.add(l); });
+  label('Zona Antar-Jemput', 21.7, 2.6, 59.6, 0.55);
+}
 function trfRemove(o) { scene.remove(o); const i = npcs.indexOf(o); if (i >= 0) npcs.splice(i, 1); }
-function kid(i) { const putri = i % 2 === 1, m = makePerson(studentModel(putri, i)); Object.assign(m, { kind: 'siswa', putri, name: (putri ? NAMES_PI : NAMES_PA)[i % 8], walkT: 0, scripted: true }); return m; }
-function spawnVehicle(mode) {
-  const car = TRF.k % 3 !== 1, dir = TRF.k % 2 ? 1 : -1, k = TRF.k++;
-  const g = new THREE.Group(), body = car ? makeCar2([0xd9d9d9, 0x2b2b2b, 0xc0392b, 0x2f5d8a, 0x8a8f96][k % 5]) : makeMotor([0x2f4f8f, 0x222222, 0xc0392b, 0x2f8a5c][k % 4]);
-  g.add(body);
-  const parent = makePerson(ADULTS[k % ADULTS.length]);
-  if (car) { parent.position.set(0.45, 0.1, 0.2); parent.scale.setScalar(0.85); } else { parent.position.set(0, 0.55, -0.1); parent.legL.rotation.x = parent.legR.rotation.x = -1.2; parent.armL.rotation.x = parent.armR.rotation.x = -1.1; }
-  g.add(parent);
-  const far = mode === 'lewat';
-  g.position.set(dir > 0 ? -120 : 120, 0, far ? LANE_FAR : LANE_IN); g.rotation.y = dir > 0 ? Math.PI / 2 : -Math.PI / 2;
-  const stopX = (dir > 0 ? 1 : -1) * (12 + Math.random() * 10) * (Math.random() < 0.5 ? 1 : -1);
-  const v = { g, parent, car, dir, state: 'jalan', stopX: Math.abs(stopX) < 9 ? 14 * Math.sign(stopX || 1) : stopX, mode, kid: null, t: 0 };
-  if (mode === 'antar') { const c = kid(k); c.visible = false; scene.add(c); v.kid = c; }
+function kid(i) { const putri = Math.random() < 0.5, m = makePerson(studentModel(putri, i)); Object.assign(m, { kind: 'siswa', putri, name: (putri ? NAMES_PI : NAMES_PA)[i % 8], walkT: 0, scripted: true }); return m; }
+const VLEN = (v) => (v.car ? 4.4 : 2.1);
+function seatParent(v) {
+  const p = v.parent; p.rotation.set(0, 0, 0); p.walkT = 0;
+  if (v.car) { p.position.set(-0.45, 0.1, 0.2); p.scale.setScalar(0.85); }                 // setir kanan
+  else { p.scale.setScalar(1); p.position.set(0, 0.55, -0.1); }
+  p.legL.rotation.x = p.legR.rotation.x = -1.2; p.armL.rotation.x = p.armR.rotation.x = -1.1;
+  v.g.add(p);
+}
+function laneFree(dir, z, x0, x1, me) {                 // apakah ruas lajur kosong (untuk masuk/keluar teluk & muncul)
+  return !TRF.veh.some((o) => o !== me && o.dir === dir && Math.abs(o.g.position.z - z) < 1.7 && o.g.position.x > Math.min(x0, x1) && o.g.position.x < Math.max(x0, x1));
+}
+function spawnVehicle(mode, x) {
+  const k = TRF.k++, car = Math.random() < 0.55, dir = mode === 'lewat' ? (Math.random() < 0.6 ? -1 : 1) : 1;
+  const z = dir > 0 ? LANE_E : LANE_W, sx = x ?? (dir > 0 ? -120 : 120);
+  if (!laneFree(dir, z, sx - 8, sx + 8)) return;
+  const g = new THREE.Group();
+  g.add(car ? makeCar2([0xd9d9d9, 0x2b2b2b, 0xc0392b, 0x2f5d8a, 0x8a8f96][k % 5]) : makeMotor([0x2f4f8f, 0x222222, 0xc0392b, 0x2f8a5c][k % 4]));
+  const v = { g, car, dir, mode, state: 'jalan', t: 0, kid: null, slot: null, speed: car ? 9 : 8.5 };
+  v.parent = makePerson(ADULTS[k % ADULTS.length]); seatParent(v);
+  g.position.set(sx, 0, z); g.rotation.y = dir > 0 ? Math.PI / 2 : -Math.PI / 2;
+  if (mode === 'antar') {
+    const c = kid(k); v.kid = c;
+    if (!car) { c.position.set(0, 0.6, -0.65); c.legL.rotation.x = c.legR.rotation.x = -1.2; g.add(c); }   // dibonceng
+    else { c.visible = false; scene.add(c); }
+    v.lepas = car || Math.random() < 0.5;                        // orang tua turun melepas anaknya
+  }
   scene.add(g); TRF.veh.push(v);
 }
 function walkPed(m, path) { m.tpath = path; m.pi = 0; TRF.peds.push(m); }
+const toGate = (x) => [[Math.sign(x || 1) * 3.2, 58.2], [Math.sign(x || 1) * 1.2, 55], [Math.sign(x || 1) * 1.5, 46], [Math.sign(x || 1) * 2, 40]];
+function blockedAhead(v, z) {
+  const x = v.g.position.x;
+  return TRF.veh.some((o) => {
+    if (o === v || o.dir !== v.dir || Math.abs(o.g.position.z - z) > 1.7) return false;
+    const d = (o.g.position.x - x) * v.dir;
+    return d > 0 && d < (VLEN(o) + VLEN(v)) / 2 + 2.2;
+  });
+}
 function updateTraffic(dt) {
   const pagi = phase === 'datang' && minutes < LATE_AT, sore = phase === 'pulang';
   const want = zone === 'luar' && (pagi || sore) && !paused;
   if (!want) { if (TRF.on && zone === 'luar' && !pagi && !sore) trafficClear(); return; }
   if (!TRF.on) {                                                    // langsung ramai saat pemain keluar
     TRF.on = true;
-    for (let k = 0; k < 4; k++) { spawnVehicle(k === 3 ? 'lewat' : pagi ? 'antar' : 'jemput'); const v = TRF.veh[TRF.veh.length - 1]; v.g.position.x = -v.dir * (18 + k * 16); }
+    [-80, -55, -30].forEach((x, k) => spawnVehicle(k === 1 ? 'lewat' : pagi ? 'antar' : 'jemput', x));
+    [70, 35, -15].forEach((x) => { spawnVehicle('lewat', x); const v = TRF.veh[TRF.veh.length - 1]; if (v && v.dir > 0) { v.g.position.z = LANE_E; } });
     for (let k = 0; k < 9; k++) {
       const m = kid(TRF.k++ + 3), side = k % 2 ? 1 : -1; scene.add(m); npcs.push(m);
-      if (pagi) { m.position.set(side * (6 + k * 4), 0, 58.2); walkPed(m, [[side * 3, 58.2], [side * 1.2, 55], [side * 1.5, 46], [side * 2, 40]]); }
+      if (pagi) { m.position.set(side * (6 + k * 4), 0, 58.2); walkPed(m, toGate(side)); }
       else { m.position.set(side * (1.5 + k * 0.4), 0, 50 - k * 1.5); walkPed(m, [[side * 1.2, 55], [side * 4, 58.2], [side * 75, 58.2]]); }
     }
   }
   TRF.t -= dt;
   if (TRF.t <= 0) {
     TRF.t = 1.4 + Math.random() * 1.6;
-    const r = Math.random();
-    if (TRF.veh.length < 6) spawnVehicle(r < 0.25 ? 'lewat' : pagi ? 'antar' : 'jemput');
+    if (TRF.veh.length < 8) spawnVehicle(Math.random() < 0.35 ? 'lewat' : pagi ? 'antar' : 'jemput');
     if (TRF.peds.length < 16) {
-      const i = TRF.k++, m = kid(i + 3), side = Math.random() < 0.5 ? -1 : 1;
-      if (pagi) { m.position.set(side * 70, 0, 58.2); scene.add(m); npcs.push(m); walkPed(m, [[side * 3, 58.2], [side * 1.2, 55], [side * 1.5, 46], [side * 2, 40]]); }
-      else { m.position.set(side * 1.5, 0, 44); scene.add(m); npcs.push(m); walkPed(m, [[side * 1.2, 55], [side * 4, 58.2], [side * 75, 58.2]]); }
+      const m = kid(TRF.k++ + 3), side = Math.random() < 0.5 ? -1 : 1; scene.add(m); npcs.push(m);
+      if (pagi) { m.position.set(side * 70, 0, 58.2); walkPed(m, toGate(side)); }
+      else { m.position.set(side * 1.5, 0, 44); walkPed(m, [[side * 1.2, 55], [side * 4, 58.2], [side * 75, 58.2]]); }
     }
-    if (sore && TRF.waiting.length < 5) {                       // menunggu dijemput di trotoar
-      const i = TRF.k++, m = kid(i + 5), x = (Math.random() < 0.5 ? -1 : 1) * (11 + Math.random() * 12);
-      m.position.set(x, 0, 58.8); m.rotation.y = 0; scene.add(m); npcs.push(m); TRF.waiting.push(m);
+    if (sore && TRF.waiting.length < 6) {                       // menunggu dijemput di trotoar zona antar-jemput
+      const m = kid(TRF.k++ + 5), x = 10 + Math.random() * 24;
+      m.position.set(x, 0, 58.6); m.rotation.y = 0; scene.add(m); npcs.push(m); TRF.waiting.push(m);
       if (Math.random() < 0.4) setTimeout(() => m.parent && bubble(m, pick(['Ayah belum datang…', 'Itu Ibu!', 'Hari ini dijemput Kakak.']), 2200), 800);
     }
   }
@@ -495,49 +527,101 @@ function updateTraffic(dt) {
     if (!p) { trfRemove(m); TRF.peds.splice(i, 1); continue; }
     if (moveTo(m, p[0], p[1], 3.2, dt) < 0.3) m.pi++;
   }
-  // kendaraan
+  const crossing = Math.abs(player.position.x) < 8 && player.position.z > 59.5 && player.position.z < 72;
   for (let i = TRF.veh.length - 1; i >= 0; i--) {
     const v = TRF.veh[i], g = v.g, x = g.position.x;
-    if (v.state === 'jalan') {
-      const ahead = TRF.veh.some((o) => o !== v && o.dir === v.dir && o.g.position.z === g.position.z && (o.g.position.x - x) * v.dir > 0 && (o.g.position.x - x) * v.dir < 6.5);
-      const nearZebra = Math.abs(x + v.dir * 4) < 8 && (Math.abs(player.position.x) < 8 && player.position.z > 59.5 && player.position.z < 72);   // berhenti bila ada yang menyeberang
-      if (!ahead && !nearZebra) g.position.x += v.dir * (v.car ? 9 : 8) * dt;
-      if (v.mode !== 'lewat' && (x - v.stopX) * v.dir >= 0 && !v.done) { v.state = 'berhenti'; v.t = 0; }
-      if (Math.abs(x) > 125) { if (v.kid) trfRemove(v.kid); scene.remove(g); TRF.veh.splice(i, 1); }
-    } else {
-      v.t += dt;
-      if (v.mode === 'antar' && v.t > 0.4 && !v.kid.visible) {           // anak turun, salim, lalu berjalan masuk
-        const c = v.kid; c.position.set(x, 0, KERB); c.rotation.y = Math.PI; c.visible = true; npcs.push(c);
-        if (!v.car) { playAnim(c, 'salim', 1.4); playAnim(v.parent, 'beritangan', 1.4); }
-        else playAnim(c, 'lambai', 1.2);
-        bubble(c, pick(["Assalamu'alaikum, Ayah!", "Assalamu'alaikum, Bu. Berangkat dulu!", 'Terima kasih, Yah!']), 1800);
-        setTimeout(() => bubble(v.parent, pick(["Wa'alaikumussalam. Belajar yang rajin, Nak!", 'Hati-hati, ya. Jangan lupa sholat!']), 1800), 900);
+    if (v.parent.parent === g) updateAnim(v.parent, dt); else updateAnim(v.parent, dt);
+    if (v.state === 'jalan' || v.state === 'keluar') {
+      // cari tempat kosong di zona antar-jemput
+      if (v.mode !== 'lewat' && !v.done && !v.slot && v.dir > 0 && x > -4 && x < 30) {
+        const s = BAY.find((b) => !b.v && b.x > x + 4);
+        if (s) { s.v = v; v.slot = s; v.state = 'masuk'; }
       }
-      if (v.mode === 'jemput' && v.t > 0.3 && !v.picked) {
-        const w = TRF.waiting.reduce((a, b) => (!a || Math.abs(b.position.x - x) < Math.abs(a.position.x - x) ? b : a), null);
-        if (w) { TRF.waiting.splice(TRF.waiting.indexOf(w), 1); v.picked = w; }
-        else v.picked = true;
+      const zLane = v.dir > 0 ? LANE_E : LANE_W;
+      if (v.state === 'keluar') {                                // kembali ke lajur bila belakang kosong
+        if (g.position.z < zLane - 0.05 && !laneFree(v.dir, zLane, x - 12, x + 3, v)) { /* tunggu sampai lajur belakang kosong */ }
+        else { g.position.z = Math.min(zLane, g.position.z + dt * 1.6); if (!blockedAhead(v, zLane)) g.position.x += v.dir * v.speed * 0.6 * dt; if (g.position.z >= zLane) v.state = 'jalan'; }
+        continue;
       }
-      if (v.picked && v.picked !== true) {
-        const w = v.picked;
-        if (!w.arrived && moveTo(w, x, KERB, 3, dt) < 0.3) { w.arrived = true; w.rotation.y = Math.PI; if (!v.car) { playAnim(w, 'salim', 1.3); playAnim(v.parent, 'beritangan', 1.3); } bubble(w, pick(["Assalamu'alaikum, Ayah!", 'Ibu! Lama menunggu.', 'Alhamdulillah, dijemput.']), 1600); v.t = 0; }
-        if (w.arrived && v.t > 1.6) {                              // naik ke kendaraan
-          trfRemove(w);
-          if (!v.car) { w.position.set(0, 0.6, -0.65); w.rotation.y = 0; w.legL.rotation.x = w.legR.rotation.x = -1.2; g.add(w); w.walkT = 0; }
-          v.picked = true; v.t = 0.5;
-        }
-      }
-      const done = v.mode === 'antar' ? v.t > 2.6 : (v.picked === true && v.t > 1.2) || v.t > 12;
-      if (done) {
-        if (v.mode === 'antar' && v.kid) { const c = v.kid; walkPed(c, [[x * 0.4, 58.2], [Math.sign(x) * 1.2, 55], [Math.sign(x) * 1.5, 46], [Math.sign(x) * 2, 40]]); v.kid = null; }
-        v.state = 'jalan'; v.done = true;
-      }
+      const nearZebra = crossing && (v.dir > 0 ? x < -6 && x > -16 : x > 7 && x < 17);
+      if (!blockedAhead(v, zLane) && !nearZebra) g.position.x += v.dir * v.speed * dt;
+      if (Math.abs(g.position.x) > 125) { if (v.kid) trfRemove(v.kid); scene.remove(g); TRF.veh.splice(i, 1); }
+      continue;
     }
+    if (v.state === 'masuk') {                                   // menepi ke teluk berhenti
+      const s = v.slot, d = s.x - x;
+      if (d < 5 || !blockedAhead(v, LANE_E)) g.position.x += Math.min(d, v.speed * 0.55 * dt);
+      const k = Math.min(1, Math.max(0, 1 - (d - 0.2) / 6));
+      g.position.z = LANE_E + (BAY_Z - LANE_E) * k;
+      if (d < 0.2) { g.position.x = s.x; g.position.z = BAY_Z; v.state = 'berhenti'; v.t = 0; v.step = 0; }
+      continue;
+    }
+    // ---- berhenti di zona antar-jemput ----
+    v.t += dt;
+    if (v.mode === 'antar') antarScene(v, dt); else jemputScene(v, dt);
   }
 }
+const DOA_ORTU = ["Belajar yang rajin, ya Nak. Bismillah.", 'Hati-hati, jangan lupa sholat Dhuha.', "Fii amanillah, Nak. Semoga ilmunya berkah.", 'Dengarkan ustadz-ustadzahmu, ya.'];
+function antarScene(v, dt) {
+  const g = v.g, x = g.position.x, c = v.kid, p = v.parent;
+  if (v.step === 0 && v.t > 0.6) {                               // anak turun
+    if (c.parent === g) { g.remove(c); c.legL.rotation.x = c.legR.rotation.x = 0; }
+    c.position.set(x - 0.6, 0, KERB); c.rotation.y = 0; c.visible = true; scene.add(c); npcs.push(c);
+    if (v.lepas) { g.remove(p); p.scale.setScalar(1); p.position.set(x + (v.car ? 0 : 0.3), 0, v.car ? BAY_Z + 1.5 : BAY_Z); p.rotation.set(0, 0, 0); p.legL.rotation.x = p.legR.rotation.x = p.armL.rotation.x = p.armR.rotation.x = 0; scene.add(p); }
+    v.step = 1;
+  }
+  if (v.step === 1) {                                            // orang tua turun & menghampiri anak di trotoar
+    if (!v.lepas) { v.step = 2; v.t = 0; return; }
+    const tx = x + 0.6, tz = KERB + 0.1;
+    if (v.car && p.position.z > BAY_Z + 0.2 && !p.round) { if (moveTo(p, x + 2.8, BAY_Z + 1.4, 2.4, dt) < 0.3) p.round = 1; return; }
+    if (v.car && p.round === 1) { if (moveTo(p, x + 2.8, KERB + 0.2, 2.4, dt) < 0.3) p.round = 2; return; }
+    if (moveTo(p, tx, tz, 2.4, dt) < 0.25) { p.rotation.y = -Math.PI / 2; c.rotation.y = Math.PI / 2; v.step = 2; v.t = 0; }
+    return;
+  }
+  if (v.step === 2 && v.t > 0.3) {                               // salim & pesan orang tua
+    c.rotation.y = v.lepas ? Math.PI / 2 : Math.PI; playAnim(c, 'salim', 1.5); playAnim(p, 'beritangan', 1.5);
+    bubble(c, pick(["Assalamu'alaikum, Ayah. Berangkat dulu!", "Assalamu'alaikum, Bu. Doakan, ya!", 'Terima kasih sudah mengantar.']), 1900);
+    setTimeout(() => bubble(p, pick(DOA_ORTU), 2300), 1100);
+    v.step = 3; v.t = 0;
+  }
+  if (v.step === 3 && v.t > 3.4) {                               // anak berjalan ke gerbang, orang tua melambai
+    walkPed(c, toGate(x)); v.kid = null; v.step = 4; v.t = 0;
+  }
+  if (v.step === 4) {
+    if (v.lepas) { p.rotation.y = Math.PI; if (v.t > 0.4 && !p.anim && v.t < 4) playAnim(p, 'lambai', 1.2); }
+    if (v.t > (v.lepas ? 4.2 : 1.2)) v.step = 5;
+  }
+  if (v.step === 5) {                                            // orang tua kembali ke kendaraan
+    if (v.lepas && p.parent !== g) {
+      if (v.car && p.round === 2) { if (moveTo(p, x + 2.8, BAY_Z + 1.4, 2.4, dt) < 0.3) p.round = 3; return; }
+      if (moveTo(p, x + (v.car ? 0 : 0.3), v.car ? BAY_Z + 1.4 : BAY_Z, 2.4, dt) > 0.3) return;
+      scene.remove(p); p.round = 0; seatParent(v);
+    }
+    leaveBay(v);
+  }
+}
+function jemputScene(v, dt) {
+  const g = v.g, x = g.position.x;
+  if (!v.picked && v.t > 0.3) {
+    const w = TRF.waiting.reduce((a, b) => (!a || Math.abs(b.position.x - x) < Math.abs(a.position.x - x) ? b : a), null);
+    if (w) { TRF.waiting.splice(TRF.waiting.indexOf(w), 1); v.picked = w; } else v.picked = true;
+  }
+  const w = v.picked;
+  if (w && w !== true) {
+    if (!w.arrived && moveTo(w, x - 0.6, KERB, 3, dt) < 0.3) { w.arrived = true; w.rotation.y = Math.PI; playAnim(w, 'salim', 1.3); playAnim(v.parent, 'beritangan', 1.3); bubble(w, pick(["Assalamu'alaikum, Ayah!", 'Ibu! Lama menunggu.', 'Alhamdulillah, dijemput.']), 1600); setTimeout(() => bubble(v.parent, pick(["Wa'alaikumussalam. Bagaimana sekolahnya hari ini?", 'Ayo pulang, Nak.']), 1800), 900); v.t = 0; }
+    if (w.arrived && v.t > 2.2) {
+      trfRemove(w);
+      if (!v.car) { w.position.set(0, 0.6, -0.65); w.rotation.set(0, 0, 0); w.legL.rotation.x = w.legR.rotation.x = -1.2; g.add(w); }
+      v.picked = true; v.t = 0.6;
+    }
+  }
+  if ((v.picked === true && v.t > 1.2) || v.t > 14) leaveBay(v);
+}
+function leaveBay(v) { if (v.slot) { v.slot.v = null; v.slot = null; } v.done = true; v.state = 'keluar'; }
 function trafficClear() {
-  TRF.veh.forEach((v) => { if (v.kid) trfRemove(v.kid); scene.remove(v.g); });
+  TRF.veh.forEach((v) => { if (v.kid) trfRemove(v.kid); if (v.parent.parent === scene) scene.remove(v.parent); scene.remove(v.g); });
   TRF.peds.concat(TRF.waiting).forEach(trfRemove);
+  BAY.forEach((b) => (b.v = null));
   TRF.veh = []; TRF.peds = []; TRF.waiting = []; TRF.on = false;
 }
 

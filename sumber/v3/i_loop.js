@@ -45,8 +45,8 @@ function blocked(x, z) {
   return false;
 }
 let wingWarn = 0;
-function wingBlocked(x) {
-  if (zone !== 'luar') return false;
+function wingBlocked(x, z = 0) {
+  if (zone !== 'luar' || z > 55.5) return false;          // jalan & trotoar depan sekolah: bebas untuk putra dan putri
   const bad = isPutri(state.cls) ? x < -WING + 0.6 : x > WING - 0.6;
   if (bad && performance.now() - wingWarn > 2500) { wingWarn = performance.now(); toast(isPutri(state.cls) ? 'Ini Area Putra — siswi putri tidak masuk ke sini' : 'Ini Area Putri — siswa putra tidak masuk ke sini'); }
   return bad;
@@ -112,7 +112,7 @@ function loop() {
       const sp = (riding ? 17 : zone === 'luar' ? (sprint ? 18 : 10) : 6.5) * Math.min(1, L) / L;
       const nx = player.position.x + vx * sp * dt, nz = player.position.z + vz * sp * dt;
       const stuck = blocked(player.position.x, player.position.z);   // bila terjepit, tetap boleh bergerak keluar
-      if ((stuck || !blocked(nx, player.position.z)) && !bodyBlocked(player, nx, player.position.z) && !wingBlocked(nx)) player.position.x = nx;
+      if ((stuck || !blocked(nx, player.position.z)) && !bodyBlocked(player, nx, player.position.z) && !wingBlocked(nx, player.position.z)) player.position.x = nx;
       if ((stuck || !blocked(player.position.x, nz)) && !bodyBlocked(player, player.position.x, nz)) player.position.z = nz;
       let d = Math.atan2(vx, vz) - player.rotation.y; d = Math.atan2(Math.sin(d), Math.cos(d));
       player.rotation.y += d * Math.min(1, dt * 12);
