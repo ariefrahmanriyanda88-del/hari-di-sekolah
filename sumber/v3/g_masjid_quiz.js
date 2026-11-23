@@ -26,10 +26,13 @@ let jamaah = [], imam = null;
 function buildJamaah() {
   jamaah.forEach((p) => ms.remove(p)); jamaah = [];
   if (imam) ms.remove(imam);
-  const L = classTeachers(state.cls).filter((t) => teacherInfo(t).g === 'L');
-  const imamName = L[0] || Object.keys(TEACH).find((t) => TEACH[t].g === 'L');
-  imam = makePerson(teacherModel('L', 1)); imam.position.set(0, 0, -9.3); imam.rotation.y = Math.PI; ms.add(imam);
-  nameTag(imam, 'Imam: ' + teacherInfo(imamName).p, 0.5); imam.base = imam.position.clone();
+  // imam bergiliran: setiap sholat berjamaah dipimpin ustadz yang berbeda
+  const pool = Object.keys(TEACH).filter((t) => TEACH[t].g === 'L').sort((a, b) => TEACH[a].p.localeCompare(TEACH[b].p, 'id'));
+  let turn = 0; try { turn = +(localStorage.getItem('hds-imam') || 0); localStorage.setItem('hds-imam', turn + 1); } catch (e) { turn = Math.floor(Math.random() * 99); }
+  const imamName = pool[turn % pool.length];
+  imam = makePerson(teacherModel('L', turn % 4)); imam.position.set(0, 0, -9.3); imam.rotation.y = Math.PI; ms.add(imam);
+  nameTag(imam, '🕌 Imam: ' + teacherInfo(imamName).p, 0.55); imam.tagEl.classList.add('imam'); imam.base = imam.position.clone();
+  setTimeout(() => toast(`Imam sholat kali ini: ${teacherInfo(imamName).p}`), 1200);
   const rows = [[false, -6.6], [false, -4.8], [true, 5.4], [true, 7.2]];
   const me = isPutri(state.cls);
   rows.forEach(([putri, z], r) => {
