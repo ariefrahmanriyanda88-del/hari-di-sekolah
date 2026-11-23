@@ -178,6 +178,9 @@ function guruSit(h, d) {
 const gAntum = () => (meP() ? 'anti' : 'antum');
 function guruGreetOpen(n) {
   const nm = state.nama, sp = guruSapaan();
+  if (n.role === 'yys') return pick([`Ahlan wa sahlan, ${nm}. Silakan duduk.`, `${nm}, apa kabar? Bagaimana keadaan sekolah?`, `Wa'alaikumussalam… eh, ${nm}. Ada yang bisa kami bantu?`]);
+  if (n.role === 'kepsek') return pick([`Silakan masuk, ${nm}.`, `${nm}, ahlan. Ada yang ingin dikoordinasikan?`]);
+  if (n.role === 'tu') return pick([`Silakan, ${nm}. Ada keperluan administrasi?`, `Ahlan, ${nm}. Mau mengambil atau menyerahkan berkas?`]);
   if (n.kind === 'guru') return pick([`Eh, ${nm}. Ahlan wa sahlan.`, `${nm}! Apa kabar, ${gAntum()}?`, `Mari, ${nm}. Sudah selesai mengajar?`]);
   if (n.kind === 'satpam') return pick([`Pagi, ${sp}. Silakan.`, `${nm}, Ustadz-Ustadzah sudah banyak yang datang.`]);
   if (n.kind === 'kantin') return `Silakan, ${nm}. Mau pesan apa?`;
@@ -185,9 +188,14 @@ function guruGreetOpen(n) {
 }
 function guruGreetOptions(n) {
   const sama = !!n.putri === meP();
+  const salam = sama ? [`🤝 Bersalaman: "Assalamu'alaikum, ${n.name}. Apa kabar?"`, 'gKabar'] : [`✋ Salam, tangan di dada: "Assalamu'alaikum, ${n.name}"`, 'gDada'];
+  if (n.role === 'yys') return [salam, ['🏫 "Mohon arahan untuk program sekolah ke depan."', 'yArah'], ['📅 "Ada agenda yayasan pekan ini?"', 'yAgenda'], ['🤲 "Mohon doanya untuk kemajuan sekolah."', 'yDoa']];
+  if (n.role === 'kepsek') return [salam, ['📋 "Izin melaporkan kegiatan hari ini."', 'kLapor'], ['🗓️ "Kapan jadwal rapat dewan guru berikutnya?"', 'kRapat']];
+  if (n.role === 'tu') return [salam, ['🗂️ "Apakah ada berkas yang perlu saya lengkapi?"', 'tBerkas'], ['🧾 "Izin menanyakan jadwal pencairan honor kegiatan."', 'tHonor']];
   if (n.kind === 'guru') return [
     sama ? [`🤝 Bersalaman: "Assalamu'alaikum, ${n.name}. Apa kabar?"`, 'gKabar'] : [`✋ Salam, tangan di dada: "Assalamu'alaikum, ${n.name}"`, 'gDada'],
-    ['📚 "Bagaimana kelas hari ini?"', 'gKelas'],
+    ['☕ "Sudah istirahat, ' + (n.putri ? 'Ustadzah' : 'Ustadz') + '? Mari ngopi sebentar."', 'gNgopi'],
+    ['🧑‍🏫 "Bagaimana pengalaman antum menangani kelas yang ramai?"', 'gBerbagi'],
     ['🕌 "Nanti Zuhur kita berjamaah, ya."', 'gZuhur'],
     ['📋 "Sudah siapkan laporan untuk yayasan?"', 'gLapor'],
   ];
@@ -205,7 +213,9 @@ function guruDoGreet(n, act) {
   const nm = state.nama, sp = guruSapaan(), an = gAntum();
   const mine = {
     gKabar: `Assalamu'alaikum, ${n.name}. Apa kabar?`, gDada: `Assalamu'alaikum, ${n.name}.`, gKelas: `${n.name}, bagaimana kelas hari ini?`,
-    gZuhur: 'Nanti Zuhur kita berjamaah, ya.', gLapor: 'Sudah siapkan laporan untuk yayasan?', gAman: `Assalamu'alaikum, ${n.name}. Bagaimana, aman?`,
+    gZuhur: 'Nanti Zuhur kita berjamaah, ya.', gNgopi: `Sudah istirahat, ${n.sapaan}? Mari ngopi sebentar.`, gBerbagi: `${n.name}, bagaimana pengalaman ${an} menangani kelas yang ramai?`,
+    yArah: 'Mohon arahan untuk program sekolah ke depan.', yAgenda: 'Ada agenda yayasan pekan ini?', yDoa: 'Mohon doanya untuk kemajuan sekolah.',
+    kLapor: 'Izin melaporkan kegiatan hari ini.', kRapat: 'Kapan jadwal rapat dewan guru berikutnya?', tBerkas: 'Apakah ada berkas yang perlu saya lengkapi?', tHonor: 'Izin menanyakan jadwal pencairan honor kegiatan.', gLapor: 'Sudah siapkan laporan untuk yayasan?', gAman: `Assalamu'alaikum, ${n.name}. Bagaimana, aman?`,
     gTerima: 'Terima kasih sudah menjaga sekolah.', gKantin: "Assalamu'alaikum, Bu. Ramai hari ini?",
     mSarapan: "Wa'alaikumussalam, Nak. Sudah sarapan?", mTugas: 'Tugasnya sudah dikerjakan?', mNasihat: 'Jangan lupa murajaah hafalan, ya.',
   }[act];
@@ -214,6 +224,15 @@ function guruDoGreet(n, act) {
     gDada: [`Wa'alaikumussalam warahmatullah, ${nm}.`],
     gKelas: ['Alhamdulillah, anak-anak semangat. Ada beberapa yang masih perlu dibimbing.', 'Lancar. Tadi materi baru, anak-anak aktif bertanya.', 'Agak ramai, tapi alhamdulillah tugasnya selesai semua.'],
     gZuhur: ['InsyaAllah. Sekalian kita pantau anak-anak berwudhu.', 'Siap, nanti kita bertemu di masjid.'],
+    gNgopi: ['Boleh, sebentar saja. Setelah ini saya masuk kelas lagi.', 'Jazakallahu khairan, nanti saja setelah Zuhur, ya.'],
+    gBerbagi: ['Saya biasanya mulai dengan murajaah singkat dan tanya jawab, anak-anak jadi lebih fokus.', 'Kuncinya sabar dan konsisten. Beri pujian untuk yang tertib, itu ampuh.'],
+    yArah: ['Fokus kita tahun ini: tahfizh, adab, dan mutu pembelajaran. Jaga kekompakan dewan guru, ya.', 'Teruskan program yang baik. Usulan baru silakan disampaikan lewat Bidang Pendidikan.'],
+    yAgenda: ['Pekan ini ada rapat koordinasi di Balai Pertemuan lantai 2. Nanti undangannya disampaikan.', 'Ada pembinaan guru dan karyawan hari Sabtu, insyaAllah.'],
+    yDoa: ['Aamiin. Semoga Allah mudahkan dan berkahi ikhtiar kita semua.', 'Baarakallahu fiikum. Kita saling mendoakan.'],
+    kLapor: ['Baik, silakan. Terima kasih atas laporannya, nanti kita bahas di rapat.', 'Jazakallahu khairan. Laporannya dikirim juga ke Waka Kurikulum, ya.'],
+    kRapat: ['InsyaAllah hari Kamis setelah Ashar.', 'Nanti diumumkan di grup dewan guru.'],
+    tBerkas: ['Tinggal fotokopi ijazah terbaru untuk arsip kepegawaian.', 'Sudah lengkap, jazakallahu khairan.'],
+    tHonor: ['InsyaAllah akhir pekan ini, setelah laporan kegiatannya diverifikasi.', 'Masih menunggu tanda tangan Kepala Sekolah, insyaAllah segera.'],
     gLapor: ['Sedang saya rapikan, insyaAllah besok saya bawa ke yayasan.', 'Sudah, kemarin saya serahkan ke Bidang Pendidikan.'],
     gAman: [`Alhamdulillah aman, ${sp}. Tadi pagi jalan ramai, tapi tertib.`],
     gTerima: [`Sama-sama, ${sp}. Sudah tugas kami.`],

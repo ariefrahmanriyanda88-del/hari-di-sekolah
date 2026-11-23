@@ -122,7 +122,7 @@ let yysPeople = [], yysTask = null;
 function yysClear() { yysPeople.forEach((p) => { scene.remove(p); const i = npcs.indexOf(p); if (i >= 0) npcs.splice(i, 1); }); yysPeople = []; }
 function yysPerson(model, name, tag, wx, wz, rot, sit = true) {
   const p = makePerson(model);
-  Object.assign(p, { fixed: true, kind: 'guru', putri: model.putri, sapaan: model.putri ? 'Ustadzah' : 'Ustadz', name, greetDay: 0 });
+  Object.assign(p, { fixed: true, kind: 'guru', role: 'yys', putri: model.putri, sapaan: model.putri ? 'Ustadzah' : 'Ustadz', name, greetDay: 0 });
   if (sit) seatPerson(p, wx, wz, rot); else { p.position.set(wx, 0, wz); p.rotation.y = rot; }
   if (tag) nameTag(p, tag, 0.42, 2.4);
   scene.add(p); npcs.push(p); yysPeople.push(p); return p;
