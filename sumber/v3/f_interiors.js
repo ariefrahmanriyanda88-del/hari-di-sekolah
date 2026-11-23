@@ -237,41 +237,52 @@ function populateKantin() {
   })));
 }
 // ---------- ruang Ustadz / ruang Ustadzah ----------
+// ruang guru: SETIAP guru punya meja sendiri dengan papan nama
 function buildRuang(origin, putri) {
-  const h = makeHall(origin, 24, 16, 0xf3e0c8, '#ece4d4', '#e2d8c4');
+  const list = Object.keys(TEACH).filter((t) => TEACH[t].g === (putri ? 'P' : 'L'))
+    .sort((a, b) => TEACH[a].p.localeCompare(TEACH[b].p, 'id'));
+  const cols = putri ? 8 : 6, rows = Math.ceil(list.length / cols), DX = 3.2, DZ = 3.6;
+  const W = cols * DX + 5, D = rows * DZ + 8;
+  const h = makeHall(origin, W, D, 0xf3e0c8, '#ece4d4', '#e2d8c4');
   const { add } = h;
-  for (let r = 0; r < 2; r++) for (let c = 0; c < 4; c++) {
-    const x = -8 + c * 5.3, z = -3.5 + r * 5;
-    add(x, 0.4, z, 2.6, 0.8, 1.3, 0x9b6b3c, true); add(x, 0.84, z, 2.7, 0.08, 1.4, 0xb98652);
-    add(x - 0.4, 1.2, z - 0.35, 0.9, 0.6, 0.06, 0x2b2f36); add(x - 0.4, 0.95, z - 0.3, 0.2, 0.15, 0.15, 0x2b2f36);   // komputer
-    add(x + 0.8, 1.0, z, 0.4, 0.25, 0.5, [0xd9577a, 0x3b7dd8, 0x58ad4e, 0xf2a33a][(r + c) % 4]);                         // buku
-    add(x, 0.45, z + 1.05, 0.6, 0.08, 0.55, 0x2b2f36); add(x, 0.8, z + 1.3, 0.6, 0.6, 0.06, 0x2b2f36);                  // kursi
-  }
-  add(0, 2.0, -7.7, 6, 1.6, 0.1, 0xffffff); add(-9.5, 1.1, -7.2, 2.2, 2.2, 0.8, 0x7a8590, true); add(9.5, 1.1, -7.2, 2.2, 2.2, 0.8, 0x7a8590, true);
-  add(10.8, 0.6, 2, 0.6, 1.2, 0.6, 0x58b8e8); add(-10.5, 0.4, 3, 1.2, 0.8, 3, putri ? 0xb04a6e : 0x3b5e9e, true);          // dispenser & sofa
-  const s = label(putri ? 'Ruang Ustadzah' : 'Ruang Ustadz', 0, 0, 0, 0.9); scene.remove(s); s.position.set(0, 3.6, -7.6); h.g.add(s);
-  const s2 = label('Jadwal Piket Guru', 0, 0, 0, 0.5); scene.remove(s2); s2.position.set(0, 2.2, -7.55); h.g.add(s2);
-  h.people = [];
+  h.D = D; h.desks = {};
+  const z0 = -D / 2 + 2.6;
+  list.forEach((t, i) => {
+    const r = Math.floor(i / cols), c = i % cols, x = (c - (cols - 1) / 2) * DX, z = z0 + r * DZ;
+    add(x, 0.4, z + 0.9, 2.3, 0.8, 1.0, 0x9b6b3c, true); add(x, 0.84, z + 0.9, 2.4, 0.07, 1.1, 0xb98652);          // meja
+    add(x + 0.55, 1.12, z + 0.7, 0.75, 0.5, 0.05, 0x2b2f36); add(x + 0.55, 0.92, z + 0.72, 0.16, 0.12, 0.12, 0x2b2f36);   // komputer
+    add(x - 0.75, 0.95, z + 0.8, 0.35, 0.2, 0.45, [0xd9577a, 0x3b7dd8, 0x58ad4e, 0xf2a33a][i % 4]);                   // buku
+    add(x - 0.15, 0.95, z + 1.42, 1.0, 0.2, 0.06, 0xf5f0e0);                                                              // papan nama
+    const nm = label(TEACH[t].p, 0, 0, 0, 0.26); scene.remove(nm); nm.position.set(x - 0.15, 1.33, z + 1.5); h.g.add(nm);
+    // kursi
+    add(x, 0.45, z - 0.05, 0.62, 0.08, 0.58, 0x2b2f36); add(x, 0.82, z - 0.36, 0.62, 0.62, 0.06, 0x2b2f36);
+    h.desks[t] = { x: origin.x + x, z: origin.z + z };
+  });
+  add(0, 2.2, -D / 2 + 0.3, 6, 1.5, 0.1, 0xffffff);
+  add(W / 2 - 1, 0.6, D / 2 - 3, 0.6, 1.2, 0.6, 0x58b8e8); add(-W / 2 + 1.2, 0.4, D / 2 - 3.5, 1.2, 0.8, 3, putri ? 0xb04a6e : 0x3b5e9e, true);   // dispenser & sofa
+  const s = label(putri ? 'Ruang Ustadzah' : 'Ruang Ustadz', 0, 0, 0, 0.9); scene.remove(s); s.position.set(0, 3.7, -D / 2 + 0.4); h.g.add(s);
+  const s2 = label('Jadwal Piket Guru', 0, 0, 0, 0.45); scene.remove(s2); s2.position.set(0, 2.3, -D / 2 + 0.45); h.g.add(s2);
+  h.people = []; h.byName = {};
   return h;
 }
 const ruangL = buildRuang(RUANG_L, false), ruangP = buildRuang(RUANG_P, true);
+const ESA = 'Esa Anugerah Putra, M.Pd., Gr.';
 function populateRuang() {
   [ruangL, ruangP].forEach((h, k) => {
-    h.people.forEach((p) => { scene.remove(p); const i = npcs.indexOf(p); if (i >= 0) npcs.splice(i, 1); }); h.people = [];
+    h.people.forEach((p) => { scene.remove(p); const i = npcs.indexOf(p); if (i >= 0) npcs.splice(i, 1); }); h.people = []; h.byName = {};
     const g = k ? 'P' : 'L';
-    const mine = classTeachers(state.cls).filter((t) => teacherInfo(t).g === g);
-    const others = Object.keys(TEACH).filter((t) => TEACH[t].g === g && !mine.includes(t));
-    mine.concat(others).slice(0, 7).forEach((t, i) => {
-      const r = Math.floor(i / 4), c = i % 4, x = -8 + c * 5.3, z = -3.5 + r * 5 + 1.05;
-      const info = teacherInfo(t), m = makePerson(teacherModel(g, i));
-      m.position.set(h.origin.x + x, 0, h.origin.z + z); m.rotation.y = Math.PI; sitPose(m, true);
-      Object.assign(m, { fixed: true, seated: true, kind: 'guru', putri: g === 'P', sapaan: g === 'P' ? 'Ustadzah' : 'Ustadz', name: info.p, greetDay: 0, homeRot: Math.PI });
-      nameTag(m, info.p, 0.5, 2.4);
-      scene.add(m); h.people.push(m); npcs.push(m);
+    const mine = classTeachers(state.cls);
+    Object.keys(h.desks).forEach((t, i) => {
+      // sebagian guru sedang mengajar di kelas (mejanya kosong); guru kelasmu & Ustadz Esa selalu ada
+      const hadir = mine.includes(t) || t === ESA || ((i * 7 + (state.day || 1) * 3) % 10) < 6;
+      if (!hadir) return;
+      const d = h.desks[t], info = teacherInfo(t), m = makePerson(teacherModel(g, i));
+      m.position.set(d.x, 0, d.z); m.rotation.y = 0; sitPose(m, true);
+      Object.assign(m, { fixed: true, seated: true, kind: 'guru', putri: g === 'P', sapaan: g === 'P' ? 'Ustadzah' : 'Ustadz', name: info.p, greetDay: 0, homeRot: 0, full: t });
+      scene.add(m); h.people.push(m); npcs.push(m); h.byName[t] = m;
     });
   });
 }
-
 // sendok di tangan kanan
 function addSpoon(p) {
   if (p.spoon) return p.spoon;

@@ -404,3 +404,23 @@ function toiletAction(id) {
       });
     }, 'main'], ['Tidak jadi', closeModal, 'small']]);
 }
+
+// ---------- Ustadz Esa: saat istirahat & waktu santai berkeliling di sekitar lapangan ----------
+const esaOut = makePerson(teacherModel('L', 3));
+Object.assign(esaOut, { fixed: true, kind: 'guru', putri: false, sapaan: 'Ustadz', name: teacherInfo(ESA).p, greetDay: 0, homeRot: 0, visible: false });
+esaOut.position.set(-18, 0, -38); scene.add(esaOut); npcs.push(esaOut);
+nameTag(esaOut, `${teacherInfo(ESA).p} · piket lapangan`, 0.46);
+const ESA_PATH = [[-20, -38], [20, -38], [26, -50], [20, -68.5], [-20, -68.5], [-26, -50]];
+let esaI = 0, esaWait = 0;
+function updateEsa(dt) {
+  const out = ['istirahat1', 'santai', 'pulang'].includes(phase) && zone === 'luar';
+  if (esaOut.visible !== out) {
+    esaOut.visible = out;
+    const inRoom = ruangL.byName && ruangL.byName[ESA]; if (inRoom) inRoom.visible = !['istirahat1', 'santai', 'pulang'].includes(phase);
+  }
+  if (!out || paused || esaOut.anim) return;
+  if (esaWait > 0) { esaWait -= dt; moveTo(esaOut, esaOut.position.x, esaOut.position.z, 0, dt); return; }
+  const [x, z] = ESA_PATH[esaI];
+  if (bodyBlocked(esaOut, esaOut.position.x + Math.sign(x - esaOut.position.x) * 0.3, esaOut.position.z + Math.sign(z - esaOut.position.z) * 0.3)) return;
+  if (moveTo(esaOut, x, z, 2.4, dt) < 0.3) { esaI = (esaI + 1) % ESA_PATH.length; esaWait = 1.5 + Math.random() * 2; }
+}

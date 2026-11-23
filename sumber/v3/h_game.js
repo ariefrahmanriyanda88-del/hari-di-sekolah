@@ -343,10 +343,10 @@ function sleep() {
 // ---------- pintu ruangan yang bisa dijelajahi ----------
 function enterRuang(putri) {
   const h = putri ? ruangP : ruangL, dd = doorsOut.find((d) => d.id === (putri ? 'ruangPI' : 'ruangPA'));
-  enterHall(putri ? 'Ruang Ustadzah' : 'Ruang Ustadz', h.origin, 16, { x: dd.x, z: dd.z - 1.5, rot: Math.PI }, () => {
+  enterHall(putri ? 'Ruang Ustadzah' : 'Ruang Ustadz', h.origin, h.D, { x: dd.x, z: dd.z - 1.5, rot: Math.PI }, () => {
     bubble(player, "Assalamu'alaikum… permisi.", 1800);
     const t = h.people[0]; if (t) setTimeout(() => bubble(t, `Wa'alaikumussalam. Ada perlu apa, ${state.nama}?`, 2600), 1200);
-    toast(`${putri ? 'Ruang Ustadzah' : 'Ruang Ustadz'} · dekati guru untuk menyapa`);
+    toast(`${putri ? 'Ruang Ustadzah' : 'Ruang Ustadz'} · setiap guru punya meja bernama. Meja kosong: gurunya sedang mengajar`);
   });
 }
 let lastTrig = null, leaving = false;

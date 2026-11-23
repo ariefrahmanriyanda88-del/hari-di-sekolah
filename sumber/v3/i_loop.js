@@ -142,7 +142,7 @@ function loop() {
     camera.lookAt(player.position.x, player.position.y + (eatingCam ? -0.6 : 1.2), player.position.z);
   }
   for (const l of sceneLabels) { if (l.parent !== scene) continue; const d = camera.position.distanceTo(l.position); l.material.opacity = THREE.MathUtils.clamp((d - 16) / 10, 0, 1); }
-  updateDoors(dt, player); updateBubbles(); updateTags(); updateMatch(dt);
+  updateDoors(dt, player); updateBubbles(); updateTags(); updateMatch(dt); updateEsa(dt);
   const mvWant = zone === 'luar' && !paused && !riding && !player.sitting;
   if (mvWant !== mvShown) { mvShown = mvWant; $('mv').classList.toggle('show', mvWant); if (!mvWant && player.position.y > 0) { player.position.y = 0; jumpV = 0; } }
   frameN++; if (frameN % 2 === 0) renderer.shadowMap.needsUpdate = true;
