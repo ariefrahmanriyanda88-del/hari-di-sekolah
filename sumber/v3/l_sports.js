@@ -53,8 +53,8 @@ function flight(from, to, apex, dur) { return { from: from.clone(), to: to.clone
 function flyPos(f, out) { const k = Math.min(1, f.t / f.dur); out.lerpVectors(f.from, f.to, k); out.y += Math.sin(k * Math.PI) * f.apex; return k; }
 function buildSports() {
   [voli, basket].forEach((s) => s && s.ps.forEach((p) => scene.remove(p)));
-  VOLI = COURTS[isPutri(state.cls) ? 'PI' : 'PA'].voli; BASK = COURTS[isPutri(state.cls) ? 'PI' : 'PA'].bask;
-  const putri = isPutri(state.cls), nm = (i) => classmateNames[(12 + i) % classmateNames.length] || 'Teman';
+  VOLI = COURTS[meP() ? 'PI' : 'PA'].voli; BASK = COURTS[meP() ? 'PI' : 'PA'].bask;
+  const putri = meP(), nm = (i) => classmateNames[(12 + i) % classmateNames.length] || 'Teman';
   voli = { ps: [
     Object.assign(sportPerson(putri, 0x2f8a5c, 0, nm(0)), { team: 0, home: [VOLI.ax + 3, VOLI.net + 4.5] }),
     Object.assign(sportPerson(putri, 0x2f8a5c, 1, nm(1)), { team: 0, home: [VOLI.bx - 3, VOLI.net + 4.5] }),
@@ -189,7 +189,7 @@ function leaveSport() {
   match = null;
   if (basket && basket.holder === player) basket.holder = basket.ps[0];
   const k = playingSport; playingSport = null; ctl([]);
-  if (zone === 'luar') { const e = isPutri(state.cls) ? -1 : 1; if (k === 'voli') player.position.set(e > 0 ? VOLI.bx + 4.5 : VOLI.ax - 4.5, 0, VOLI.net); else player.position.set(e > 0 ? BASK.bx + 4 : BASK.ax - 4, 0, (BASK.az + BASK.bz) / 2); player.rotation.y = 0; }
+  if (zone === 'luar') { const e = meP() ? -1 : 1; if (k === 'voli') player.position.set(e > 0 ? VOLI.bx + 4.5 : VOLI.ax - 4.5, 0, VOLI.net); else player.position.set(e > 0 ? BASK.bx + 4 : BASK.ax - 4, 0, (BASK.az + BASK.bz) / 2); player.rotation.y = 0; }
 }
 // ---------- pertandingan resmi: transisi, papan skor, waktu ----------
 let match = null;

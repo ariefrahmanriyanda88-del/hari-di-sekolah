@@ -80,7 +80,7 @@ const LAB_SPOT = spot(LABR, LAB_FREE.x, LAB_FREE.z + 0.9, labr.g);
 let labPeople = [];
 function enterLabRoom() {
   labPeople.forEach((p) => scene.remove(p)); labPeople = [];
-  const putri = isPutri(state.cls);
+  const putri = meP();
   LAB_PCS.forEach((p, i) => { if (p === LAB_FREE || i % 3 === 1) return; const m = makePerson(studentModel(putri, i)); m.position.set(LABR.x + p.x, 0, LABR.z + p.z); m.rotation.y = Math.PI; sitPose(m, true); m.armL.rotation.x = m.armR.rotation.x = -1.2; scene.add(m); labPeople.push(m); });
   const g = makePerson(teacherModel(putri ? 'P' : 'L', 4)); g.position.set(LABR.x - 8.8, 0, LABR.z - 4.4); g.rotation.y = 0; nameTag(g, putri ? 'Ustadzah TIK' : 'Ustadz TIK', 0.5); scene.add(g); labPeople.push(g);
   const dd = doorsOut.find((d) => d.id === 'lab');
@@ -236,7 +236,7 @@ function enterTU() {
     scene.add(p); npcs.push(p); tuPeople.push(p);
   });
   // murid yang sedang antre di depan loket (sesuai jenis kelamin pemain)
-  const putri = isPutri(state.cls);
+  const putri = meP();
   [3.6, 8.6].forEach((x, i) => {
     const q = makePerson(studentModel(putri, i + 2)); q.position.set(TUR.x + x, 0, TUR.z - 2.4); q.rotation.y = Math.PI;
     if (q.bag) q.bag.visible = false;
@@ -305,7 +305,7 @@ const MW_SPOTS = {
 };
 function enterMasjidWalk() {
   jamaah.forEach((p) => ms.remove(p)); jamaah = []; if (imam) { ms.remove(imam); imam = null; }
-  const me = isPutri(state.cls), sd = me ? 'PI' : 'PA', sp = me ? MW.spawnPI : MW.spawnPA;
+  const me = meP(), sd = me ? 'PI' : 'PA', sp = me ? MW.spawnPI : MW.spawnPA;
   sideJamaah.forEach((p) => ms.remove(p)); sideJamaah = [];
   const z0 = me ? 5.6 : -6.4;
   [[-6, 0], [-3.5, 1.6], [5, 0.8], [7, 2.2]].forEach(([x, dz], i) => {
@@ -360,7 +360,7 @@ const WD_SPOTS = {};
   WD_SPOTS.wudhu = spot(WDR, 0, -3.0, wdr.g);
 }
 function enterWudhuRoom() {
-  const id = isPutri(state.cls) ? 'wudhuPI' : 'wudhuPA', dd = doorsOut.find((d) => d.id === id), s = id === 'wudhuPA' ? 1 : -1;
+  const id = meP() ? 'wudhuPI' : 'wudhuPA', dd = doorsOut.find((d) => d.id === id), s = id === 'wudhuPA' ? 1 : -1;
   enterHall(`Tempat Wudhu ${side()}`, WDR, 12, { x: dd.x + s * 1.2, z: dd.z, rot: s * Math.PI / 2 }, () => {
     fillWudhu();
     roomSpots = [{ ...WD_SPOTS.wudhu, id: 'wudhu' }];
@@ -387,7 +387,7 @@ const TL_SPOTS = {};
   TL_SPOTS.bilik = spot(TLR, 0, 0.2, tlr.g); TL_SPOTS.cuci = spot(TLR, -6.4, 3, tlr.g);
 }
 function enterToilet() {
-  const id = isPutri(state.cls) ? 'toiletPI' : 'toiletPA', dd = doorsOut.find((d) => d.id === id);
+  const id = meP() ? 'toiletPI' : 'toiletPA', dd = doorsOut.find((d) => d.id === id);
   enterHall(`Toilet ${side()}`, TLR, 12, { x: dd.x, z: dd.z - 1.2, rot: Math.PI }, () => {
     roomSpots = [{ ...TL_SPOTS.bilik, id: 'toilet-bilik' }, { ...TL_SPOTS.cuci, id: 'toilet-cuci' }];
     toast('Bilik toilet di belakang · wastafel di kiri');
@@ -631,7 +631,7 @@ function trafficClear() {
 const WDC = { list: [], q: [], t: 0 };
 const WD_TAPS = [-7.2, -4.8, -2.4, 2.4, 4.8, 7.2];                // keran tengah (x=0) untuk pemain
 function wdPerson(i) {
-  const putri = isPutri(state.cls), guru = i % 4 === 3;
+  const putri = meP(), guru = i % 4 === 3;
   let m, name;
   if (guru) { const ts = Object.keys(TEACH).filter((t) => TEACH[t].g === (putri ? 'P' : 'L')); name = TEACH[ts[(i * 7) % ts.length]].p; m = makePerson(teacherModel(putri ? 'P' : 'L', i)); nameTag(m, name, 0.45); }
   else { name = (putri ? NAMES_PI : NAMES_PA)[i % 8]; m = makePerson(studentModel(putri, i + 2)); }

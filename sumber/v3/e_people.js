@@ -121,7 +121,7 @@ function classTeachers(cls) {
 function populate() {
   [...welcomers, ...walkers].forEach((n) => { scene.remove(n); npcs.splice(npcs.indexOf(n), 1); });
   welcomers = []; walkers = [];
-  const putri = isPutri(state.cls);
+  const putri = meP();
   const pool = (putri ? NAMES_PI : NAMES_PA).filter((n) => n.toLowerCase() !== (state.nama || '').toLowerCase());
   classmateNames = pool.slice();
   const ts = classTeachers(state.cls);
@@ -145,7 +145,7 @@ function populate() {
 }
 
 // ---------- aturan berpapasan ----------
-const isMale = (c) => (c === player ? !isPutri(state.cls) : !c.putri);
+const isMale = (c) => (c === player ? !meP() : !c.putri);
 const isStudent = (c) => c === player || c.kind === 'siswa' || c.kind === 'bola';
 const sameSex = (a, b) => isMale(a) === isMale(b);
 const canTalk = (n) => !(isStudent(n) && !sameSex(n, player));
@@ -156,7 +156,7 @@ ball.castShadow = true; ball.position.set(FIELD.cx, 0.32, FIELD.cz); ball.vel = 
 let ballers = [], goals = [0, 0];
 function buildBallers() {
   ballers.forEach((b) => scene.remove(b)); ballers = [];
-  const putri = isPutri(state.cls);
+  const putri = meP();
   for (let i = 0; i < 6; i++) {
     const team = i % 2;
     const m = putri ? { putri: true, shirt: team ? 0xf57c00 : 0x1e88e5, bottom: 0x3a3a3a, hijab: 0xffffff, skin: SKINS[i % 4] } : { shirt: team ? 0xf57c00 : 0x1e88e5, bottom: 0x1a1a1a, tie: false, skin: SKINS[i % 4] };
@@ -273,7 +273,7 @@ function updateNPCs(dt) {
 // semua berbondong-bondong ke masjid saat azan
 const crowd = [];
 function crowdToMasjid() {
-  const putri = isPutri(state.cls);
+  const putri = meP();
   for (const n of walkers) {
     n.visible = true; n.wait = Math.random() * 4; n.passT = 0;
     const goal = n.putri ? 10 : 9;
@@ -316,7 +316,7 @@ function afterMasjid() {
 // ---------- menyapa ----------
 const pick = (a) => a[Math.floor(Math.random() * a.length)];
 function greetOptions(n) {
-  const sama = !!n.putri === isPutri(state.cls);
+  const sama = !!n.putri === meP();
   if (n.kind === 'guru') {
     const o = [];
     if (sama) o.push([`🤝 Salim (cium tangan): "Assalamu'alaikum, ${n.name}"`, n.welcome ? 'salimPagi' : 'salim']);
@@ -337,7 +337,7 @@ function doGreet(n, act) {
   faceTo(player, n); faceTo(n, player); n.talk = 3.5;
   if (n.fixed && n.homeRot !== undefined) setTimeout(() => { n.rotation.y = n.homeRot; }, 3600);
   player.busy = 3.2;
-  const nm = state.nama, fi = isPutri(state.cls) ? 'fiiki' : 'fiik';
+  const nm = state.nama, fi = meP() ? 'fiiki' : 'fiik';
   const reply = {
     salim: [`Wa'alaikumussalam warahmatullah. Barakallahu ${fi}, ${nm}.`],
     salimPagi: [`Wa'alaikumussalam, selamat datang ${nm}! Semangat belajar hari ini.`],

@@ -137,7 +137,7 @@ const lib = makeHall(LIB, 24, 16, 0xf1e6cf, '#efe3c9', '#e4d6b8');
 let libPeople = [];
 function enterLibrary() {
   libPeople.forEach((p) => scene.remove(p)); libPeople = [];
-  const putri = isPutri(state.cls);
+  const putri = meP();
   [[-5.3, 1.2], [-2.7, 1.2], [2.7, 2.8], [5.3, 1.2]].forEach(([x, z], i) => {
     const m = makePerson(studentModel(putri, i + 4)); m.position.set(LIB.x + x, 0, LIB.z + z); m.rotation.y = z < 2 ? 0 : Math.PI; sitPose(m, true); m.armL.rotation.x = m.armR.rotation.x = -1.1; scene.add(m); libPeople.push(m);
   });

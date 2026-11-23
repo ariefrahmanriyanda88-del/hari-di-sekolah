@@ -42,7 +42,7 @@ const PARK_SLOT = { x: -37 + 9 * 3, z: 51 };
 // ---------- motor & helm pemain ----------
 let riding = false, myMotor = null, helmet = null;
 function startRiding() {
-  myMotor = makeMotor(isPutri(state.cls) ? 0xd9577a : 0x3b7dd8); myMotor.position.y = -0.55; player.add(myMotor);
+  myMotor = makeMotor(meP() ? 0xd9577a : 0x3b7dd8); myMotor.position.y = -0.55; player.add(myMotor);
   helmet = new THREE.Mesh(new THREE.SphereGeometry(0.47, 16, 12, 0, Math.PI * 2, 0, Math.PI / 1.7), mat(0xffffff)); helmet.position.set(0, 1.98, -0.02); player.add(helmet);
   riding = true; ridePose(true);
 }

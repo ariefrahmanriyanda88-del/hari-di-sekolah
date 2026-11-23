@@ -16,7 +16,7 @@ function masjidMenu() {
 function goWudhuFor(what) {
   savedObj = savedObj || objective;
   toast('Berwudhu dulu, ya');
-  const wd = doorsOut.find((d) => d.id === (isPutri(state.cls) ? 'wudhuPI' : 'wudhuPA'));
+  const wd = doorsOut.find((d) => d.id === (meP() ? 'wudhuPI' : 'wudhuPA'));
   setObjective(`Berwudhu di <b>Wudhu ${side()}</b> sebelum ${what === 'Dhuha' ? sunnahName() : 'mengaji'}`, wd, () => doWudhu(what === 'Dhuha' ? (dhuhaTime() ? 'Dhuha' : 'sunnah') : 'mengaji', null, what === 'Dhuha' ? dhuhaScene : mengajiScene));
 }
 function restoreObjective() {
@@ -27,7 +27,7 @@ function leaveMasjidVisit(msg, pts) {
   caption('');
   sideJamaah.forEach((p) => ms.remove(p)); sideJamaah = [];
   fade('Keluar masjid…', 700, () => {
-    const md = doorsOut.find((d) => d.id === (isPutri(state.cls) ? 'masjidPI' : 'masjidPA'));
+    const md = doorsOut.find((d) => d.id === (meP() ? 'masjidPI' : 'masjidPA'));
     goOutside(md.x, md.z + 2.5, 0); player.base = null; player.position.y = 0;
     addPts(pts); toast(msg); restoreObjective();
   });
@@ -38,7 +38,7 @@ function enterQuietMasjid(cb) {
   setMsCam(); savedObj = savedObj || objective;
   fade('Masuk masjid…', 800, () => {
     zone = 'masjid'; hud(); $('modal').classList.add('low');
-    const me = isPutri(state.cls), z0 = me ? 5.6 : -6.4;
+    const me = meP(), z0 = me ? 5.6 : -6.4;
     // beberapa teman sedang beribadah masing-masing
     [[-6, 0], [-3, 1.6], [4, 0.8], [6.5, 1.8]].forEach(([x, dz], i) => {
       const m = makePerson(me ? { putri: true, shirt: 0xffffff, bottom: 0xffffff, hijab: 0xffffff, skin: SKINS[i % 4] } : { shirt: 0xffffff, bottom: 0x6d6f73, peci: 0xffffff, tie: false, skin: SKINS[i % 4] });

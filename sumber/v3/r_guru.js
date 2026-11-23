@@ -25,7 +25,8 @@ const GURU_PLACES = [
   ['📚 Perpustakaan', () => doorTo('perpus', 2.5, 0)],
   ['🖥️ Lab Komputer', () => doorTo('lab', 2.5, 0)],
   ['🩺 UKS', () => doorTo('uks', 2.5, 0)],
-  ['🕌 Masjid', () => doorTo('masjidPA', 2.5, 0)],
+  ['🕌 Masjid', () => doorTo(meP() ? 'masjidPI' : 'masjidPA', 2.5, 0)],
+  ['💧 Tempat wudhu', () => doorTo(meP() ? 'wudhuPI' : 'wudhuPA', 0, 0)],
   ['⚽ Lapangan', () => goOutside(-30, -80, Math.PI)],
   [`🏢 Gedung ${YYS_NAMA}`, () => { const d = YYS_DOOR(); goOutside(d.x, d.z - 3, 0); }],
 ];

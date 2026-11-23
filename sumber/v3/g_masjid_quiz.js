@@ -34,7 +34,7 @@ function buildJamaah() {
   nameTag(imam, '🕌 Imam: ' + teacherInfo(imamName).p, 0.55); imam.tagEl.classList.add('imam'); imam.base = imam.position.clone();
   setTimeout(() => toast(`Imam sholat kali ini: ${teacherInfo(imamName).p}`), 1200);
   const rows = [[false, -6.6], [false, -4.8], [true, 5.4], [true, 7.2]];
-  const me = isPutri(state.cls);
+  const me = meP();
   rows.forEach(([putri, z], r) => {
     for (let i = 0; i < 11; i++) {
       const x = -7.5 + i * 1.5;
@@ -70,7 +70,7 @@ function masjidScene(done) {
   buildJamaah(); setMsCam();
   fade('Masuk masjid…', 800, () => {
     zone = 'masjid'; hud();
-    const me = isPutri(state.cls);
+    const me = meP();
     player.base = new THREE.Vector3(-7.5 + 6 * 1.5, 0, me ? 5.4 : -6.6).add(MSJ);
     player.baseRot = Math.PI; player.rotation.y = Math.PI;
     sitPose(player, false); pose(player, 'berdiri');

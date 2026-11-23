@@ -87,7 +87,7 @@ function startBattle(lesson, bank, done, theme) {
     if (theme === 'naga') { scene.background.set(0x1b1440); scene.fog.color.set(0x1b1440); }
     player.visible = false;
     if (bPlayer) bt.remove(bPlayer);
-    bPlayer = makePlayer(isPutri(state.cls)); bPlayer.position.set(-4.5, 0, -1); bPlayer.rotation.y = Math.PI / 2; bt.add(bPlayer);
+    bPlayer = makePlayer(meP()); bPlayer.position.set(-4.5, 0, -1); bPlayer.rotation.y = Math.PI / 2; bt.add(bPlayer);
     nameTag(bPlayer, state.nama, 0.6);
     $('top').style.display = 'none'; $('qhud').classList.add('show'); battleHud();
     modal(`<div class="tag">${lesson.lab ? 'Latihan Lab Komputer' : 'Tugas dari ' + esc(teacherInfo(lesson.g[0]).p)}</div><div class="big">${theme === 'naga' ? '🐉 Duel Naga' : '⚔️ Battle'} ${esc(SUBJ[lesson.s])}</div>
@@ -187,7 +187,7 @@ function startRace(lesson, bank, done) {
   });
   const fin = new THREE.Mesh(new THREE.PlaneGeometry(12, 2), mat(0xffffff)); fin.rotation.x = -Math.PI / 2; fin.position.set(0, 0.06, -LEN); radd(fin);
   const fs = label('FINISH', 0, 0, 0, 1.6, true); scene.remove(fs); fs.position.set(0, 5, -LEN); radd(fs);
-  race.car = radd(makeCar(isPutri(state.cls) ? 0xd9577a : 0x3b7dd8));
+  race.car = radd(makeCar(meP() ? 0xd9577a : 0x3b7dd8));
   race.rivals = [0xe0623e, 0x2f8a5c, 0xf2a33a].map((c, i) => { const car = radd(makeCar(c)); car.position.set(LANES[[0, 2, 1][i]], 0, 4 + i * 3); car.nm = classmateNames[i + 1]; car.sp = 12 + Math.random() * 2.5; car.done = null; nameTag(car, car.nm, 0.6, 2.4); return car; });
   fade('Menuju sirkuit…', 700, () => {
     zone = 'balap'; hud(); Audio.setTrack('aksi'); player.visible = false;

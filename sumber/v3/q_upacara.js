@@ -59,7 +59,7 @@ function upacaraScene() {
     walkers.forEach((n) => { n.visible = false; n.path = null; });   // semua warga sekolah ikut upacara: tidak ada yang berkeliaran
     cerePeople.forEach((p) => scene.remove(p)); cerePeople = [];
     const add = (m, x, z, r) => { const g = makePerson(m); g.position.set(x, 0, z); g.rotation.y = r; scene.add(g); cerePeople.push(g); return g; };
-    const me = isPutri(state.cls);
+    const me = meP();
     for (let r = 0; r < 4; r++) for (let c = 0; c < 7; c++) {
       if (!me && r === 1 && c === 3) continue;
       add(studentModel(false, r * 7 + c), -30 + c * 3, 21 + r * 2, Math.PI);

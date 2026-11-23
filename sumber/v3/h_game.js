@@ -18,7 +18,9 @@ const dayIdx = () => ((state.start || 0) + state.day - 1) % 5;
 const dayName = () => HARI[dayIdx()];
 const lessons = () => today.filter((b) => b.s);
 const zuhurAt = () => Math.min(lessons().length, Math.max(2, Math.ceil(lessons().length / 2)));
-const side = () => (isPutri(state.cls) ? 'Putri' : 'Putra');
+// sisi putra/putri pemain: murid mengikuti kelasnya, guru mengikuti dirinya (ustadz/ustadzah)
+function meP() { return GURU ? GURU.jk === 'P' : isPutri(state.cls); }
+const side = () => (meP() ? 'Putri' : 'Putra');
 const $ = (id) => document.getElementById(id);
 
 function hud() {
@@ -144,7 +146,7 @@ function freeBreak() {
   breakEnd = performance.now() + 4 * 60 * 1000;
   setObjective(`Istirahat bebas! Jelajahi sekolah, lalu kembali ke kelas <b>${state.cls}</b>`, classDoors[state.cls], () => { breakEnd = 0; phase = 'kelas2'; Audio.sfx('bell'); knockClass(); });
 }
-const kantinDoor = () => doorsOut.find((d) => d.id === (isPutri(state.cls) ? 'kantinPI' : 'kantinPA'));
+const kantinDoor = () => doorsOut.find((d) => d.id === (meP() ? 'kantinPI' : 'kantinPA'));
 let tray = null;
 function enterKantin(mode) {
   populateKantin();
@@ -236,7 +238,7 @@ function zuhur() {
   modal(`<div class="tag">🔔 ISHOMA</div><div class="big">Azan Zuhur berkumandang</div><p>Semua bersiap ke masjid: berwudhu dulu di <b>Wudhu ${side()}</b>.</p>`,
     [['Keluar kelas', () => {
       closeModal(); paused = true;
-      exitClass(() => { playAzan(); crowdToMasjid(); setObjective(`Azan! Berwudhu di <b>Wudhu ${side()}</b>`, doorsOut.find((d) => d.id === (isPutri(state.cls) ? 'wudhuPI' : 'wudhuPA')), doWudhu); });
+      exitClass(() => { playAzan(); crowdToMasjid(); setObjective(`Azan! Berwudhu di <b>Wudhu ${side()}</b>`, doorsOut.find((d) => d.id === (meP() ? 'wudhuPI' : 'wudhuPA')), doWudhu); });
     }, 'main']]);
 }
 // azan: rekaman yang dikirim Ustadz, dipotong sampai takbir keempat — file azan.mp3 di samping halaman
@@ -285,7 +287,7 @@ function afterWudhuDone() {
     paused = true;
     leaveInterior();
     if (!p) { toast(`Sudah berwudhu ✓ Masjid bisa dimasuki untuk ${sunnahName()} atau mengaji`); return; }
-    const md = doorsOut.find((d) => d.id === (isPutri(state.cls) ? 'masjidPI' : 'masjidPA'));
+    const md = doorsOut.find((d) => d.id === (meP() ? 'masjidPI' : 'masjidPA'));
     setObjective(`Masuk masjid lewat <b>Pintu ${side()}</b> untuk ${p.sholat === 'mengaji' ? 'mengaji' : 'sholat ' + p.sholat}`, md, () => { paused = true; (p.enter || masjidScene)(p.after); });
   }, 300);
 }
@@ -293,7 +295,7 @@ function afterZuhur() {
   caption('');
   fade('Keluar masjid…', 700, () => {
     afterMasjid();
-    const md = doorsOut.find((d) => d.id === (isPutri(state.cls) ? 'masjidPI' : 'masjidPA'));
+    const md = doorsOut.find((d) => d.id === (meP() ? 'masjidPI' : 'masjidPA'));
     goOutside(md.x, md.z + 2.5, 0);
     addPts(10); toast('+10 ⭐ Sholat Zuhur berjamaah');
     phase = 'santai'; minutes = 12 * 60 + 50;
@@ -363,7 +365,7 @@ function pulangPhase(outside) {
   phase = 'pulang'; minutes = 15 * 60 + 30; Audio.sfx('bell');
   const ashar = today.some((b) => /Ashar/.test(b.act || ''));
   const go = () => ashar
-    ? setObjective(`Waktu Ashar: berwudhu di <b>Wudhu ${side()}</b>`, doorsOut.find((d) => d.id === (isPutri(state.cls) ? 'wudhuPI' : 'wudhuPA')), () => doWudhu('Ashar', afterAshar))
+    ? setObjective(`Waktu Ashar: berwudhu di <b>Wudhu ${side()}</b>`, doorsOut.find((d) => d.id === (meP() ? 'wudhuPI' : 'wudhuPA')), () => doWudhu('Ashar', afterAshar))
     : setObjective('Sekolah selesai: pulang lewat <b>Gerbang Utama</b>', { x: 0, z: 50 }, goHome);
   if (outside) return go();
   if (ashar) setTimeout(() => { playAzan(); crowdToMasjid(); }, 2500);
@@ -376,7 +378,7 @@ function afterAshar() {
     caption('');
     fade('Keluar masjid…', 700, () => {
       afterMasjid();
-      const md = doorsOut.find((d) => d.id === (isPutri(state.cls) ? 'masjidPI' : 'masjidPA'));
+      const md = doorsOut.find((d) => d.id === (meP() ? 'masjidPI' : 'masjidPA'));
       goOutside(md.x, md.z + 2.5, 0);
       addPts(10); toast("+10 ⭐ Sholat Ashar & Al-Ma'tsurat"); minutes = 16 * 60;
       setObjective('Sekolah selesai: pulang lewat <b>Gerbang Utama</b>', { x: 0, z: 50 }, goHome);
@@ -442,10 +444,10 @@ function checkTriggers() {
   if (hit === 'voli' || hit === 'basket') return ['istirahat1', 'santai', 'pulang', 'guru'].includes(phase) ? (playingSport === hit ? null : joinSport(hit)) : toast(`Lapangan ${hit === 'voli' ? 'voli' : 'basket'}: bisa ikut main saat jam istirahat / waktu santai`);
   if (hit === 'bola') return ['istirahat1', 'santai', 'pulang', 'guru'].includes(phase) ? (playingBall ? null : joinBall()) : toast('Lapangan: bisa ikut main bola saat jam istirahat / waktu santai');
   if (hit.startsWith('kantin')) return toast('Kantin dibuka saat jam istirahat pertama');
-  if (hit.startsWith('masjid')) { if (phase === 'zuhur' || (phase === 'pulang' && objective && /Ashar/.test(objective.text))) return toast('Berwudhu dulu sebelum masuk masjid'); if (hit !== (isPutri(state.cls) ? 'masjidPI' : 'masjidPA')) return toast(`Gunakan Pintu ${side()}`); paused = true; return enterMasjidWalk(); }
+  if (hit.startsWith('masjid')) { if (phase === 'zuhur' || (phase === 'pulang' && objective && /Ashar/.test(objective.text))) return toast('Berwudhu dulu sebelum masuk masjid'); if (hit !== (meP() ? 'masjidPI' : 'masjidPA')) return toast(`Gunakan Pintu ${side()}`); paused = true; return enterMasjidWalk(); }
   if (hit.startsWith('wudhu') || hit.startsWith('toilet')) {
-    const mine = hit.endsWith(isPutri(state.cls) ? 'PI' : 'PA');
-    if (!mine) return toast(`Ini ${hit.startsWith('wudhu') ? 'tempat wudhu' : 'toilet'} ${hit.endsWith('PI') ? 'putri' : 'putra'}. Gunakan yang ${side().toLowerCase()}`);
+    const mine = hit.endsWith(meP() ? 'PI' : 'PA');
+    if (!mine) { Audio.sfx('no'); return toast(`⛔ Ini ${hit.startsWith('wudhu') ? 'tempat wudhu' : 'toilet'} ${hit.endsWith('PI') ? 'putri' : 'putra'}. ${GURU ? (meP() ? 'Ustadzah' : 'Ustadz') : (meP() ? 'Siswi' : 'Siswa')} tidak boleh masuk. Gunakan yang ${side().toLowerCase()}`); }
     paused = true; return hit.startsWith('wudhu') ? enterWudhuRoom() : enterToilet();
   }
   if (hit.startsWith('cls:')) return toast(`Ini kelas ${hit.slice(4)}. Kelasmu ${state.cls}`);

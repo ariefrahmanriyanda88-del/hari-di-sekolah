@@ -218,7 +218,7 @@ const NPC_MENUS = [['nasi', 'ayam', 'bayam', 'jeruk'], ['nasi', 'telur', 'brokol
 const npcMeal = (i) => { const m = NPC_MENUS[i % NPC_MENUS.length]; return makeMeal({ pokok: m[0], lauk: m[1], sayur: m[2], buah: m[3], susu: 'susu' }); }
 function populateKantin() {
   ktPeople.forEach((p) => { scene.remove(p); const i = npcs.indexOf(p); if (i >= 0) npcs.splice(i, 1); }); ktPeople = [];
-  const putri = isPutri(state.cls);
+  const putri = meP();
   const ibu = makePerson({ putri: true, shirt: 0xffffff, bottom: 0x3a3a3a, hijab: 0x2f8a5c });
   ibu.position.set(KANTIN.x, 0, KANTIN.z - 7.4); ibu.rotation.y = 0; scene.add(ibu);
   Object.assign(ibu, { fixed: true, kind: 'kantin', putri: true, name: 'Ibu Kantin', greetDay: 0, homeRot: 0 });

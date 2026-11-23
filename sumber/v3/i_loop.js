@@ -47,8 +47,8 @@ function blocked(x, z) {
 let wingWarn = 0;
 function wingBlocked(x, z = 0) {
   if (zone !== 'luar' || z > 55.5 || GURU) return false;          // jalan & trotoar depan sekolah: bebas untuk putra dan putri
-  const bad = isPutri(state.cls) ? x < -WING + 0.6 : x > WING - 0.6;
-  if (bad && performance.now() - wingWarn > 2500) { wingWarn = performance.now(); toast(isPutri(state.cls) ? 'Ini Area Putra — siswi putri tidak masuk ke sini' : 'Ini Area Putri — siswa putra tidak masuk ke sini'); }
+  const bad = meP() ? x < -WING + 0.6 : x > WING - 0.6;
+  if (bad && performance.now() - wingWarn > 2500) { wingWarn = performance.now(); toast(meP() ? 'Ini Area Putra — siswi putri tidak masuk ke sini' : 'Ini Area Putri — siswa putra tidak masuk ke sini'); }
   return bad;
 }
 
@@ -247,12 +247,12 @@ $('startbtn').onclick = async () => {
   if (sel.value !== state.cls || nm !== state.nama) state = { day: 1, points: 0, cls: sel.value, kode: state.kode, avatar: state.avatar };
   state.nama = nm;
   state.start = ((+dsel.value - (state.day - 1)) % 5 + 5) % 5;
-  Audio.start(); Audio.loadUrl('azan.mp3'); save(); setPlayer(isPutri(state.cls));
+  Audio.start(); Audio.loadUrl('azan.mp3'); save(); setPlayer(meP());
   builtFor = ''; populate(); populateRuang(); startDay();
   $('start').classList.add('hide'); paused = false;
 };
 $('resetbtn').onclick = () => { state = { day: 1, points: 0, cls: sel.value, nama: state.nama, avatar: state.avatar }; save(); startLabel(); };
-setPlayer(isPutri(state.cls));
+setPlayer(meP());
 setClassCam(); setMsCam();
 populate(); populateRuang();
 today = DATA.sched[state.cls][dayIdx()].blocks;
