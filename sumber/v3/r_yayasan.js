@@ -137,11 +137,12 @@ function enterYayasan(fromUp) {
   yysRecep = yysPerson(teacherModel('L', 5), 'Penerima Tamu', 'Penerima Tamu', YY.x + 3.6, YY.z + 3.5, 0);
   enterHall(`${YYS_NAMA} · Lantai 1`, YY, 20, yysOut(), () => {
     roomSpots = [{ ...YY_SPOT.tamu, id: 'yys-tamu' }, { ...YY_SPOT.naik, id: 'yys-naik' }];
-    if (fromUp) { player.position.set(YY.x + 12.5, 0, YY.z + 0.6); player.rotation.y = 0; lastTrig = computeHit(); }
+    if (fromUp) { player.position.set(YY.x + 9.6, 0, YY.z - 0.2); player.rotation.y = -Math.PI / 2; }   // agak jauh dari lingkaran tangga
     else {
       say([{ p: player, t: "Assalamu'alaikum… permisi." }, { p: yysRecep, t: `Wa'alaikumussalam, ${state.nama}. Selamat datang di ${YYS_NAMA}. Ada keperluan apa?`, e: 'senang' }]);
       toast('Lantai 1: ruang pengurus · tangga ke Balai Pertemuan (lantai 2) di kanan belakang');
     }
+    lastTrig = computeHit();
     if (yysTask) yysTask.inside();
   }, 'room');
 }
@@ -161,8 +162,9 @@ function enterBalai(rapat) {
     yysPerson(teacherModel('L', 2), 'Petugas Balai', 'Petugas Balai', YY2.x + 7, YY2.z + 4, -Math.PI / 2, false);
   }
   enterHall('Balai Pertemuan · Lantai 2', YY2, 20, yysOut(), () => {
-    player.position.set(YY2.x - 11.2, 0, YY2.z + 6.4); player.rotation.y = Math.PI; lastTrig = computeHit();
     roomSpots = [{ ...YY_SPOT.turun, id: 'yys-turun' }];
+    player.position.set(YY2.x - 8.6, 0, YY2.z + 5.6); player.rotation.y = Math.PI;      // tiba di lantai 2, agak jauh dari tangga turun
+    lastTrig = computeHit();
     if (!rapat) toast('Balai Pertemuan lantai 2 · tempat rapat & pertemuan yayasan');
     if (yysTask) yysTask.inside2 && yysTask.inside2();
   }, 'room');
