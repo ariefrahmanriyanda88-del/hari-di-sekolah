@@ -276,6 +276,7 @@ function populateRuang() {
       // sebagian guru sedang mengajar di kelas (mejanya kosong); guru kelasmu & Ustadz Esa selalu ada
       const hadir = mine.includes(t) || t === ESA || ((i * 7 + (state.day || 1) * 3) % 10) < 6;
       if (!hadir) return;
+      if (GURU && teacherInfo(t).p.toLowerCase() === String(state.nama).toLowerCase()) return;   // meja guru yang sedang bermain dibiarkan kosong
       const d = h.desks[t], info = teacherInfo(t), m = makePerson(teacherModel(g, i));
       m.position.set(d.x, 0, d.z); m.rotation.y = 0; sitPose(m, true);
       Object.assign(m, { fixed: true, seated: true, kind: 'guru', putri: g === 'P', sapaan: g === 'P' ? 'Ustadzah' : 'Ustadz', name: info.p, greetDay: 0, homeRot: 0, full: t });

@@ -50,6 +50,7 @@ function toast(t) { const el = $('toast'); el.textContent = t; el.classList.add(
 
 function goOutside(x, z, rotY = 0) {
   zone = 'luar'; interior = null;
+  if (GURU && guruPrevObj) { const o = guruPrevObj; guruPrevObj = null; setTimeout(() => setObjective(o.text, o.has ? { x: o.x, z: o.z } : null, o.run, o.zone), 60); }
   if (yysPeople.length) yysClear();                  // pengurus yayasan hanya ada di dalam Gedung Yayasan
   if (document.body.classList.contains('homescene')) homeView(false);
   if (player.sitting) sitPose(player, false);
@@ -79,6 +80,7 @@ function startDay() {
   objective = null; hasWudhu = false; savedObj = null; upacaraDone = false; lateDone = false; setGate(false); homeMorning();
 }
 function knockClass() {
+  if (GURU) return guruKnock();
   const first = lessons().find((b) => !dayDone.has(b.a));
   const guru = first ? teacherInfo(first.g[0]).p : '';
   modal(`<div class="tag">Pintu kelas ${esc(state.cls)}</div><p>${guru ? `<b>${esc(guru)}</b> sudah ada di dalam kelas.` : 'Kelas sudah dimulai.'}</p>`, [
@@ -412,6 +414,7 @@ function enterRuang(putri) {
     const t = h.people[0];
     say([{ p: player, t: "Assalamu'alaikum… permisi." }].concat(t ? [{ p: t, t: `Wa'alaikumussalam. Ada perlu apa, ${state.nama}?`, e: 'senang' }] : []));
     toast(`${putri ? 'Ruang Ustadzah' : 'Ruang Ustadz'} · setiap guru punya meja bernama. Meja kosong: gurunya sedang mengajar`);
+    if (GURU) guruDeskObj(h);
   });
 }
 let lastTrig = null, leaving = false;
