@@ -198,12 +198,15 @@ const TU_SPOTS = {};
   // sekat: kantor TU (x -12..-0.3) | ruang bendahara (x 0.3..12), keduanya z -8..1.5; lobi di depan
   add(0, H / 2, -3.25, 0.5, H, 9.5, wl, true);
   const front = (x1, x2, g1, g2) => { add((x1 + g1) / 2, H / 2, 1.5, g1 - x1, H, 0.25, wl, true); add((g2 + x2) / 2, H / 2, 1.5, x2 - g2, H, 0.25, wl, true); add((g1 + g2) / 2, 2.85, 1.5, g2 - g1, 0.3, 0.25, wl); addDoor(tur.g, g1, 1.5, g2 - g1, 2.6, 1); };
-  front(-12, -0.25, -7.2, -5.0); front(0.25, 12, 5.0, 7.2);
+  // kantor TU dibagi dua ruangan berpintu sendiri: ustadzah (kiri) | ustadz (kanan)
+  add(-12 + 1.0, H / 2, 1.5, 2.0, H, 0.25, wl, true); add(-6.4 - 1.0, H / 2, 1.5, 0.8, H, 0.25, wl, true); add(-9.0, 2.85, 1.5, 2.0, 0.3, 0.25, wl); addDoor(tur.g, -10.0, 1.5, 2.0, 2.6, 1);
+  add(-6.4 + 0.8, H / 2, 1.5, 1.6, H, 0.25, wl, true); add(-1.8, H / 2, 1.5, 3.1, H, 0.25, wl, true); add(-3.8, 2.85, 1.5, 1.6, 0.3, 0.25, wl); addDoor(tur.g, -4.8, 1.5, 1.6, 2.6, 1);
+  front(0.25, 12, 5.0, 7.2);
   // --- kantor TU: meja & kursi tiap petugas, sekat rendah ustadz | ustadzah ---
   TU_STAFF.slice(0, 4).forEach(([, jab, , , x, z]) => { chairAt(tur.g, x, z, 0); add(x, 0.4, z + 1.05, 2.0, 0.8, 0.9, 0x8a5a2b, true); add(x + 0.55, 1.05, z + 0.95, 0.5, 0.35, 0.06, 0x333a40); add(x - 0.4, 0.95, z + 1.45, 0.9, 0.18, 0.06, 0xf5f0e0); tag(jab, x - 0.4, 1.35, z + 1.55, 0.24); });
-  add(-6.4, 0.7, -3.6, 0.12, 1.4, 7.6, 0xb9c7d2, true);                 // sekat rendah
+  add(-6.4, H / 2, -3.25, 0.25, H, 9.5, wl, true);                         // dinding pemisah ruang TU ustadzah | ustadz
   add(-11.6, 1.1, -7.2, 0.6, 2.2, 1.6, 0x8a5a2b, true); add(-1.2, 1.1, -7.6, 1.6, 2.2, 0.6, 0x8a5a2b, true);   // lemari arsip
-  tag('Kantor Tata Usaha', -6.1, 3.5, 1.4);
+  tag('TU · Ustadzah', -9.2, 3.5, 1.4, 0.38); tag('TU · Ustadz', -3.4, 3.5, 1.4, 0.38);
   // --- ruang bendahara: dua loket, kaca, antrean bertali ---
   add(6.1, 0.55, -3.6, 11, 1.1, 0.8, 0xb98652, true);                    // meja loket
   [3.6, 8.6].forEach((x) => add(x, 1.75, -3.6, 4.2, 1.3, 0.05, 0xbfe3f5)); add(6.1, 1.5, -3.6, 0.12, 2.0, 0.9, 0x8a9aa6, true);
@@ -220,7 +223,7 @@ const TU_SPOTS = {};
   tag('Ruang Tamu TU', -8.6, 2.4, 7.2, 0.4);
   for (let i = 0; i < 4; i++) add(5.2 + i * 1.1, 0.25, 6.2, 0.9, 0.5, 0.9, 0x8a3b5c, true);   // kursi tunggu bendahara
   tag('Kursi tunggu', 6.8, 1.5, 6.2, 0.3);
-  TU_SPOTS.tu = spot(TUR, -3.6, 0.3, tur.g); TU_SPOTS.tamu = spot(TUR, -6.0, 5.0, tur.g);
+  TU_SPOTS.tu = spot(TUR, -3.6, 0.3, tur.g); TU_SPOTS.tu2 = spot(TUR, -9.2, 0.3, tur.g); TU_SPOTS.tamu = spot(TUR, -6.0, 5.0, tur.g);
   TU_SPOTS.spp = spot(TUR, 3.6, 0.4, tur.g); TU_SPOTS.lkms = spot(TUR, 8.6, 0.4, tur.g);
 }
 let tuPeople = [], tuQueue = [];
@@ -242,7 +245,7 @@ function enterTU() {
   });
   const dd = doorsOut.find((d) => d.id === 'tu');
   enterHall('Tata Usaha & Bendahara', TUR, 16, { x: dd.x, z: dd.z + 1.5, rot: 0 }, () => {
-    roomSpots = [{ ...TU_SPOTS.tu, id: 'tu-tu' }, { ...TU_SPOTS.tamu, id: 'tu-tamu' }, { ...TU_SPOTS.spp, id: 'tu-spp' }, { ...TU_SPOTS.lkms, id: 'tu-lkms' }];
+    roomSpots = [{ ...TU_SPOTS.tu, id: 'tu-tu' }, { ...TU_SPOTS.tu2, id: 'tu-tu2' }, { ...TU_SPOTS.tamu, id: 'tu-tamu' }, { ...TU_SPOTS.spp, id: 'tu-spp' }, { ...TU_SPOTS.lkms, id: 'tu-lkms' }];
     say([{ p: player, t: "Assalamu'alaikum…" }, { p: tuPeople[0], t: `Wa'alaikumussalam. Urusan surat ke kantor TU di kiri, bayar SPP atau LKMS di ruang bendahara sebelah kanan.`, e: '' }]);
   }, 'room');
 }
@@ -256,8 +259,8 @@ function tuServe(i, then) {
 const BULAN = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 function tuAction(id) {
   if (id === 'tu-tamu') { player.position.set(TUR.x - 6.0, 0, TUR.z + 5.0); player.rotation.y = -Math.PI / 2; bubble(tuPeople[2], 'Silakan tunggu sebentar di ruang tamu.', 2200); return; }
-  if (id === 'tu-tu') {
-    bubble(tuPeople[2], 'Ada keperluan apa?', 1500);
+  if (id === 'tu-tu' || id === 'tu-tu2') {
+    bubble(tuPeople[id === 'tu-tu2' ? 1 : 2], 'Ada keperluan apa?', 1500);
     return modal(`<div class="tag">🗂️ Tata Usaha · Kepala TU Ustadz Dede</div><div class="big">Layanan administrasi</div><p class="muted">Pilih keperluanmu (simulasi)</p>`,
       [['📄 Minta surat keterangan siswa', () => { modal(`<div class="tag">🗂️ Tata Usaha</div><p>Surat keterangan siswa atas nama <b>${esc(state.nama)}</b> (kelas ${esc(state.cls)}) akan selesai besok. Jangan lupa mengucapkan terima kasih 😊</p>`, [['Jazakumullah khairan', closeModal, 'main']]); }, 'opt'],
         ['🪪 Kartu pelajar hilang', () => { modal(`<div class="tag">🗂️ Tata Usaha</div><p>Isi formulir kehilangan dan bawa pas foto. Kartu baru dicetak dalam 3 hari.</p>`, [['Baik, terima kasih', closeModal, 'main']]); }, 'opt'],
