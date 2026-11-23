@@ -10,7 +10,7 @@ const YYS_STAFF = [
   ['Ustadz Hamdani', 'Ketua Pembina Yayasan', 'L', 1, 'A', -14.2, -7.9, 1],
   ['Ustadz Adrizal', 'Pembina Yayasan', 'L', 2, 'A', -12.0, -7.9, 1],
   ['Ustadz Tusman', 'Ketua Pengawas Yayasan', 'L', 3, 'A', -9.8, -7.9, 1],
-  ['Ustadz Sutrisno', 'Ketua ' + YYS_NAMA, 'L', 4, 'B', -6.0, -8.3, 1],
+  ['Ustadz Sutrisno', 'Ketua ' + YYS_NAMA, 'L', 4, 'B', -0.4, -8.4, 1],
   ['Ustadz Muhyiddin', 'Sekretaris Yayasan', 'L', 5, 'C', 3.9, -7.9, 1],
   ['Ustadz Zainal', 'Bendahara Yayasan', 'L', 1, 'C', 7.1, -7.9, 1],
   ['Ustadz Winarko', 'Kabid Kepegawaian', 'L', 2, 'E', -14.3, 8.6, -1],
@@ -75,13 +75,14 @@ const YY_SPOT = {};
     add(x - 0.35, 0.95, dz + f * 0.3, 0.8, 0.16, 0.05, 0xf5f0e0); tag(j, x - 0.35, 1.38, dz + f * 0.4, 0.22);
   });
   // ruang Ketua Yayasan: meja kerja + MEJA RAPAT
-  chairAt(g, -6.0, -8.3, 0, 0x5a2e1a); add(-6.0, 0.45, -7.0, 2.6, 0.9, 1.1, 0x5e3b22, true); add(-6.0, 0.93, -7.0, 2.7, 0.07, 1.2, 0x7a4f2b);
-  add(-6.0, 1.02, -6.65, 0.9, 0.12, 0.05, 0xf5f0e0); tag('Ketua ' + YYS_NAMA, -6.0, 1.45, -6.5, 0.24);
-  add(-1.6, 0.42, -5.2, 1.7, 0.84, 4.2, 0x6b4a2b, true); add(-1.6, 0.86, -5.2, 1.8, 0.07, 4.3, 0x8a5a2b);   // meja rapat panjang
-  [-6.6, -5.2, -3.8].forEach((z) => { chairAt(g, -2.85, z, Math.PI / 2, 0x3b5e9e); chairAt(g, -0.35, z, -Math.PI / 2, 0x3b5e9e); });
-  chairAt(g, -1.6, -7.7, 0, 0x3b5e9e); tag('Meja Rapat', -1.6, 1.4, -5.2, 0.3);
-  add(-3, 2.1, -9.8, 3.4, 1.2, 0.05, 0xffffff); tag('Visi & Misi Yayasan', -3, 2.9, -9.7, 0.28);
-  add(1.3, 1.1, -9.3, 0.9, 2.2, 0.9, 0x6b4a2b, true);                                 // lemari arsip
+  // meja kerja ketua di kanan belakang; MEJA RAPAT di sisi kiri belakang, jauh dari pintu (pintu di x -2.9..-1.1)
+  chairAt(g, -0.4, -8.4, 0, 0x5a2e1a); add(-0.4, 0.45, -7.1, 2.6, 0.9, 1.1, 0x5e3b22, true); add(-0.4, 0.93, -7.1, 2.7, 0.07, 1.2, 0x7a4f2b);
+  add(-0.4, 1.02, -6.75, 0.9, 0.12, 0.05, 0xf5f0e0); tag('Ketua ' + YYS_NAMA, -0.4, 1.45, -6.6, 0.24);
+  add(-5.6, 0.42, -7.0, 3.6, 0.84, 1.6, 0x6b4a2b, true); add(-5.6, 0.86, -7.0, 3.7, 0.07, 1.7, 0x8a5a2b);   // meja rapat
+  [-6.8, -5.6, -4.4].forEach((x) => { chairAt(g, x, -8.3, 0, 0x3b5e9e); chairAt(g, x, -5.7, Math.PI, 0x3b5e9e); });
+  chairAt(g, -7.6, -7.0, Math.PI / 2, 0x3b5e9e); tag('Meja Rapat', -5.6, 1.4, -7.0, 0.3);
+  add(-4.5, 2.1, -9.8, 3.4, 1.2, 0.05, 0xffffff); tag('Visi & Misi Yayasan', -4.5, 2.9, -9.7, 0.28);
+  add(1.5, 1.1, -4.2, 0.7, 2.2, 1.6, 0x6b4a2b, true);                                 // lemari arsip
   // ruang pembina: rak & kaligrafi
   add(-15.4, 1.1, -5, 0.6, 2.2, 3, 0x8a5a2b, true); add(-12, 2.2, -9.85, 3, 0.8, 0.05, 0x2f6b4a);
   // ruang sekretaris: lemari arsip

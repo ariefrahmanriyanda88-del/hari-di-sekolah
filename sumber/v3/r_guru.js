@@ -173,3 +173,58 @@ function guruSit(h, d) {
   ]);
   $('modal').classList.add('low');
 }
+
+// ---------- percakapan guru (berbeda dengan murid): sesama guru, satpam, murid, petugas kantin ----------
+const gAntum = () => (meP() ? 'anti' : 'antum');
+function guruGreetOpen(n) {
+  const nm = state.nama, sp = guruSapaan();
+  if (n.kind === 'guru') return pick([`Eh, ${nm}. Ahlan wa sahlan.`, `${nm}! Apa kabar, ${gAntum()}?`, `Mari, ${nm}. Sudah selesai mengajar?`]);
+  if (n.kind === 'satpam') return pick([`Pagi, ${sp}. Silakan.`, `${nm}, Ustadz-Ustadzah sudah banyak yang datang.`]);
+  if (n.kind === 'kantin') return `Silakan, ${nm}. Mau pesan apa?`;
+  return pick([`Assalamu'alaikum, ${sp}!`, `Selamat pagi, ${sp}.`, `${sp}… mau ke kelas kami?`]);
+}
+function guruGreetOptions(n) {
+  const sama = !!n.putri === meP();
+  if (n.kind === 'guru') return [
+    sama ? [`🤝 Bersalaman: "Assalamu'alaikum, ${n.name}. Apa kabar?"`, 'gKabar'] : [`✋ Salam, tangan di dada: "Assalamu'alaikum, ${n.name}"`, 'gDada'],
+    ['📚 "Bagaimana kelas hari ini?"', 'gKelas'],
+    ['🕌 "Nanti Zuhur kita berjamaah, ya."', 'gZuhur'],
+    ['📋 "Sudah siapkan laporan untuk yayasan?"', 'gLapor'],
+  ];
+  if (n.kind === 'satpam') return [[`👋 "Assalamu'alaikum, ${n.name}. Bagaimana, aman?"`, 'gAman'], ['🙏 "Terima kasih sudah menjaga sekolah."', 'gTerima']];
+  if (n.kind === 'kantin') return [['👋 "Assalamu\'alaikum, Bu. Ramai hari ini?"', 'gKantin']];
+  return [['👋 "Wa\'alaikumussalam, Nak. Sudah sarapan?"', 'mSarapan'], ['📚 "Tugasnya sudah dikerjakan?"', 'mTugas'], ['💬 "Jangan lupa murajaah hafalan, ya."', 'mNasihat']];
+}
+function guruDoGreet(n, act) {
+  if (!sameSex(n, player)) {
+    const dx = player.position.x - n.position.x, dz = player.position.z - n.position.z, d = Math.hypot(dx, dz) || 1;
+    if (d < 2.4) { const nx = n.position.x + dx / d * 2.4, nz = n.position.z + dz / d * 2.4; if (!blocked(nx, nz)) player.position.set(nx, player.position.y, nz); }
+  }
+  faceTo(player, n); faceTo(n, player); n.talk = 3.5; player.busy = 3.2;
+  if (n.fixed && n.homeRot !== undefined) setTimeout(() => { n.rotation.y = n.homeRot; }, 3600);
+  const nm = state.nama, sp = guruSapaan(), an = gAntum();
+  const mine = {
+    gKabar: `Assalamu'alaikum, ${n.name}. Apa kabar?`, gDada: `Assalamu'alaikum, ${n.name}.`, gKelas: `${n.name}, bagaimana kelas hari ini?`,
+    gZuhur: 'Nanti Zuhur kita berjamaah, ya.', gLapor: 'Sudah siapkan laporan untuk yayasan?', gAman: `Assalamu'alaikum, ${n.name}. Bagaimana, aman?`,
+    gTerima: 'Terima kasih sudah menjaga sekolah.', gKantin: "Assalamu'alaikum, Bu. Ramai hari ini?",
+    mSarapan: "Wa'alaikumussalam, Nak. Sudah sarapan?", mTugas: 'Tugasnya sudah dikerjakan?', mNasihat: 'Jangan lupa murajaah hafalan, ya.',
+  }[act];
+  const reply = {
+    gKabar: [`Wa'alaikumussalam warahmatullah. Alhamdulillah, khair. ${an[0].toUpperCase() + an.slice(1)} bagaimana, ${nm}?`, `Wa'alaikumussalam. Alhamdulillah sehat, ${nm}. Semoga dimudahkan hari ini.`],
+    gDada: [`Wa'alaikumussalam warahmatullah, ${nm}.`],
+    gKelas: ['Alhamdulillah, anak-anak semangat. Ada beberapa yang masih perlu dibimbing.', 'Lancar. Tadi materi baru, anak-anak aktif bertanya.', 'Agak ramai, tapi alhamdulillah tugasnya selesai semua.'],
+    gZuhur: ['InsyaAllah. Sekalian kita pantau anak-anak berwudhu.', 'Siap, nanti kita bertemu di masjid.'],
+    gLapor: ['Sedang saya rapikan, insyaAllah besok saya bawa ke yayasan.', 'Sudah, kemarin saya serahkan ke Bidang Pendidikan.'],
+    gAman: [`Alhamdulillah aman, ${sp}. Tadi pagi jalan ramai, tapi tertib.`],
+    gTerima: [`Sama-sama, ${sp}. Sudah tugas kami.`],
+    gKantin: [`Alhamdulillah ramai, ${sp}. Mau dibungkuskan sesuatu?`],
+    mSarapan: [`Sudah, ${sp}. Alhamdulillah!`, `Belum, ${sp}… hehe.`],
+    mTugas: [`Sudah, ${sp}!`, `Sedikit lagi, ${sp}.`],
+    mNasihat: [`InsyaAllah, ${sp}!`, `Baik, ${sp}. Terima kasih.`],
+  }[act];
+  if (act === 'gKabar') { playAnim(player, 'beritangan', 1.4); playAnim(n, 'beritangan', 1.4); }
+  else if (act === 'gDada') { playAnim(player, 'dada', 1.4); setTimeout(() => playAnim(n, 'dada', 1.4), 400); }
+  else { playAnim(player, 'lambai', 1.1); setTimeout(() => playAnim(n, n.kind === 'siswa' ? 'dada' : 'lambai', 1.1), 450); }
+  Audio.sfx('greet');
+  say([{ p: player, t: mine }, { p: n, t: pick(reply), e: 'senang' }], () => { if (n.fixed && n.homeRot !== undefined) n.rotation.y = n.homeRot; });
+}

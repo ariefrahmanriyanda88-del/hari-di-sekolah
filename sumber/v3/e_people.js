@@ -316,6 +316,7 @@ function afterMasjid() {
 // ---------- menyapa ----------
 const pick = (a) => a[Math.floor(Math.random() * a.length)];
 function greetOptions(n) {
+  if (GURU) return guruGreetOptions(n);
   const sama = !!n.putri === meP();
   if (n.kind === 'guru') {
     const o = [];
@@ -330,6 +331,7 @@ function greetOptions(n) {
 }
 function doGreet(n, act) {
   closeModal();
+  if (GURU) return guruDoGreet(n, act);
   if (!sameSex(n, player)) {      // lawan jenis: cukup berdiri berjarak, tidak mendekat
     const dx = player.position.x - n.position.x, dz = player.position.z - n.position.z, d = Math.hypot(dx, dz) || 1;
     if (d < 2.4) { const nx = n.position.x + dx / d * 2.4, nz = n.position.z + dz / d * 2.4; if (!blocked(nx, nz)) player.position.set(nx, player.position.y, nz); }
@@ -370,6 +372,7 @@ let nearNPC = null;
 // sapaan pembuka (baku) dari NPC saat didekati
 function greetOpen(n) {
   const nm = state.nama;
+  if (GURU) return guruGreetOpen(n);
   if (n.kind === 'guru') return n.welcome ? pick([`Selamat pagi, ${nm}! Ayo masuk, sebentar lagi bel.`, `Pagi, ${nm}. Sudah sarapan?`]) : pick([`Eh, ${nm}. Ada yang bisa dibantu?`, `${nm}, sudah siap belajar hari ini?`, `Hm? Ada apa, ${nm}?`]);
   if (n.kind === 'satpam') return pick([`Pagi, Dik ${nm}! Rapi sekali hari ini.`, 'Hati-hati, jangan lari-lari di dekat gerbang, ya.']);
   if (n.kind === 'kantin') return `Mau ambil makan, ${nm}?`;
