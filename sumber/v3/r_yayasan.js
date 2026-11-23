@@ -135,7 +135,7 @@ function enterYayasan(fromUp) {
     const m = yysPerson(teacherModel(gd, look), p, `${p} · ${j}`, YY.x + x, YY.z + z, f > 0 ? 0 : Math.PI);
     m.jab = j;
   });
-  yysRecep = yysPerson(teacherModel('L', 5), 'Penerima Tamu', 'Penerima Tamu', YY.x + 3.6, YY.z + 3.5, 0);
+  yysRecep = yysPerson(teacherModel('L', 5), 'Penerima Tamu', 'Penerima Tamu', YY.x + 3.6, YY.z + 3.5, 0); yysRecep.role = null;
   enterHall(`${YYS_NAMA} · Lantai 1`, YY, 20, yysOut(), () => {
     roomSpots = [{ ...YY_SPOT.tamu, id: 'yys-tamu' }, { ...YY_SPOT.naik, id: 'yys-naik' }];
     if (fromUp) { player.position.set(YY.x + 9.6, 0, YY.z - 0.2); player.rotation.y = -Math.PI / 2; }   // agak jauh dari lingkaran tangga
@@ -157,10 +157,10 @@ function enterBalai(rapat) {
       if (i === 3 || i === 4 || k >= guru.length) return;
       const t = guru[k++], putri = t.g === 'P';
       if ((c.x > 0) !== putri) return;                              // ustadz di kiri, ustadzah di kanan
-      yysPerson(teacherModel(t.g, i % 5), t.p, null, YY2.x + c.x, YY2.z + c.z, Math.PI);
+      yysPerson(teacherModel(t.g, i % 5), t.p, null, YY2.x + c.x, YY2.z + c.z, Math.PI).role = null;   // guru peserta rapat (bukan pengurus)
     });
   } else {
-    yysPerson(teacherModel('L', 2), 'Petugas Balai', 'Petugas Balai', YY2.x + 7, YY2.z + 4, -Math.PI / 2, false);
+    yysPerson(teacherModel('L', 2), 'Petugas Balai', 'Petugas Balai', YY2.x + 7, YY2.z + 4, -Math.PI / 2, false).role = null;
   }
   enterHall('Balai Pertemuan · Lantai 2', YY2, 20, yysOut(), () => {
     roomSpots = [{ ...YY_SPOT.turun, id: 'yys-turun' }];

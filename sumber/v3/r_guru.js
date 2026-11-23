@@ -178,7 +178,7 @@ function guruSit(h, d) {
 const gAntum = () => (meP() ? 'anti' : 'antum');
 function guruGreetOpen(n) {
   const nm = state.nama, sp = guruSapaan();
-  if (n.role === 'yys') return pick([`Ahlan wa sahlan, ${nm}. Silakan duduk.`, `${nm}, apa kabar? Bagaimana keadaan sekolah?`, `Wa'alaikumussalam… eh, ${nm}. Ada yang bisa kami bantu?`]);
+  if (n.role === 'yys') { n.q = Math.floor(Math.random() * YYS_Q.length); return YYS_Q[n.q].t(nm); }   // pengurus yayasan bertanya kepada guru
   if (n.role === 'kepsek') return pick([`Silakan masuk, ${nm}.`, `${nm}, ahlan. Ada yang ingin dikoordinasikan?`]);
   if (n.role === 'tu') return pick([`Silakan, ${nm}. Ada keperluan administrasi?`, `Ahlan, ${nm}. Mau mengambil atau menyerahkan berkas?`]);
   if (n.kind === 'guru') return pick([`Eh, ${nm}. Ahlan wa sahlan.`, `${nm}! Apa kabar, ${gAntum()}?`, `Mari, ${nm}. Sudah selesai mengajar?`]);
@@ -189,7 +189,7 @@ function guruGreetOpen(n) {
 function guruGreetOptions(n) {
   const sama = !!n.putri === meP();
   const salam = sama ? [`🤝 Bersalaman: "Assalamu'alaikum, ${n.name}. Apa kabar?"`, 'gKabar'] : [`✋ Salam, tangan di dada: "Assalamu'alaikum, ${n.name}"`, 'gDada'];
-  if (n.role === 'yys') return [salam, ['🏫 "Mohon arahan untuk program sekolah ke depan."', 'yArah'], ['📅 "Ada agenda yayasan pekan ini?"', 'yAgenda'], ['🤲 "Mohon doanya untuk kemajuan sekolah."', 'yDoa']];
+  if (n.role === 'yys') return [...YYS_Q[n.q || 0].a.map((t, i) => [`💬 "${t}"`, 'yJawab' + i]), salam, ['🤲 "Mohon nasihat untuk kami para guru, Ustadz."', 'yNasihat']];
   if (n.role === 'kepsek') return [salam, ['📋 "Izin melaporkan kegiatan hari ini."', 'kLapor'], ['🗓️ "Kapan jadwal rapat dewan guru berikutnya?"', 'kRapat']];
   if (n.role === 'tu') return [salam, ['🗂️ "Apakah ada berkas yang perlu saya lengkapi?"', 'tBerkas'], ['🧾 "Izin menanyakan jadwal pencairan honor kegiatan."', 'tHonor']];
   if (n.kind === 'guru') return [
@@ -214,7 +214,7 @@ function guruDoGreet(n, act) {
   const mine = {
     gKabar: `Assalamu'alaikum, ${n.name}. Apa kabar?`, gDada: `Assalamu'alaikum, ${n.name}.`, gKelas: `${n.name}, bagaimana kelas hari ini?`,
     gZuhur: 'Nanti Zuhur kita berjamaah, ya.', gNgopi: `Sudah istirahat, ${n.sapaan}? Mari ngopi sebentar.`, gBerbagi: `${n.name}, bagaimana pengalaman ${an} menangani kelas yang ramai?`,
-    yArah: 'Mohon arahan untuk program sekolah ke depan.', yAgenda: 'Ada agenda yayasan pekan ini?', yDoa: 'Mohon doanya untuk kemajuan sekolah.',
+    yNasihat: 'Mohon nasihat untuk kami para guru, Ustadz.', yJawab0: (YYS_Q[n.q || 0] || YYS_Q[0]).a[0], yJawab1: (YYS_Q[n.q || 0] || YYS_Q[0]).a[1],
     kLapor: 'Izin melaporkan kegiatan hari ini.', kRapat: 'Kapan jadwal rapat dewan guru berikutnya?', tBerkas: 'Apakah ada berkas yang perlu saya lengkapi?', tHonor: 'Izin menanyakan jadwal pencairan honor kegiatan.', gLapor: 'Sudah siapkan laporan untuk yayasan?', gAman: `Assalamu'alaikum, ${n.name}. Bagaimana, aman?`,
     gTerima: 'Terima kasih sudah menjaga sekolah.', gKantin: "Assalamu'alaikum, Bu. Ramai hari ini?",
     mSarapan: "Wa'alaikumussalam, Nak. Sudah sarapan?", mTugas: 'Tugasnya sudah dikerjakan?', mNasihat: 'Jangan lupa murajaah hafalan, ya.',
@@ -226,9 +226,8 @@ function guruDoGreet(n, act) {
     gZuhur: ['InsyaAllah. Sekalian kita pantau anak-anak berwudhu.', 'Siap, nanti kita bertemu di masjid.'],
     gNgopi: ['Boleh, sebentar saja. Setelah ini saya masuk kelas lagi.', 'Jazakallahu khairan, nanti saja setelah Zuhur, ya.'],
     gBerbagi: ['Saya biasanya mulai dengan murajaah singkat dan tanya jawab, anak-anak jadi lebih fokus.', 'Kuncinya sabar dan konsisten. Beri pujian untuk yang tertib, itu ampuh.'],
-    yArah: ['Fokus kita tahun ini: tahfizh, adab, dan mutu pembelajaran. Jaga kekompakan dewan guru, ya.', 'Teruskan program yang baik. Usulan baru silakan disampaikan lewat Bidang Pendidikan.'],
-    yAgenda: ['Pekan ini ada rapat koordinasi di Balai Pertemuan lantai 2. Nanti undangannya disampaikan.', 'Ada pembinaan guru dan karyawan hari Sabtu, insyaAllah.'],
-    yDoa: ['Aamiin. Semoga Allah mudahkan dan berkahi ikhtiar kita semua.', 'Baarakallahu fiikum. Kita saling mendoakan.'],
+    yNasihat: ['Luruskan niat. Mengajar adalah ibadah; setiap ilmu yang antum ajarkan menjadi amal jariyah.', 'Jadilah teladan sebelum menasihati. Anak-anak lebih banyak meniru daripada mendengar.', 'Sabar dan kasih sayang kepada murid, serta jaga kekompakan sesama guru. Itu kunci keberkahan sekolah.', 'Terus belajar dan perbaiki cara mengajar. Guru yang berhenti belajar, berhenti pula mengajar dengan baik.'],
+    yJawab0: [(YYS_Q[n.q || 0] || YYS_Q[0]).r[0]], yJawab1: [(YYS_Q[n.q || 0] || YYS_Q[0]).r[1]],
     kLapor: ['Baik, silakan. Terima kasih atas laporannya, nanti kita bahas di rapat.', 'Jazakallahu khairan. Laporannya dikirim juga ke Waka Kurikulum, ya.'],
     kRapat: ['InsyaAllah hari Kamis setelah Ashar.', 'Nanti diumumkan di grup dewan guru.'],
     tBerkas: ['Tinggal fotokopi ijazah terbaru untuk arsip kepegawaian.', 'Sudah lengkap, jazakallahu khairan.'],
@@ -241,9 +240,24 @@ function guruDoGreet(n, act) {
     mTugas: [`Sudah, ${sp}!`, `Sedikit lagi, ${sp}.`],
     mNasihat: [`InsyaAllah, ${sp}!`, `Baik, ${sp}. Terima kasih.`],
   }[act];
+  if (act === 'gKabar' && n.role === 'yys') reply.splice(0, reply.length, `Wa'alaikumussalam warahmatullah. Alhamdulillah baik, ${nm}. Bagaimana kabar ${an} dan keluarga?`);
   if (act === 'gKabar') { playAnim(player, 'beritangan', 1.4); playAnim(n, 'beritangan', 1.4); }
   else if (act === 'gDada') { playAnim(player, 'dada', 1.4); setTimeout(() => playAnim(n, 'dada', 1.4), 400); }
   else { playAnim(player, 'lambai', 1.1); setTimeout(() => playAnim(n, n.kind === 'siswa' ? 'dada' : 'lambai', 1.1), 450); }
   Audio.sfx('greet');
   say([{ p: player, t: mine }, { p: n, t: pick(reply), e: 'senang' }], () => { if (n.fixed && n.homeRot !== undefined) n.rotation.y = n.homeRot; });
 }
+
+// pertanyaan dari pengurus yayasan kepada guru: [pertanyaan, 2 jawaban guru, 2 tanggapan pengurus]
+const YYS_Q = [
+  { t: (nm) => `Ahlan, ${nm}. Bagaimana mengajar di sekolah? Lancar?`, a: ['Alhamdulillah lancar, Ustadz. Anak-anak semangat belajar.', 'Ada tantangan, Ustadz, tapi insyaAllah bisa kami atasi bersama.'],
+    r: ['Alhamdulillah. Pertahankan, dan terus berinovasi dalam mengajar.', 'Wajar ada tantangan. Sampaikan ke Bidang Pendidikan, kami siap membantu.'] },
+  { t: (nm) => `${nm}, bagaimana hafalan Al-Qur'an anak-anak sekarang?`, a: ['Alhamdulillah meningkat, Ustadz. Murajaah pagi sangat membantu.', 'Sebagian masih perlu dorongan, Ustadz.'],
+    r: ['MasyaAllah, baarakallahu fiikum. Itu program unggulan kita.', 'Dampingi dengan sabar. Libatkan juga orang tua di rumah.'] },
+  { t: (nm) => `Apa yang perlu yayasan bantu untuk sekolah, ${nm}?`, a: ['Pelatihan guru tentang media pembelajaran, Ustadz.', 'Perbaikan beberapa sarana kelas, Ustadz.'],
+    r: ['Usulan yang baik. InsyaAllah kami jadwalkan bersama Bidang Pendidikan.', 'Baik, nanti Biro Sarpras kami minta meninjau ke sekolah.'] },
+  { t: (nm) => `${nm}, bagaimana adab dan akhlak anak-anak di sekolah?`, a: ['Alhamdulillah, makin baik, Ustadz. Mereka terbiasa salam dan antre.', 'Masih ada yang perlu dibina, Ustadz.'],
+    r: ['Alhamdulillah. Adab sebelum ilmu, itu yang kita tanamkan.', 'Teruskan pembinaan dengan lembut. Biro Konseling siap membantu.'] },
+  { t: (nm) => `Bagaimana kabar ${nm} dan keluarga? Sehat semua?`, a: ['Alhamdulillah sehat semua, Ustadz.', 'Alhamdulillah, mohon doanya, Ustadz.'],
+    r: ['Alhamdulillah. Semoga Allah senantiasa menjaga antum sekeluarga.', 'Kami doakan, semoga Allah beri kesehatan dan keberkahan.'] },
+];
