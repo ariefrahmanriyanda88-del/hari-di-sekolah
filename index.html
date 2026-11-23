@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#1f7a52">
-<title>Hari di Sekolah · Game edukatif 3D SMAIT IQRA' Kota Bengkulu</title>
-<meta name="description" content="Game 3D simulasi satu hari penuh di SMAIT IQRA' Kota Bengkulu: jadwal asli, adab islami, tugas guru jadi permainan. Bisa dimainkan di HP dan laptop.">
-<meta property="og:title" content="Hari di Sekolah · SMAIT IQRA' Kota Bengkulu">
+<title>Hari di Sekolah · Game edukatif 3D untuk sekolah</title>
+<meta name="description" content="Game 3D simulasi satu hari penuh di sekolah: jadwal kelas, adab islami, tugas guru jadi permainan. Setiap sekolah punya ruangnya sendiri. Bisa dimainkan di HP dan laptop.">
+<meta property="og:title" content="Hari di Sekolah · game edukatif 3D untuk sekolah">
 <meta property="og:description" content="Game 3D simulasi kehidupan siswa: masuk kelas, sholat berjamaah, makan MBG, olahraga, dan mengerjakan tugas guru sebagai permainan.">
 <meta property="og:image" content="img/hero.webp">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -63,6 +63,20 @@ p{margin:0}
 .ayat .ar{font:600 26px/1.6 "Noto Naskh Arabic",serif;direction:rtl}
 .ayat small{font-size:14px;font-weight:700;opacity:.75}
 @media (max-width:900px){.hero .wrap{grid-template-columns:1fr;gap:34px;padding-top:36px}.hero{background:linear-gradient(var(--sky) 0 70%,#8fd07c 70%)}}
+
+/* ---------- pilih sekolah ---------- */
+.schools{padding-bottom:20px}
+.schoolgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.sch{border:var(--line);border-radius:20px;background:#fff;box-shadow:var(--pop);padding:20px;display:flex;flex-direction:column;gap:10px}
+.sch .logo{width:54px;height:54px;border:var(--line);border-radius:16px;display:grid;place-items:center;font-size:28px;box-shadow:0 3px 0 var(--ink)}
+.sch h3{font-size:24px}
+.sch .where{font-weight:700;opacity:.75;margin-top:-6px}
+.sch .tag{align-self:flex-start;font-weight:800;font-size:13.5px;border:2px solid var(--ink);border-radius:999px;padding:2px 10px;background:var(--sky)}
+.sch .tag.open{background:#cdeedb}
+.sch .acts{display:flex;gap:10px;flex-wrap:wrap;margin-top:auto;padding-top:6px}
+.sch .btn{padding:11px 16px;font-size:16px}
+.sch.soon{background:repeating-linear-gradient(135deg,#fff 0 14px,#f2f6f3 14px 28px);border-style:dashed;box-shadow:none}
+@media (max-width:900px){.schoolgrid{grid-template-columns:1fr}}
 
 /* ---------- satu hari ---------- */
 section{padding:84px 0}
@@ -167,9 +181,9 @@ footer a{color:var(--sun)}
   <div class="wrap">
     <a class="brand" href="#"><i>🏫</i>Hari di Sekolah</a>
     <nav aria-label="Navigasi">
-      <a href="#sehari">Sehari di sekolah</a><a href="#denah">Denah</a><a href="#fitur">Isi game</a><a href="#guru">Untuk guru</a><a href="#cara">Cara main</a>
+      <a href="#sekolah">Pilih sekolah</a><a href="#sehari">Sehari di sekolah</a><a href="#denah">Denah</a><a href="#fitur">Isi game</a><a href="#guru">Untuk guru</a><a href="#cara">Cara main</a>
     </nav>
-    <a class="btn play" href="main.html">▶ Main</a>
+    <a class="btn play" href="#sekolah">▶ Main</a>
   </div>
 </header>
 
@@ -178,14 +192,14 @@ footer a{color:var(--sun)}
 <section class="hero" aria-labelledby="judul">
   <div class="wrap">
     <div>
-      <span class="school">SMAIT IQRA' Kota Bengkulu</span>
+      <span class="school">Game edukatif 3D untuk sekolah</span>
       <h1 id="judul">Hari di Sekolah</h1>
-      <p class="lead">Jalani satu hari penuh sebagai siswa dalam game 3D: masuk kelas, sholat berjamaah, makan MBG, dan kerjakan tugas guru sambil bermain.</p>
+      <p class="lead">Jalani satu hari penuh sebagai siswa dalam game 3D: masuk kelas, sholat berjamaah, makan MBG, dan kerjakan tugas dari guru sekolahmu sambil bermain.</p>
       <div class="ctas">
-        <a class="btn play" href="main.html?s=iqra">▶ Main di SMAIT IQRA'</a>
-        <a class="btn" href="main.html?s=umum">🌐 Coba versi Sekolah Umum</a>
+        <a class="btn play" href="#sekolah">▶ Pilih sekolahmu</a>
+        <a class="btn" href="main.html?s=umum">🌐 Coba versi demo</a>
       </div>
-      <p class="note">Warga SMAIT IQRA' masuk dengan kode kelas dari guru. Versi Sekolah Umum (SMA Nusantara) terbuka untuk siapa saja, dengan guru fiktif dan soal contoh. Gratis, langsung di browser HP atau laptop.</p>
+      <p class="note">Setiap sekolah punya ruang sendiri: guru, jadwal, soal, dan nilainya terpisah. Versi demo terbuka untuk siapa saja. Gratis, langsung di browser HP atau laptop.</p>
       <div class="ayat">
         <span class="ar">طَلَبُ الْعِلْمِ فَرِيْضَةٌ عَلَى كُلِّ مُسْلِمٍ</span>
         <small>"Menuntut ilmu itu wajib bagi setiap muslim." (HR. Ibnu Majah)</small>
@@ -198,12 +212,23 @@ footer a{color:var(--sun)}
   </div>
 </section>
 
+<!-- ===== pilih sekolah ===== -->
+<section id="sekolah" class="schools" aria-labelledby="h-sekolah">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2 id="h-sekolah">Pilih sekolahmu</h2>
+      <p>Murid masuk ke ruang sekolahnya dengan kode kelas dari guru, supaya nilainya terkirim. Guru masuk lewat Panel Guru sekolah masing-masing.</p>
+    </div>
+    <div class="schoolgrid" id="schoolgrid"></div>
+  </div>
+</section>
+
 <!-- ===== satu hari ===== -->
 <section id="sehari" aria-labelledby="h-sehari">
   <div class="wrap">
     <div class="sec-head">
       <h2 id="h-sehari">Sehari di sekolah,<br>dari gerbang sampai pulang</h2>
-      <p>Jadwal pelajaran dan nama guru diambil dari jadwal asli sekolah. Setiap kelas X–XII, putra dan putri, punya harinya sendiri.</p>
+      <p>Jadwal pelajaran dan nama guru mengikuti jadwal asli sekolahmu. Setiap kelas X–XII, putra dan putri, punya harinya sendiri.</p>
     </div>
     <div class="day">
       <article class="slot big"><img src="img/gerbang.webp" alt="Ustadz dan Ustadzah menyambut murid di gerbang sekolah" ><div><time>06.30</time><h3>Berangkat dan disambut di gerbang</h3><p>Sarapan, salim kepada orang tua, lalu jalan kaki atau naik motor. Lewat pukul 07.15 gerbang ditutup, dan yang terlambat berdzikir pagi sambil berdiri.</p></div></article>
@@ -258,7 +283,7 @@ footer a{color:var(--sun)}
   <div class="wrap gurugrid">
     <div>
       <h2 id="h-guru">Untuk Ustadz dan Ustadzah</h2>
-      <p style="margin-top:14px;font-size:18px;max-width:46ch">Daftar sendiri dengan email di Panel Guru. Setelah disetujui admin sekolah, Anda bisa langsung memberi tugas.</p>
+      <p style="margin-top:14px;font-size:18px;max-width:46ch">Daftar dengan email di Panel Guru sekolah Anda. Setelah disetujui admin sekolah, Anda bisa langsung memberi tugas.</p>
       <ul class="checks">
         <li><i>📝</i><span><b>Buat soal sendiri</b>Pilihan ganda A–D atau benar/salah, tandai sendiri jawaban yang benar. Bisa tempel dari Excel.</span></li>
         <li><i>📚</i><span><b>Tulis materi perpustakaan</b>Materi tampil sebagai buku di rak mapel Anda.</span></li>
@@ -283,9 +308,9 @@ footer a{color:var(--sun)}
 <!-- ===== cara main ===== -->
 <section id="cara" aria-labelledby="h-cara">
   <div class="wrap">
-    <div class="sec-head"><h2 id="h-cara">Cara mulai bermain</h2><p>Tidak perlu akun. Cukup nama, kelas, dan kode kelas dari guru.</p></div>
+    <div class="sec-head"><h2 id="h-cara">Cara mulai bermain</h2><p>Murid tidak perlu akun. Cukup pilih sekolah, isi nama dan kelas, lalu masukkan kode kelas dari guru.</p></div>
     <div class="steps">
-      <div class="step"><div class="n">1</div><h3>Pilih sekolah</h3><p><b>SMAIT IQRA'</b> untuk warga sekolah, atau <b>Sekolah Umum</b> untuk mencoba. Bisa diganti di layar awal.</p></div>
+      <div class="step"><div class="n">1</div><h3>Pilih sekolah</h3><p>Ketuk sekolahmu di daftar <b>Pilih sekolahmu</b>, atau coba versi demo. Bisa diganti di layar awal game.</p></div>
       <div class="step"><div class="n">2</div><h3>Isi nama dan kelas</h3><p>Atur avatarmu, lalu masukkan <b>kode kelas</b> dari guru agar nilaimu terkirim.</p></div>
       <div class="step"><div class="n">3</div><h3>Ikuti panah kuning</h3><p>Panah menunjukkan tugas berikutnya. Tidur di rumah untuk menyimpan.</p></div>
     </div>
@@ -299,19 +324,31 @@ footer a{color:var(--sun)}
 <section class="final" aria-labelledby="h-final">
   <div class="wrap">
     <h2 id="h-final">Siap berangkat sekolah?</h2>
-    <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap"><a class="btn play" href="main.html?s=iqra">▶ Main di SMAIT IQRA'</a><a class="btn" href="main.html?s=umum">🌐 Coba versi Sekolah Umum</a></div>
+    <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap"><a class="btn play" href="#sekolah">▶ Pilih sekolahmu</a><a class="btn" href="main.html?s=umum">🌐 Coba versi demo</a></div>
   </div>
 </section>
 </main>
 
 <footer>
   <div class="wrap">
-    <span>Hari di Sekolah · game edukatif SMAIT IQRA' Kota Bengkulu</span>
+    <span>Hari di Sekolah · game edukatif 3D untuk sekolah</span>
     <span>Dikembangkan oleh Ustadz Arief · <a href="guru.html">Panel Guru</a></span>
   </div>
 </footer>
 
 <script>
+// daftar sekolah yang sudah punya ruang sendiri (bertambah di Tahap 2)
+const SCHOOLS = [
+  { id: 'iqra', nama: "SMAIT IQRA'", where: 'Kota Bengkulu', logo: '🕌', bg: '#1f7a52', tag: 'Pakai kode kelas dari guru', panel: true },
+  { id: 'umum', nama: 'SMA Nusantara', where: 'Versi demo · guru fiktif & soal contoh', logo: '🌐', bg: '#cfeaf7', tag: 'Terbuka untuk siapa saja', open: true },
+];
+document.getElementById('schoolgrid').innerHTML = SCHOOLS.map((s) => `
+  <article class="sch"><div class="logo" style="background:${s.bg}">${s.logo}</div><h3>${s.nama}</h3><p class="where">${s.where}</p>
+    <span class="tag ${s.open ? 'open' : ''}">${s.tag}</span>
+    <div class="acts"><a class="btn play" href="main.html?s=${s.id}">▶ Main</a>${s.panel ? '<a class="btn" href="guru.html">👩‍🏫 Panel Guru</a>' : ''}</div></article>`).join('') + `
+  <article class="sch soon"><div class="logo" style="background:var(--sun)">＋</div><h3>Sekolah Anda?</h3><p class="where">Sekolah lain bisa punya ruang sendiri: nama, guru, jadwal, soal, dan nilai yang terpisah.</p>
+    <span class="tag">Segera hadir</span></article>`;
+
 // titik denah: posisi dalam persen gambar
 const PLACES = [
   ['Gerbang Utama', 'Pintu masuk', 'gerbang', 0, 56, 'Ustadz dan Ustadzah menyambut murid setiap pagi. Pos satpam di samping gerbang, parkir motor di dalam sebelah kiri.'],
