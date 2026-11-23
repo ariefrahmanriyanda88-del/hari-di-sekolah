@@ -129,8 +129,8 @@ const masjid = building(-14, -14, 14, 4, 5.5, 0xf3e3c3, 0x3a9a6a);
   label('Ruang Ustadzah', b.cx, 6.4, b.cz, 1.4); doorOut('ruangPI', b.cx, b.az - 2);
 }
 // ---------- perpustakaan, lab, UKS, kepala sekolah ----------
-[[-42.5, -32, 'Kantor Kepala Sekolah', 0xf3e0c8, 0xc98a5a], [-27.5, -20.5, 'TU & Bendahara', 0xe6eef3, 0x4a7a99], [-16.5, -3, 'Perpustakaan', 0xdde8f3, 0x6b7079], [3, 16.5, 'Lab Komputer', 0xdde8f3, 0x6b7079], [21, 30, 'UKS', 0xffffff, 0xc0392b]]
-  .forEach(([x1, x2, n, w, r]) => { const b = building(x1, -30, x2, -22, 4, w, r); windowBand(b, 'S'); door(b.cx, b.bz + 0.05, 'S', 0x9b6b3c); label(n, b.cx, 6.2, b.cz, n.length > 14 ? 1.0 : 1.3); if (n === 'Lab Komputer') { doorOut('lab', b.cx, b.bz + 2); label('🎮 Arcade', b.cx, 4.2, b.bz + 0.8, 0.8, true); }
+[[-42.5, -32, 'Kantor Kepala Sekolah', 0xf3e0c8, 0xc98a5a], [-27.7, -20.3, 'TU & Bendahara', 0xe6eef3, 0x4a7a99], [-16.5, -3, 'Perpustakaan', 0xdde8f3, 0x6b7079], [3, 16.5, 'Lab Komputer', 0xdde8f3, 0x6b7079], [21, 30, 'UKS', 0xffffff, 0xc0392b]]
+  .forEach(([x1, x2, n, w, r]) => { const tu = n.startsWith('TU'), b = building(x1, tu ? -36 : -30, x2, -22, tu ? 4.8 : 4, w, r); windowBand(b, 'S'); if (tu) { windowBand(b, 'E'); windowBand(b, 'W'); }   // gedung TU lebih dalam ke belakang, celah jalan pintas ke lapangan tetap terbuka door(b.cx, b.bz + 0.05, 'S', 0x9b6b3c); label(n, b.cx, 6.2, b.cz, n.length > 14 ? 1.0 : 1.3); if (n === 'Lab Komputer') { doorOut('lab', b.cx, b.bz + 2); label('🎮 Arcade', b.cx, 4.2, b.bz + 0.8, 0.8, true); }
     if (n === 'Perpustakaan') { doorOut('perpus', b.cx, b.bz + 2); label('📚 Baca', b.cx, 4.2, b.bz + 0.8, 0.8, true); }
     if (n === 'UKS') { doorOut('uks', b.cx, b.bz + 2); label('🩺 Berobat', b.cx, 4.2, b.bz + 0.8, 0.8, true); }
     if (n.startsWith('Kantor')) doorOut('kepsek', b.cx, b.bz + 2);
@@ -165,7 +165,7 @@ function tree(x, z, collide = true) {
 }
 for (let z = -66; z < 54; z += 8) { tree(-97, z); tree(97, z); }
 for (let x = -92; x < 95; x += 9) { tree(x, -69); if (Math.abs(x) > 10) tree(x, 58.5, false); }
-[[-42, 22], [42, 22], [-37, -16], [37, -16], [-37, -8], [37, -8], [-28, -36], [28, -36], [10, 48], [26, 50]]
+[[-42, 22], [42, 22], [-37, -16], [37, -16], [-37, -8], [37, -8], [-33.5, -37.5], [28, -36], [10, 48], [26, 50]]
   .forEach(([x, z]) => tree(x, z));
 
 // ---------- tempat-tempat (info lokasi) ----------
