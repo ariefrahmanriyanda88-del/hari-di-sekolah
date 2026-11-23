@@ -141,7 +141,7 @@ function enterLibrary() {
   [[-5.3, 1.2], [-2.7, 1.2], [2.7, 2.8], [5.3, 1.2]].forEach(([x, z], i) => {
     const m = makePerson(studentModel(putri, i + 4)); m.position.set(LIB.x + x, 0, LIB.z + z); m.rotation.y = z < 2 ? 0 : Math.PI; sitPose(m, true); m.armL.rotation.x = m.armR.rotation.x = -1.1; scene.add(m); libPeople.push(m);
   });
-  const pus = makePerson(teacherModel(putri ? 'P' : 'L', 3)); pus.position.set(LIB.x + 8.5, 0, LIB.z + 7); pus.rotation.y = Math.PI; scene.add(pus); nameTag(pus, putri ? 'Ustadzah Pustakawan' : 'Ustadz Pustakawan', 0.5); libPeople.push(pus);
+  const pus = makePerson(teacherModel('P', 3)); pus.position.set(LIB.x + 8.5, 0, LIB.z + 7); pus.rotation.y = Math.PI; scene.add(pus); nameTag(pus, (SCHOOL.demo ? 'Ustadzah Laila' : 'Ustadzah Karimah') + ' · Pustakawan', 0.5); pus.name = SCHOOL.demo ? 'Ustadzah Laila' : 'Ustadzah Karimah'; libPeople.push(pus);
   const dd = doorsOut.find((d) => d.id === 'perpus');
   enterHall('Perpustakaan', LIB, 16, { x: dd.x, z: dd.z + 1.5, rot: 0 }, () => {
     bubble(player, "Assalamu'alaikum…", 1500);

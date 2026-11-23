@@ -135,7 +135,7 @@ function lessonDone(b) {
 function istirahat1() {
   phase = 'istirahat1'; minutes = 10 * 60; Audio.sfx('bell');
   modal(`<div class="tag">🔔 Bel istirahat pertama</div><div class="big">Waktunya makan!</div><p>Ayo ke <b>Kantin ${side()}</b> untuk makan MBG bersama teman-teman.</p>`,
-    [['🍽️ Makan MBG di kantin', () => { closeModal(); paused = true; exitClass(() => setObjective(`Istirahat: makan MBG di <b>Kantin ${side()}</b>`, kantinDoor(), enterKantin)); }, 'main'],
+    [['🍽️ Makan MBG di kantin', () => { closeModal(); paused = true; exitClass(() => setObjective(`Istirahat: makan MBG di <b>Kantin ${side()}</b>`, kantinDoor(), () => enterKantin())); }, 'main'],
      ['🙅 Tidak makan MBG', () => { closeModal(); paused = true; exitClass(() => { toast('Tidak apa-apa. Jangan lupa makan bekalmu dan minum yang cukup, ya'); freeBreak(); }); }]]);
 }
 // istirahat bebas (setelah makan, atau bila tidak makan MBG)
@@ -145,11 +145,13 @@ function freeBreak() {
 }
 const kantinDoor = () => doorsOut.find((d) => d.id === (isPutri(state.cls) ? 'kantinPI' : 'kantinPA'));
 let tray = null;
-function enterKantin() {
+function enterKantin(mode) {
   populateKantin();
   const dd = kantinDoor();
   enterHall('Kantin', KANTIN, 16, { x: dd.x, z: dd.z - 1.5, rot: Math.PI }, () => {
     toast(`Kantin ${side()}`);
+    if (mode === true) return setObjective('Pesan makan siang di <b>meja saji</b>', { x: KANTIN.x, z: KANTIN.z - 4.6 }, lunchMenu, 'kantin');
+    if (mode === 'jajan') return setObjective('Belanja jajanan di <b>meja saji</b>', { x: KANTIN.x, z: KANTIN.z - 4.6 }, jajanMenu, 'kantin');
     setObjective('Ambil MBG di <b>meja saji</b>', { x: KANTIN.x, z: KANTIN.z - 4.6 }, mbgGame, 'kantin');
   });
 }
@@ -197,7 +199,7 @@ function eatScene() {
   ]);
   function eat() {
     const cats = ['pokok', 'lauk', 'sayur', 'buah', 'susu'].filter((c) => myMenu[c]), left = new Set(cats);
-    const draw = () => modal(`<div class="tag">Makan MBG</div><p>Ketuk untuk menghabiskan setiap makanan. Jangan bersisa!</p>`,
+    const draw = () => modal(`<div class="tag">${lunchMode ? 'Makan siang' : 'Makan MBG'}</div><p>Ketuk untuk menghabiskan setiap makanan. Jangan bersisa!</p>`,
       [...left].map((it) => [`🥄 Suap ${myMenu[it].lbl}`, () => {
         document.querySelectorAll('#mbtns button').forEach((x) => (x.disabled = true));
         playAnim(player, 'suap', 1.6);
@@ -207,12 +209,14 @@ function eatScene() {
     draw();
   }
   function after() {
-    minutes = 10 * 60 + 12; hud();
+    if (lunchMode) { minutes = Math.max(minutes, 13 * 60 + 5); hud(); }
+    else { minutes = 10 * 60 + 12; hud(); }
     modal(`<div class="tag">Doa sesudah makan</div><div class="doa"><span class="ar">اَلْحَمْدُ لِلّٰهِ الَّذِيْ أَطْعَمَنَا وَسَقَانَا وَجَعَلَنَا مُسْلِمِيْنَ</span><i>Alhamdulillahilladzii ath‘amanaa wa saqaanaa wa ja‘alanaa muslimiin</i></div>`,
       [['🤲 Aamiin, kembalikan nampan', () => {
         addPts(5); toast('+5 ⭐ Makanan habis & nampan dikembalikan');
         holdTray(false); sitPose(player, false); ktMarker.visible = true; eatingCam = false; $('modal').classList.remove('low');
         if (player.spoon) { player.armR.remove(player.spoon); player.spoon = null; }
+        if (lunchMode) { lunchMode = false; closeModal(); leaveInterior(); setTimeout(santaiObj, 700); return; }
         breakEnd = performance.now() + 4 * 60 * 1000;
         modal(`<div class="tag">Istirahat masih berlanjut</div><div class="big">Waktunya bebas! 🎉</div>
           <p>Silakan berkeliling sekolah: ikut main <b>⚽ bola</b>, <b>🏐 voli</b>, atau <b>🏀 basket</b>, mampir ke <b>🎮 Lab Komputer</b>, perpustakaan, atau menyapa guru di <b>Ruang Ustadz/Ustadzah</b>.</p>
@@ -238,10 +242,10 @@ function zuhur() {
 function playAzan() {
   Audio.duck(true);
   const el = $('qbanner');
-  const show = () => { el.innerHTML = `🕌 <span class="ar">اللّٰهُ أَكْبَرُ، اللّٰهُ أَكْبَرُ</span><br>Allahu Akbar, Allahu Akbar`; el.classList.add('show'); };
+  const show = () => { el.innerHTML = `🕌 Azan · <span class="ar">اللّٰهُ أَكْبَرُ</span> Allahu Akbar`; el.classList.add('show', 'cap', 'azan'); };
   const real = Audio.playBuffer();
   (real ? [300, 21300] : [0, 4000]).forEach((ms) => setTimeout(show, ms));
-  setTimeout(() => { el.classList.remove('show'); Audio.duck(false); }, real ? 38500 : 8500);
+  setTimeout(() => { el.classList.remove('show', 'cap', 'azan'); Audio.duck(false); }, real ? 38500 : 8500);
 }
 const DOA = {
   basmalah: ['بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ', 'Bismillaahir rahmaanir rahiim'],
@@ -279,7 +283,7 @@ function afterWudhuDone() {
   setTimeout(() => {
     paused = true;
     leaveInterior();
-    if (!p) { toast('Sudah berwudhu ✓ Masjid bisa dimasuki untuk sholat Dhuha atau mengaji'); return; }
+    if (!p) { toast(`Sudah berwudhu ✓ Masjid bisa dimasuki untuk ${sunnahName()} atau mengaji`); return; }
     const md = doorsOut.find((d) => d.id === (isPutri(state.cls) ? 'masjidPI' : 'masjidPA'));
     setObjective(`Masuk masjid lewat <b>Pintu ${side()}</b> untuk ${p.sholat === 'mengaji' ? 'mengaji' : 'sholat ' + p.sholat}`, md, () => { paused = true; (p.enter || masjidScene)(p.after); });
   }, 300);
@@ -293,8 +297,64 @@ function afterZuhur() {
     addPts(10); toast('+10 ⭐ Sholat Zuhur berjamaah');
     phase = 'santai'; minutes = 12 * 60 + 50;
     if (dayDone.size >= lessons().length) return pulangPhase(true);
-    setObjective(`Waktu santai (main bola, ke taman, perpustakaan…). Lalu kembali ke kelas <b>${state.cls}</b>`, classDoors[state.cls], knockClass);
+    lunchChoice();
   });
+}
+// ---------- setelah Zuhur: makan siang / jajan di kantin / langsung santai ----------
+let lunchMode = false;
+function santaiObj() { setObjective(`Waktu santai (main bola, ke taman, perpustakaan…). Lalu kembali ke kelas <b>${state.cls}</b>`, classDoors[state.cls], knockClass); }
+function lunchChoice() {
+  setTimeout(() => modal(`<div class="tag">🍛 ISHOMA · selesai sholat Zuhur</div><div class="big">Mau ke mana sekarang?</div><p>Masih ada waktu istirahat. Boleh makan siang atau jajan di <b>Kantin ${side()}</b>.</p>`, [
+    ['🍛 Makan siang di kantin', () => { closeModal(); lunchMode = true; setObjective(`Makan siang di <b>Kantin ${side()}</b>`, kantinDoor(), () => enterKantin(true)); }, 'main'],
+    ['🛍️ Belanja jajanan di kantin', () => { closeModal(); lunchMode = false; setObjective(`Belanja jajanan di <b>Kantin ${side()}</b>`, kantinDoor(), () => enterKantin('jajan')); }, 'main'],
+    ['🌳 Langsung santai', () => { closeModal(); santaiObj(); }, 'small'],
+  ]), 900);
+}
+const LUNCH = [
+  ['🍗 Nasi ayam + sayur bayam', { pokok: ['nasi', '🍚 Nasi'], lauk: ['ayam', '🍗 Ayam goreng'], sayur: ['bayam', '🥬 Sayur bayam'] }, 12000],
+  ['🐟 Nasi ikan bakar + tumis brokoli', { pokok: ['nasi', '🍚 Nasi'], lauk: ['ikan', '🐟 Ikan bakar'], sayur: ['brokoli', '🥦 Tumis brokoli'] }, 13000],
+  ['🥚 Nasi telur + tempe + sayur', { pokok: ['nasi', '🍚 Nasi'], lauk: ['telur', '🥚 Telur'], sayur: ['bayam', '🥬 Sayur bayam'] }, 9000],
+];
+const DRINK = [['🥛 Susu', ['susu', '🥛 Susu'], 4000], ['🍊 Jeruk', ['jeruk', '🍊 Jeruk'], 3000], ['🍌 Pisang', ['pisang', '🍌 Pisang'], 2000]];
+const rp = (n) => 'Rp' + n.toLocaleString('id-ID');
+function lunchMenu() {
+  let pk = 0, ex = new Set();
+  const draw = () => modal(`<div class="tag">🍛 Kantin · makan siang</div><div class="big">Pilih menu makan siang</div>
+    <div class="mbg">${LUNCH.map((m, i) => `<button type="button" data-p="${i}" class="${i === pk ? 'on' : ''}">${m[0]}<br><small>${rp(m[2])}</small></button>`).join('')}</div>
+    <p class="muted">Tambahan (boleh pilih):</p><div class="mbg">${DRINK.map((d, i) => `<button type="button" data-d="${i}" class="${ex.has(i) ? 'on' : ''}">${d[0]}<br><small>${rp(d[2])}</small></button>`).join('')}</div>
+    <p><b>Total: ${rp(LUNCH[pk][2] + [...ex].reduce((a, i) => a + DRINK[i][2], 0))}</b></p>`,
+    [['💵 Bayar & ambil nampan', () => {
+      myMenu = {}; const L = LUNCH[pk][1]; for (const c in L) myMenu[c] = { key: L[c][0], lbl: L[c][1] };
+      [...ex].forEach((i) => { const [k, l] = DRINK[i][1]; myMenu[k === 'susu' ? 'susu' : 'buah'] = { key: k, lbl: l }; });
+      Audio.sfx('ok'); closeModal(); holdTray(true);
+      bubble(npcs.find((n) => n.kind === 'kantin'), `Terima kasih, ${state.nama}. Selamat makan!`, 2200);
+      setObjective('Duduk di <b>kursi kosong</b> (lingkaran kuning)', { x: KANTIN.x + KT_SEAT.x, z: KANTIN.z + KT_SEAT.z }, eatScene, 'kantin');
+    }, 'main'], ['Tidak jadi', () => { closeModal(); lunchMode = false; leaveInterior(); santaiObj(); }, 'small']]);
+  draw();
+  const bind = () => document.querySelectorAll('.mbg button').forEach((b) => (b.onclick = () => { if (b.dataset.p) pk = +b.dataset.p; else { const i = +b.dataset.d; ex.has(i) ? ex.delete(i) : ex.add(i); } draw(); bind(); }));
+  bind();
+}
+const SNACK = [['🍞 Roti isi', 3000, 1], ['🍌 Pisang goreng', 2000, 1], ['🥟 Risoles', 2500, 1], ['💧 Air mineral', 3000, 2], ['🍎 Buah potong', 4000, 2], ['🥛 Susu kotak', 5000, 2], ['🥤 Minuman soda', 6000, 0], ['🍬 Permen', 1000, 0], ['🍟 Keripik pedas', 3000, 0]];
+function jajanMenu() {
+  const pickd = new Set();
+  const draw = () => modal(`<div class="tag">🛍️ Kantin · jajanan</div><div class="big">Mau jajan apa?</div><p class="muted">Uang saku: ${rp(15000)}. Pilih jajanan yang sehat, ya.</p>
+    <div class="mbg">${SNACK.map((m, i) => `<button type="button" data-i="${i}" class="${pickd.has(i) ? 'on' : ''}">${m[0]}<br><small>${rp(m[1])}</small></button>`).join('')}</div>
+    <p><b>Total: ${rp([...pickd].reduce((a, i) => a + SNACK[i][1], 0))}</b></p><div id="fb"></div>`,
+    [['💵 Bayar', () => {
+      const tot = [...pickd].reduce((a, i) => a + SNACK[i][1], 0);
+      if (!pickd.size) { $('fb').textContent = 'Pilih minimal satu jajanan.'; return; }
+      if (tot > 15000) { $('fb').textContent = 'Uang sakumu tidak cukup. Kurangi pilihanmu.'; Audio.sfx('no'); return; }
+      const sehat = [...pickd].every((i) => SNACK[i][2] > 0), minum = [...pickd].some((i) => SNACK[i][2] === 2);
+      closeModal(); Audio.sfx('ok');
+      bubble(npcs.find((n) => n.kind === 'kantin'), `Kembaliannya ${rp(15000 - tot)}. Terima kasih!`, 2200);
+      if (sehat) { addPts(minum ? 6 : 4); toast(`+${minum ? 6 : 4} ⭐ Jajan sehat & hemat`); }
+      else toast('Jajanan manis, soda, dan pedas jangan terlalu sering, ya');
+      setTimeout(() => { bubble(player, "Bismillah… nyam!", 1500); playAnim(player, 'suap', 1.4); }, 900);
+      setTimeout(() => { leaveInterior(); setTimeout(santaiObj, 700); }, 2800);
+    }, 'main'], ['Tidak jadi', () => { closeModal(); leaveInterior(); santaiObj(); }, 'small']]);
+  draw();
+  const bind = () => document.querySelectorAll('.mbg button').forEach((b) => (b.onclick = () => { const i = +b.dataset.i; pickd.has(i) ? pickd.delete(i) : pickd.add(i); draw(); bind(); }));
+  bind();
 }
 // ---------- pulang ----------
 function pulangPhase(outside) {

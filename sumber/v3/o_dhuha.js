@@ -3,9 +3,12 @@
 //  MASJID DI LUAR WAKTU SHOLAT WAJIB: sholat Dhuha & mengaji (tilawah)
 // =====================================================================
 let hasWudhu = false, savedObj = null, sideJamaah = [];
+// sholat Dhuha hanya sampai ± pukul 11.30; setelah itu (dan setelah Zuhur) cukup "sholat sunnah"
+const dhuhaTime = () => minutes < 11 * 60 + 30 && !['santai', 'pulang'].includes(phase);
+const sunnahName = () => (dhuhaTime() ? 'sholat Dhuha' : 'sholat sunnah');
 function masjidMenu() {
-  modal(`<div class="tag">🕌 Masjid · Pintu ${side()}</div><div class="big">Mau beribadah apa?</div><p class="muted">Masjid terbuka sejak pagi untuk sholat Dhuha dan mengaji.</p>`, [
-    ['🤲 Sholat Dhuha (2 rakaat)', () => { closeModal(); hasWudhu ? dhuhaScene() : goWudhuFor('Dhuha'); }, 'main'],
+  modal(`<div class="tag">🕌 Masjid · Pintu ${side()}</div><div class="big">Mau beribadah apa?</div><p class="muted">${dhuhaTime() ? 'Masjid terbuka sejak pagi untuk sholat Dhuha dan mengaji.' : 'Silakan sholat sunnah (misalnya tahiyatul masjid atau sholat taubat) atau mengaji.'}</p>`, [
+    [dhuhaTime() ? '🤲 Sholat Dhuha (2 rakaat)' : '🤲 Sholat sunnah (2 rakaat)', () => { closeModal(); hasWudhu ? dhuhaScene() : goWudhuFor('Dhuha'); }, 'main'],
     ['📖 Mengaji (tilawah)', () => { closeModal(); hasWudhu ? mengajiScene() : goWudhuFor('mengaji'); }, 'main'],
     ['Nanti saja', closeModal, 'small'],
   ]);
@@ -14,7 +17,7 @@ function goWudhuFor(what) {
   savedObj = savedObj || objective;
   toast('Berwudhu dulu, ya');
   const wd = doorsOut.find((d) => d.id === (isPutri(state.cls) ? 'wudhuPI' : 'wudhuPA'));
-  setObjective(`Berwudhu di <b>Wudhu ${side()}</b> sebelum ${what === 'Dhuha' ? 'sholat Dhuha' : 'mengaji'}`, wd, () => doWudhu(what === 'Dhuha' ? 'Dhuha' : 'mengaji', null, what === 'Dhuha' ? dhuhaScene : mengajiScene));
+  setObjective(`Berwudhu di <b>Wudhu ${side()}</b> sebelum ${what === 'Dhuha' ? sunnahName() : 'mengaji'}`, wd, () => doWudhu(what === 'Dhuha' ? (dhuhaTime() ? 'Dhuha' : 'sunnah') : 'mengaji', null, what === 'Dhuha' ? dhuhaScene : mengajiScene));
 }
 function restoreObjective() {
   const o = savedObj; savedObj = null;
@@ -57,6 +60,8 @@ function updateSideJamaah(t) {
 function dhuhaScene() {
   hasWudhu = true;
   enterQuietMasjid(() => {
+    if (!dhuhaTime()) return modal(`<div class="tag">Sholat sunnah · niat</div><div class="doa"><b>Niat sholat sunnah (dalam hati)</b><span class="ar">أُصَلِّيْ سُنَّةً رَكْعَتَيْنِ لِلّٰهِ تَعَالَى</span><i>Ushalli sunnatan rak‘ataini lillaahi ta‘aalaa</i><small>Artinya: Aku niat sholat sunnah dua rakaat karena Allah Ta‘ala. Boleh diniatkan tahiyatul masjid, sholat taubat, atau sholat sunnah lainnya.</small></div>`,
+      [['Allahu Akbar, mulai sholat', () => { $('modal').classList.remove('show'); paused = true; runDhuha(); }, 'main']]);
     modal(`<div class="tag">Sholat Dhuha · niat</div><div class="doa"><b>Niat sholat Dhuha</b><span class="ar">أُصَلِّيْ سُنَّةَ الضُّحٰى رَكْعَتَيْنِ لِلّٰهِ تَعَالَى</span><i>Ushalli sunnatadh dhuhaa rak‘ataini lillaahi ta‘aalaa</i><small>Artinya: Aku niat sholat sunnah Dhuha dua rakaat karena Allah Ta‘ala.</small></div>`,
       [['Allahu Akbar, mulai sholat', () => { $('modal').classList.remove('show'); paused = true; runDhuha(); }, 'main']]);
   });
@@ -71,6 +76,8 @@ function runDhuha() {
   seq.forEach(([c, p, d]) => { setTimeout(() => { caption(c); pose(player, p); }, t); t += d; });
   setTimeout(() => {
     caption(''); pose(player, 'duduk');
+    if (!dhuhaTime()) return modal(`<div class="tag">Dzikir setelah sholat sunnah</div><div class="doa"><span class="ar">أَسْتَغْفِرُ اللّٰهَ الْعَظِيْمَ</span><i>Astaghfirullaahal ‘azhiim</i><small>Artinya: Aku memohon ampun kepada Allah Yang Maha Agung.</small></div>`,
+      [['🤲 Aamiin', () => { closeModal(); $('modal').classList.remove('low'); pose(player, 'berdiri'); leaveMasjidVisit('+8 ⭐ Sholat sunnah', 8); }, 'main']]);
     modal(`<div class="tag">Doa setelah sholat Dhuha</div><div class="doa"><span class="ar">اَللّٰهُمَّ إِنَّ الضُّحَاءَ ضُحَاؤُكَ، وَالْبَهَاءَ بَهَاؤُكَ، وَالْجَمَالَ جَمَالُكَ، وَالْقُوَّةَ قُوَّتُكَ، وَالْقُدْرَةَ قُدْرَتُكَ، وَالْعِصْمَةَ عِصْمَتُكَ</span><i>Allaahumma innadh dhuhaa-a dhuhaa-uka, wal bahaa-a bahaa-uka, wal jamaala jamaaluka, wal quwwata quwwatuka, wal qudrata qudratuka, wal ‘ishmata ‘ishmatuka.</i><small>(Bagian awal doa Dhuha) Artinya: Ya Allah, sesungguhnya waktu dhuha adalah waktu dhuha-Mu, keagungan adalah keagungan-Mu, keindahan adalah keindahan-Mu, kekuatan adalah kekuatan-Mu, kekuasaan adalah kekuasaan-Mu, dan penjagaan adalah penjagaan-Mu.</small></div>`,
       [['🤲 Aamiin', () => { closeModal(); $('modal').classList.remove('low'); pose(player, 'berdiri'); leaveMasjidVisit('+8 ⭐ Sholat Dhuha', 8); }, 'main']]);
   }, t + 300);

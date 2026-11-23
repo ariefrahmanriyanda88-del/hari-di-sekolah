@@ -106,7 +106,10 @@ function fixedNPC(x, z, rotY, model, opts) {
   nameTag(s, opts.tag || opts.name);
   scene.add(s); npcs.push(s); return s;
 }
-fixedNPC(18, 54, Math.PI, { shirt: 0x37474f, bottom: 0x263238, peci: 0x263238, tie: false }, { kind: 'satpam', name: 'Pak Satpam' });
+// satpam berjaga di depan sekolah
+const SATPAM = SCHOOL.demo ? ['Pak Joko', 'Pak Darto', 'Pak Udin', 'Pak Rahmat', 'Pak Slamet'] : ['Ustadz Radiansyah', 'Ustadz Tanzili', 'Pak Man', 'Ustadz Irul', 'Pakde Mukhtar'];
+[[18, 54, Math.PI], [-7.5, 54.2, Math.PI], [7.5, 54.2, Math.PI], [-12, 58.4, Math.PI / 2], [12, 58.4, -Math.PI / 2]].forEach(([x, z, r], i) =>
+  fixedNPC(x, z, r, { shirt: 0x37474f, bottom: 0x263238, peci: 0x263238, tie: false, face: { brow: 1, mouth: i % 2 } }, { kind: 'satpam', name: SATPAM[i], tag: `${SATPAM[i]} · Satpam` }));
 
 // ---------- isi orang sesuai kelas yang dipilih (rombel sendiri) ----------
 let welcomers = [], walkers = [], classmateNames = [];
@@ -221,7 +224,7 @@ function updateNPCs(dt) {
     if (!n.visible) continue;
     const busy = updateAnim(n, dt);
     if (n.passT > 0) n.passT -= dt;
-    if (n.seated) continue;
+    if (n.seated || n.scripted) continue;
     if (n.fixed || busy || n.talk > 0) { if (n.talk > 0) n.talk -= dt; n.legL.rotation.x = n.legR.rotation.x = 0; if (!busy) n.armL.rotation.x = n.armR.rotation.x = 0; continue; }
     if (n.wait > 0) { n.wait -= dt; n.legL.rotation.x = n.legR.rotation.x = n.armL.rotation.x = n.armR.rotation.x = 0; continue; }
     const [tx, tz] = NODES[n.target];
@@ -286,6 +289,24 @@ function crowdToMasjid() {
     g.path = route(start, putri ? 10 : 9, g); g.target = g.path.shift() ?? start;
     scene.add(g); npcs.push(g); crowd.push(g);
   }
+  // murid kelas lain & para ustadz/ustadzah ikut berbondong-bondong
+  const add = (model, x, z, o) => {
+    const g = makePerson(model); g.position.set(x, 0, z);
+    const start = nearestNode(x, z);
+    Object.assign(g, { speed: 2.6 + Math.random() * 0.9, node: start, greetDay: 0, walker: true, goingIn: true, ...o });
+    g.path = route(start, g.putri ? 10 : 9, g); g.target = g.path.shift() ?? start;
+    scene.add(g); npcs.push(g); crowd.push(g);
+    if (o.kind === 'guru') nameTag(g, o.name, 0.5);
+  };
+  Object.keys(classDoors).filter((c) => c !== state.cls).sort(() => Math.random() - 0.5).slice(0, 5).forEach((c, k) => {
+    const dd = classDoors[c], pi = isPutri(c);
+    for (let i = 0; i < 3; i++) add(studentModel(pi, k * 3 + i + 11), dd.x + (i - 1) * 1.2, dd.z + 0.6 + Math.random(), { kind: 'siswa', putri: pi, name: (pi ? NAMES_PI : NAMES_PA)[(k + i) % 8], wait: 1 + k * 1.4 + i * 0.6 });
+  });
+  ['L', 'P'].forEach((gd) => {
+    const dd = doorsOut.find((d) => d.id === (gd === 'P' ? 'ruangPI' : 'ruangPA'));
+    Object.keys(TEACH).filter((t) => TEACH[t].g === gd).slice(0, 4).forEach((t, i) =>
+      add(teacherModel(gd, i), dd.x + (i - 1.5) * 1.3, dd.z + 1 + (i % 2), { kind: 'guru', putri: gd === 'P', sapaan: gd === 'P' ? 'Ustadzah' : 'Ustadz', name: TEACH[t].p, wait: 2 + i * 1.5 }));
+  });
 }
 function afterMasjid() {
   crowd.forEach((g) => { scene.remove(g); npcs.splice(npcs.indexOf(g), 1); }); crowd.length = 0;
@@ -303,7 +324,7 @@ function greetOptions(n) {
     if (!n.welcome) o.push([`🙂 "${n.sapaan}, tugas hari ini apa saja?"`, 'tanya']);
     return o;
   }
-  if (n.kind === 'satpam') return [['👋 "Assalamu\'alaikum, Pak!"', 'salamPak'], ['🙂 "Selamat pagi, Pak Satpam!"', 'pagi']];
+  if (n.kind === 'satpam') return [[`👋 "Assalamu'alaikum, ${n.name}!"`, 'salamPak'], [`🙂 "Selamat pagi, ${n.name}!"`, 'pagi']];
   if (n.kind === 'kantin') return [['👋 "Assalamu\'alaikum, Bu. Terima kasih makanannya!"', 'kantin']];
   return [['👋 "Assalamu\'alaikum!"', 'salamTeman'], ['🕌 "Nanti Zuhur bareng ke masjid, yuk!"', 'masjid'], ['📚 "Sudah kerjakan tugas belum?"', 'tugas']];
 }
@@ -331,7 +352,7 @@ function doGreet(n, act) {
     tugas: ['Sudah dong, tadi malam!', 'Belum… nanti bantu aku, ya!', 'Hampir selesai, tinggal satu soal.'],
   }[act];
   const mine = { salimPagi: `Assalamu'alaikum, ${n.name}. Selamat pagi.`, dadaPagi: `Assalamu'alaikum, ${n.name}.`, salim: `Assalamu'alaikum, ${n.name}.`, dada: `Assalamu'alaikum, ${n.name}.`,
-    tanya: `${n.sapaan}, tugas hari ini apa saja?`, salamPak: "Assalamu'alaikum, Pak!", pagi: 'Selamat pagi, Pak Satpam!', kantin: "Assalamu'alaikum, Bu. Terima kasih!",
+    tanya: `${n.sapaan}, tugas hari ini apa saja?`, salamPak: `Assalamu'alaikum, ${n.name}!`, pagi: `Selamat pagi, ${n.name}!`, kantin: "Assalamu'alaikum, Bu. Terima kasih!",
     salamTeman: "Assalamu'alaikum!", masjid: 'Nanti Zuhur bareng, yuk!', tugas: 'Sudah kerjakan tugas?' }[act];
   if (act.startsWith('salim')) { playAnim(player, 'salim', 1.5); playAnim(n, 'beritangan', 1.5); }
   else if (act.startsWith('dada')) { playAnim(player, 'dada', 1.4); setTimeout(() => playAnim(n, 'dada', 1.4), 400); }

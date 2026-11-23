@@ -92,7 +92,7 @@ function masjidScene(done) {
     steps.forEach(([t, fn]) => later(t + 600, fn));
   });
 }
-function caption(t) { const el = $('qbanner'); el.innerHTML = t ? `🕌 ${esc(t)}` : ''; el.classList.toggle('show', !!t); }
+function caption(t) { const el = $('qbanner'); el.innerHTML = t ? `🕌 ${esc(t)}` : ''; el.classList.toggle('show', !!t); el.classList.toggle('cap', !!t); document.body.classList.toggle('sholat', !!t && zone === 'masjid'); }
 
 // =====================================================================
 //  ARENA TUGAS ala ZEP QUIZ: pos soal berurutan, gerbang terbuka bila benar, pos O/X
