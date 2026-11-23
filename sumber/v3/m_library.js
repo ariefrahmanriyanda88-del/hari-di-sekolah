@@ -5,6 +5,21 @@
 // =====================================================================
 const B_ = (t) => `<span class="ar">${t}</span>`;
 const BOOKS = {
+  UMUM: { t: 'Kisah Teladan: Jujur Walau Terancam', p: [
+    '<h4>Bekal dari ibu</h4><p>Seorang anak bernama Abdul Qadir hendak merantau untuk menuntut ilmu. Ibunya menjahitkan uang bekal di balik bajunya dan berpesan: <b>"Jangan pernah berdusta, apa pun yang terjadi."</b></p>',
+    '<h4>Dihadang perampok</h4><p>Di tengah perjalanan, rombongannya dihadang perampok. Seorang perampok bertanya, "Apa yang kau bawa?" Abdul Qadir menjawab jujur bahwa ia membawa uang yang dijahit di bajunya.</p>',
+    '<h4>Hati yang tersentuh</h4><p>Pemimpin perampok heran. Abdul Qadir menjelaskan, ia sudah berjanji kepada ibunya untuk tidak berdusta. Mendengar itu, para perampok menangis dan bertaubat.</p>',
+    '<h4>Pelajaran</h4><ul><li>Kejujuran bisa mengubah hati orang lain.</li><li>Menepati pesan orang tua adalah bakti.</li><li>Jujur tetap jujur, walau sedang terdesak.</li></ul>'] },
+  UMUM2: { t: 'Tips Belajar Efektif', p: [
+    '<h4>Mulai dengan niat</h4><p>Niatkan belajar karena Allah dan untuk bermanfaat bagi orang lain. Awali dengan basmalah dan doa belajar.</p>',
+    '<h4>Atur waktu</h4><ul><li>Belajar 25 menit, istirahat 5 menit.</li><li>Ulangi pelajaran hari itu sebelum tidur.</li><li>Kerjakan tugas sebelum bermain.</li></ul>',
+    '<h4>Cara mengingat</h4><ul><li>Tulis ulang dengan kata-katamu sendiri.</li><li>Jelaskan kepada teman sebangku.</li><li>Kerjakan latihan soal di Lab Komputer.</li></ul>',
+    '<h4>Jaga badan</h4><p>Tidur cukup, sarapan, banyak minum air, dan berolahraga. Otak yang segar lebih mudah menangkap pelajaran.</p>'] },
+  UMUM3: { t: 'Hidup Sehat Remaja Muslim', p: [
+    '<h4>Makan seimbang</h4><p>Ikuti pedoman <b>4 sehat 5 sempurna</b>: makanan pokok, lauk, sayur, buah, dan susu. Kurangi jajanan manis dan minuman bersoda.</p>',
+    '<h4>Adab makan</h4><ul><li>Berdoa sebelum dan sesudah makan.</li><li>Makan dengan tangan kanan, sambil duduk.</li><li>Tidak berlebihan dan tidak menyisakan makanan.</li></ul>',
+    '<h4>Kebersihan</h4><ul><li>Cuci tangan dengan sabun.</li><li>Jaga wudhu dan kebersihan pakaian.</li><li>Sikat gigi pagi dan sebelum tidur.</li></ul>',
+    '<h4>Bergerak aktif</h4><p>Luangkan waktu berolahraga: sepak bola, voli, basket, atau berjalan kaki ke sekolah. Tubuh yang kuat lebih dicintai Allah.</p>'] },
   BA: { t: 'Bahasa Arab: Kosakata Sekolah', p: [
     `<h4>Benda di kelas</h4><ul><li>${B_('كِتَابٌ')} = buku</li><li>${B_('قَلَمٌ')} = pena</li><li>${B_('سَبُّورَةٌ')} = papan tulis</li><li>${B_('بَابٌ')} = pintu · ${B_('نَافِذَةٌ')} = jendela</li><li>${B_('كُرْسِيٌّ')} = kursi</li></ul>`,
     `<h4>Orang & tempat di sekolah</h4><ul><li>${B_('مُعَلِّمٌ')} = guru · ${B_('طَالِبٌ')} = siswa</li><li>${B_('مَدْرَسَةٌ')} = sekolah · ${B_('فَصْلٌ')} = kelas</li><li>${B_('مَكْتَبَةٌ')} = perpustakaan</li><li>${B_('مَقْصَفٌ')} = kantin · ${B_('مَلْعَبٌ')} = lapangan</li><li>${B_('مَسْجِدٌ')} = masjid · ${B_('بَيْتٌ')} = rumah</li></ul>`,
@@ -97,6 +112,7 @@ const SHELVES = [
   { x: 8.4, z: -5.6, n: 'IPS & Kewarganegaraan', b: ['SJ', 'GEO', 'EKO', 'SOS', 'PP'], c: 0x8f5fb0 },
   { x: -10.2, z: 2.5, n: 'Teknologi', b: ['TIK', 'KKA'], c: 0x2b6f7a, side: 'W' },
   { x: 10.2, z: 2.5, n: 'Seni, Olahraga & Prakarya', b: ['SB', 'PJOK', 'PRK'], c: 0xd9577a, side: 'E' },
+  { x: -10.2, z: -2.7, n: 'Bacaan Umum', b: ['UMUM', 'UMUM2', 'UMUM3'], c: 0xc99a2e, side: 'W' },
 ];
 const lib = makeHall(LIB, 24, 16, 0xf1e6cf, '#efe3c9', '#e4d6b8');
 {

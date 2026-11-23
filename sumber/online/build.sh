@@ -12,4 +12,4 @@ i=s.rfind('<script>')
 s=s[:i]+'<script src="config.js"></script>\n<script src="online.js"></script>\n'+s[i:]
 open('dist/main.html','w').write(s)
 PY
-cp src/landing.html dist/index.html; mkdir -p dist/img; cp src/img/*.webp dist/img/; ls dist
+cp src/landing.html dist/index.html; mkdir -p dist/templat; cp src/templat/* dist/templat/; mkdir -p dist/img; cp src/img/*.webp dist/img/; ls dist

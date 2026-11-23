@@ -33,6 +33,31 @@ const kelasGroup = (name, sel, list = KELAS) => ['X ', 'XI ', 'XII '].map((g) =>
   return `<div class="kg"><b>Kelas ${g.trim()}</b><div class="chks">${checks(name, ks, sel)}</div></div>`;
 }).join('');
 
+// =============================== PEMBACA FILE WORD (.docx) ===============================
+// hasil: daftar blok { t: 'p'|'h'|'li'|'pb'|'title', x: teks } dan tabel (array baris → array sel)
+async function readDocx(file) {
+  const cfb = XLSX.CFB.read(new Uint8Array(await file.arrayBuffer()), { type: 'array' });
+  const ix = cfb.FullPaths.findIndex((p) => /word\/document\.xml$/i.test(p)), ent = ix >= 0 ? cfb.FileIndex[ix] : null;
+  if (!ent || !ent.content) throw new Error('Bukan file Word (.docx) yang valid');
+  const xml = new DOMParser().parseFromString(new TextDecoder().decode(ent.content), 'application/xml');
+  const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+  const kids = (el, n) => [...el.childNodes].filter((c) => c.namespaceURI === W && c.localName === n);
+  const textOf = (el) => { let t = ''; el.querySelectorAll('*').forEach((n) => { if (n.namespaceURI !== W) return; if (n.localName === 't') t += n.textContent; else if (n.localName === 'tab') t += ' '; else if (n.localName === 'br' && n.getAttributeNS(W, 'type') !== 'page') t += ' '; }); return t.replace(/\s+/g, ' ').trim(); };
+  const body = xml.getElementsByTagNameNS(W, 'body')[0], blocks = [], tables = [];
+  [...body.childNodes].forEach((n) => {
+    if (n.namespaceURI !== W) return;
+    if (n.localName === 'tbl') { tables.push(kids(n, 'tr').map((tr) => kids(tr, 'tc').map(textOf))); return; }
+    if (n.localName !== 'p') return;
+    const pPr = kids(n, 'pPr')[0], st = pPr && kids(pPr, 'pStyle')[0] ? kids(pPr, 'pStyle')[0].getAttributeNS(W, 'val') || '' : '';
+    const before = pPr && kids(pPr, 'pageBreakBefore').length, after = [...n.getElementsByTagNameNS(W, 'br')].some((b) => b.getAttributeNS(W, 'type') === 'page');
+    if (before) blocks.push({ t: 'pb' });
+    const x = textOf(n);
+    if (x) blocks.push({ t: /^Title$/i.test(st) ? 'title' : /^(Heading|Judul)\d|^heading/i.test(st) ? 'h' : pPr && kids(pPr, 'numPr').length ? 'li' : /List/i.test(st) ? 'li' : 'p', x });
+    if (after) blocks.push({ t: 'pb' });
+  });
+  return { blocks, tables };
+}
+
 // =============================== LOGIN ===============================
 function viewAuth(mode = 'masuk') {
   const names = Object.keys(GURUS);
@@ -183,7 +208,7 @@ function editor() {
       <label class="chk wide"><input type="checkbox" id="aktif" ${d.aktif !== false ? 'checked' : ''}><span>Aktif (tampil di game murid)</span></label>
     </div>
     <div class="bar"><h2>Daftar soal <span class="muted" id="cnt"></span></h2></div>
-    <div class="tools"><button class="btn small" id="tempel">📋 Tempel dari Excel</button><button class="btn small" id="impor">⬆️ Impor file Excel</button><button class="btn small" id="templat">⬇️ Templat Excel</button><input type="file" id="file" accept=".xlsx,.xls,.csv" hidden></div>
+    <div class="tools"><button class="btn small" id="tempel">📋 Tempel dari Excel</button><button class="btn small" id="impor">⬆️ Impor Excel / Word</button><a class="btn small" href="templat/Templat_Soal_Hari_di_Sekolah.xlsx" download>⬇️ Templat Excel</a><a class="btn small" href="templat/Templat_Soal_Hari_di_Sekolah.docx" download>⬇️ Templat Word</a><input type="file" id="file" accept=".xlsx,.xls,.csv,.docx" hidden></div>
     <div id="qs"></div>
     <div class="tools"><button class="btn" id="addpg">＋ Pilihan ganda</button><button class="btn" id="addbs">＋ Benar / Salah</button></div>
     <div class="savebar"><button class="btn main" id="simpan">💾 Simpan paket soal</button></div>`;
@@ -244,16 +269,17 @@ function editor() {
     $('#tutup', box).onclick = () => box.remove();
     $('#ok', box).onclick = () => { const t = $('#tsv', box).value; addRows(t.split(/\r?\n/).map((l) => l.split(l.includes('\t') ? '\t' : ';'))); box.remove(); };
   };
-  $('#templat').onclick = () => {
-    const ws = XLSX.utils.aoa_to_sheet([['Soal', 'Pilihan A', 'Pilihan B', 'Pilihan C', 'Pilihan D', 'Kunci (A/B/C/D)'], ['Apa arti كِتَابٌ ?', 'Pena', 'Buku', 'Meja', 'Pintu', 'B'], ['Apa arti مَسْجِدٌ ?', 'Masjid', 'Sekolah', 'Rumah', '', 'A'], ['قَلَمٌ artinya pena.', 'B'], ['Ibu kota Indonesia adalah Bengkulu.', 'S']]);
-    ws['!cols'] = [{ wch: 50 }, { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 16 }];
-    const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Soal'); XLSX.writeFile(wb, 'Templat_Soal_Hari_di_Sekolah.xlsx');
-  };
   $('#impor').onclick = () => $('#file').click();
   $('#file').onchange = async (e) => {
     const f = e.target.files[0]; if (!f) return;
-    const wb = XLSX.read(await f.arrayBuffer()); const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 });
-    addRows(rows); e.target.value = '';
+    try {
+      if (/\.docx$/i.test(f.name)) {                     // Word: baca semua tabel soal (Soal · A · B · C · D · Kunci, atau Soal · B/S)
+        const { tables } = await readDocx(f);
+        const rows = tables.flat().filter((r) => r.length >= 2 && !/^(no\.?|nomor)$/i.test(r[0] || ''));
+        if (!rows.length) toast('Tidak ditemukan tabel soal di file Word ini', true); else addRows(rows.map((r) => (/^\d+\.?$/.test(r[0]) ? r.slice(1) : r)));
+      } else { const wb = XLSX.read(await f.arrayBuffer()); addRows(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 })); }
+    } catch (er) { toast('File tidak bisa dibaca: ' + er.message, true); }
+    e.target.value = '';
   };
   $('#simpan').onclick = (ev) => {
     pull();
@@ -303,6 +329,7 @@ function editorMateri() {
       <label class="chk wide"><input type="checkbox" id="aktifM" ${d.aktif !== false ? 'checked' : ''}><span>Aktif (tampil di perpustakaan)</span></label>
     </div>
     <div class="card">
+      <div class="tools"><button class="btn small" id="imporM">⬆️ Impor dari Word (.docx)</button><a class="btn small" href="templat/Templat_Materi_Perpustakaan.docx" download>⬇️ Templat Word</a><input type="file" id="fileM" accept=".docx" hidden></div>
       <label>Isi materi<textarea id="isiM" rows="14" placeholder="Tulis materi di sini. Huruf Arab boleh.&#10;&#10;Pisahkan halaman dengan baris berisi --- &#10;---&#10;Halaman berikutnya…">${esc(d.isi)}</textarea></label>
       <p class="muted small">Tips: setiap baris baru tetap tampil sebagai baris baru. Tulis <b>---</b> di baris sendiri untuk pindah halaman. Awali baris dengan <b>#</b> untuk judul kecil, dan <b>-</b> untuk butir daftar.</p>
       <div class="muted small" id="infoM"></div>
@@ -310,6 +337,25 @@ function editorMateri() {
     <div class="savebar"><button class="btn main" id="simpanM">💾 Simpan materi</button></div>`;
   const info = () => ($('#infoM').textContent = `${halaman($('#isiM').value).length} halaman · ${$('#isiM').value.length} karakter`);
   $('#isiM').oninput = info; info();
+  $('#imporM').onclick = () => $('#fileM').click();
+  $('#fileM').onchange = async (e) => {
+    const f = e.target.files[0]; if (!f) return;
+    try {
+      const { blocks } = await readDocx(f); let judul = '', out = [];
+      blocks.forEach((b) => {
+        if (b.t === 'title' && !judul) judul = b.x;
+        else if (b.t === 'pb') { if (out.length && out[out.length - 1] !== '---') out.push('---'); }
+        else if (b.t === 'h') out.push('# ' + b.x);
+        else if (b.t === 'li') out.push('- ' + b.x);
+        else out.push(b.x);
+      });
+      while (out[out.length - 1] === '---') out.pop();
+      if (!out.length) return toast('File Word ini kosong', true);
+      if (judul && !$('#judulM').value.trim()) $('#judulM').value = judul;
+      $('#isiM').value = out.join('\n'); info(); toast('Materi dari Word dimasukkan ✓ Periksa lalu simpan');
+    } catch (er) { toast('File tidak bisa dibaca: ' + er.message, true); }
+    e.target.value = '';
+  };
   $('#batalM').onclick = () => { if (confirm('Kembali tanpa menyimpan?')) { S.editM = null; tabMateri(); } };
   $('#simpanM').onclick = (ev) => {
     d.judul = $('#judulM').value.trim(); d.mapel = $('#mapelM').value; d.aktif = $('#aktifM').checked; d.isi = $('#isiM').value;

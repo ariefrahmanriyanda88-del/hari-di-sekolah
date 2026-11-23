@@ -30,6 +30,7 @@ function goLandscape() {
   const p = el.requestFullscreen ? el.requestFullscreen({ navigationUI: 'hide' }) : null;
   if (p && p.then) p.then(() => screen.orientation && screen.orientation.lock && screen.orientation.lock('landscape').catch(() => {})).catch(() => {});
 }
+$('musbtn').onclick = () => { Audio.start(); toast('🎵 Musik: ' + Audio.nextStyle()); };
 $('fsbtn').onclick = () => { if (document.fullscreenElement) document.exitFullscreen(); else goLandscape(); };
 $('rotok').onclick = () => document.body.classList.add('rotok');
 cv.addEventListener('pointerup', endJoy); cv.addEventListener('pointercancel', endJoy);

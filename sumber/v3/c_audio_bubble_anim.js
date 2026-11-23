@@ -34,14 +34,9 @@ const Audio = (() => {
     while (nextT < ac.currentTime + 0.25) {
       const t = nextT;
       if (track === 'sekolah') {
-        const bar = Math.floor(step16 / 8) % 8, s = step16 % 8, ch = CH[bar];
-        if (s === 0) { ch.forEach((n) => tone(mtof(n), t, BEAT * 4, 'triangle', 0.045, music, 0.4)); tone(mtof(ch[0] - 24), t, BEAT * 1.8, 'sine', 0.22, music); }
-        if (s === 4) tone(mtof(ch[0] - 24 + 7), t, BEAT * 1.5, 'sine', 0.16, music);
-        tone(mtof(ch[s % 3] + 12), t, BEAT * 0.45, 'triangle', 0.05, music);
-        const mi = (step16 % 64) >> 1;
-        if (step16 % 2 === 0 && Math.floor(step16 / 64) % 2 === 1 && MEL[mi % 32] > 0) tone(mtof(MEL[mi % 32]), t, BEAT * 0.9, 'sine', 0.09, music);
-        if (Math.random() < 0.012) bird(t);
-        nextT += BEAT / 2; step16++;
+        const st = styleNow();
+        if (st === 'diam') { nextT += 0.5; continue; }
+        nextT += STYLE_FN[st](t); step16++;
       } else {
         const T = track === 'aksi' ? AKSI : ARENA, b16 = 60 / T.bpm / 4;
         const bar = Math.floor(step16 / 16) % 4, s = step16 % 16, ch = T.ch[bar];
@@ -58,6 +53,52 @@ const Audio = (() => {
       }
     }
   }
+  // ---------- pilihan gaya musik latar sekolah (semua dibuat oleh kode) ----------
+  const STYLES = [['ceria', '☀️ Ceria pagi'], ['akustik', '🎸 Santai akustik'], ['rebana', '🥁 Nasyid rebana'], ['lofi', '🎧 Lo-fi belajar'], ['auto', '🔀 Berganti tiap hari'], ['diam', '🔇 Tanpa musik (efek saja)']];
+  let styleI = 0; try { styleI = Math.max(0, STYLES.findIndex((x) => x[0] === localStorage.getItem('hds-musik'))); } catch (e) { /* abaikan */ }
+  const styleNow = () => { const s = STYLES[styleI][0]; if (s !== 'auto') return s; let d = 1; try { d = state.day || 1; } catch (e) { /* abaikan */ } return ['ceria', 'akustik', 'rebana', 'lofi'][(d - 1) % 4]; };
+  const STYLE_FN = {
+    ceria(t) {
+      const bar = Math.floor(step16 / 8) % 8, s = step16 % 8, ch = CH[bar];
+      if (s === 0) { ch.forEach((n) => tone(mtof(n), t, BEAT * 4, 'triangle', 0.045, music, 0.4)); tone(mtof(ch[0] - 24), t, BEAT * 1.8, 'sine', 0.22, music); }
+      if (s === 4) tone(mtof(ch[0] - 24 + 7), t, BEAT * 1.5, 'sine', 0.16, music);
+      tone(mtof(ch[s % 3] + 12), t, BEAT * 0.45, 'triangle', 0.05, music);
+      const mi = (step16 % 64) >> 1;
+      if (step16 % 2 === 0 && Math.floor(step16 / 64) % 2 === 1 && MEL[mi % 32] > 0) tone(mtof(MEL[mi % 32]), t, BEAT * 0.9, 'sine', 0.09, music);
+      if (Math.random() < 0.012) bird(t);
+      return BEAT / 2;
+    },
+    akustik(t) {   // petikan gitar lembut, G – D – Em – C
+      const B = 60 / 84, ch = [[55, 59, 62], [50, 54, 57], [52, 55, 59], [48, 52, 55]][Math.floor(step16 / 8) % 4], s = step16 % 8;
+      const pat = [0, 1, 2, 1, 2, 1, 2, 1], up = s === 4 ? 12 : 0;
+      tone(mtof(ch[pat[s]] + 12 + up), t, B * 1.1, 'triangle', 0.07, music, 0.004);
+      if (s === 0 || s === 4) tone(mtof(ch[0] - 12 + (s === 4 ? 7 : 0)), t, B * 1.6, 'sine', 0.2, music, 0.01);
+      const M = [71, -1, 74, -1, 76, 74, 71, -1, 69, -1, 71, -1, 67, -1, -1, -1, 64, -1, 67, 69, 71, -1, 69, 67, 64, -1, 62, -1, 67, -1, -1, -1];
+      const mn = M[step16 % 32]; if (Math.floor(step16 / 32) % 2 === 1 && mn > 0) tone(mtof(mn), t, B * 0.9, 'sine', 0.07, music, 0.02);
+      if (Math.random() < 0.008) bird(t);
+      return B / 2;
+    },
+    rebana(t) {    // irama rebana (dum–tak) dengan nada maqam hijaz
+      const B = 60 / 100, s = step16 % 8;
+      if (s === 0 || s === 3) { const o = ac.createOscillator(), g = ac.createGain(); o.frequency.setValueAtTime(110, t); o.frequency.exponentialRampToValueAtTime(60, t + 0.15); g.gain.setValueAtTime(0.42, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.25); o.connect(g); g.connect(music); o.start(t); o.stop(t + 0.3); }
+      if (s === 2 || s === 5 || s === 6) noise(t, 0.07, 0.16, 2200);
+      if (s % 2 === 1) noise(t, 0.05, 0.05, 8000);
+      if (step16 % 32 === 0) [50, 57].forEach((n) => tone(mtof(n), t, B * 16, 'sine', 0.05, music, 1.2));   // dengung D
+      const H = [74, -1, 75, 74, 78, -1, 79, -1, 81, -1, 79, 78, 75, -1, 74, -1, 72, -1, 70, -1, 69, -1, 70, 72, 74, -1, -1, -1, 74, -1, -1, -1];
+      const mn = H[step16 % 32]; if (Math.floor(step16 / 32) % 2 === 1 && mn > 0) tone(mtof(mn - 12), t, B * 0.6, 'triangle', 0.08, music, 0.01);
+      return B / 2;
+    },
+    lofi(t) {      // akor lembut & ketukan pelan untuk belajar
+      const B = 60 / 72, s = step16 % 8, ch = [[53, 57, 60, 64], [52, 55, 59, 62], [50, 53, 57, 60], [48, 52, 55, 59]][Math.floor(step16 / 8) % 4];
+      if (s === 0) { ch.forEach((n) => tone(mtof(n), t, B * 4.2, 'sine', 0.035, music, 0.25)); tone(mtof(ch[0] - 24), t, B * 2, 'sine', 0.2, music, 0.02); }
+      if (s === 0 || s === 5) kick(t, 0.3);
+      if (s === 4) noise(t, 0.12, 0.07, 1500);
+      if (s % 2 === 1) noise(t, 0.03, 0.03, 9000);
+      const L = [72, -1, -1, 74, -1, 76, -1, -1, 74, -1, 72, -1, -1, -1, 69, -1];
+      const mn = L[step16 % 16]; if (Math.floor(step16 / 16) % 2 === 1 && mn > 0) tone(mtof(mn), t, B * 0.8, 'triangle', 0.04, music, 0.03);
+      return B / 2;
+    },
+  };
   function bird(t) {
     for (let k = 0; k < 3; k++) {
       const o = ac.createOscillator(), g = ac.createGain(), s = t + k * 0.13;
@@ -79,6 +120,8 @@ const Audio = (() => {
         ac.resume();
       } catch (e) {}
     },
+    styleName() { return STYLES[styleI][1]; },
+    nextStyle() { styleI = (styleI + 1) % STYLES.length; try { localStorage.setItem('hds-musik', STYLES[styleI][0]); } catch (e) { /* abaikan */ } step16 = 0; return STYLES[styleI][1]; },
     setTrack(name) { if (track === name) return; track = name; step16 = 0; if (ac) nextT = Math.max(nextT, ac.currentTime + 0.05); },
     duck(on) { if (music) music.gain.setTargetAtTime(on ? 0.04 : 1.6, ac.currentTime, 0.4); },
     loadUrl(url) {
