@@ -97,3 +97,27 @@ function kopAction(id) {
   if (id === 'kop-kasir') return kopKasir();
   return kopRak(id.slice(4));
 }
+
+// ---------- penanda pintu masuk: lingkaran kuning berdenyut + panah memantul di setiap pintu gedung ----------
+const DOOR_MARKS = [];
+function buildDoorMarks() {
+  const skip = ['voli', 'basket', 'bola'];
+  doorsOut.forEach((d) => {
+    if (skip.includes(d.id)) return;
+    const g = new THREE.Group(); g.position.set(d.x, 0, d.z);
+    const ring = new THREE.Mesh(new THREE.RingGeometry(0.75, 1.0, 32), new THREE.MeshBasicMaterial({ color: 0xffc83d, transparent: true, opacity: 0.9 }));
+    ring.rotation.x = -Math.PI / 2; ring.position.y = 0.08; g.add(ring);
+    const arrow = new THREE.Mesh(new THREE.ConeGeometry(0.32, 0.6, 4), new THREE.MeshBasicMaterial({ color: 0xffc83d }));
+    arrow.rotation.x = Math.PI; arrow.position.y = 2.2; g.add(arrow);
+    scene.add(g); DOOR_MARKS.push({ g, ring, arrow, d });
+  });
+}
+function updateDoorMarks(t) {
+  if (zone !== 'luar') return;
+  for (const m of DOOR_MARKS) {
+    const near = Math.hypot(player.position.x - m.d.x, player.position.z - m.d.z) < 26;
+    m.g.visible = near; if (!near) continue;
+    const k = 1 + Math.sin(t * 3 + m.d.x) * 0.12; m.ring.scale.set(k, k, 1);
+    m.arrow.position.y = 2.1 + Math.sin(t * 3.4 + m.d.z) * 0.25; m.arrow.rotation.y = t * 1.5;
+  }
+}

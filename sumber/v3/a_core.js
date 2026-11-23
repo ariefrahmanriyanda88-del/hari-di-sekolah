@@ -119,9 +119,11 @@ function windowBand(b, face, floors = 1) {
   }
 }
 
+// pintu yang jelas: kusen terang, daun pintu, gagang, dan keset di depannya
 function door(x, z, face, color = 0x8a5a2b) {
-  if (face === 'S' || face === 'N') box(x, 1.3, z, 1.8, 2.6, 0.25, color, false);
-  else box(x, 1.3, z, 0.25, 2.6, 1.8, color, false);
+  const ns = face === 'S' || face === 'N', o = face === 'S' || face === 'E' ? 1 : -1;
+  if (ns) { box(x, 1.45, z, 2.3, 2.95, 0.22, 0xf5efe0, false); box(x, 1.3, z + o * 0.06, 1.8, 2.6, 0.22, color, false); box(x + 0.6, 1.25, z + o * 0.2, 0.14, 0.14, 0.1, 0xe0c060, false); box(x, 1.95, z + o * 0.19, 1.2, 0.5, 0.04, 0xbfe3f5, false); plane(x - 1.1, z + (o > 0 ? 0.1 : -1.1), x + 1.1, z + (o > 0 ? 1.1 : -0.1), 0x6b5a4a, 0.065); }
+  else { box(x, 1.45, z, 0.22, 2.95, 2.3, 0xf5efe0, false); box(x + o * 0.06, 1.3, z, 0.22, 2.6, 1.8, color, false); box(x + o * 0.2, 1.25, z + 0.6, 0.1, 0.14, 0.14, 0xe0c060, false); box(x + o * 0.19, 1.95, z, 0.04, 0.5, 1.2, 0xbfe3f5, false); plane(x + (o > 0 ? 0.1 : -1.1), z - 1.1, x + (o > 0 ? 1.1 : -0.1), z + 1.1, 0x6b5a4a, 0.065); }
 }
 
 // ---------- label melayang ----------

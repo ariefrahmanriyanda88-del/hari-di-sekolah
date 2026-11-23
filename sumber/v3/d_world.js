@@ -131,7 +131,7 @@ const masjid = building(-14, -14, 14, 4, 5.5, 0xf3e3c3, 0x3a9a6a);
 // ---------- perpustakaan, lab, UKS, kepala sekolah ----------
 // deretan simetris: 3 gedung di kiri & 3 di kanan jalan tengah, lebar sama (10,3 m), jalan pintas 3,5 m, ±3 m dari pagar tanaman
 [[-40.9, -30.6, 'Kantor Kepala Sekolah', 0xf3e0c8, 0xc98a5a], [-27.1, -16.8, 'TU & Bendahara', 0xe6eef3, 0x4a7a99], [-13.3, -3, 'Perpustakaan', 0xdde8f3, 0x6b7079], [3, 13.3, 'Lab Komputer', 0xdde8f3, 0x6b7079], [16.8, 27.1, 'UKS', 0xffffff, 0xc0392b], [30.6, 40.9, 'Koperasi Sekolah', 0xf3e0c8, 0xc98a5a]]
-  .forEach(([x1, x2, n, w, r]) => { const b = building(x1, -30, x2, -22, 4, w, r); windowBand(b, 'S'); roofSign(n, b);   // semua gedung sejajar (z -30..-22); nama tertulis di atap door(b.cx, b.bz + 0.05, 'S', 0x9b6b3c); label(n, b.cx, 6.2, b.cz, n.length > 14 ? 1.0 : 1.3); if (n === 'Lab Komputer') { doorOut('lab', b.cx, b.bz + 2); label('🎮 Arcade', b.cx, 4.2, b.bz + 0.8, 0.8, true); }
+  .forEach(([x1, x2, n, w, r]) => { const b = building(x1, -30, x2, -22, 4, w, r); windowBand(b, 'S'); roofSign(n, b); /* semua gedung sejajar (z -30..-22); nama tertulis di atap */ door(b.cx, b.bz + 0.05, 'S', 0x9b6b3c); label(n, b.cx, 6.2, b.cz, n.length > 14 ? 1.0 : 1.3); if (n === 'Lab Komputer') { doorOut('lab', b.cx, b.bz + 2); label('🎮 Arcade', b.cx, 4.2, b.bz + 0.8, 0.8, true); }
     if (n === 'Perpustakaan') { doorOut('perpus', b.cx, b.bz + 2); label('📚 Baca', b.cx, 4.2, b.bz + 0.8, 0.8, true); }
     if (n === 'UKS') { doorOut('uks', b.cx, b.bz + 2); label('🩺 Berobat', b.cx, 4.2, b.bz + 0.8, 0.8, true); }
     if (n.startsWith('Kantor')) doorOut('kepsek', b.cx, b.bz + 2);

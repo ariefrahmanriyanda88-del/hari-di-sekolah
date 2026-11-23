@@ -93,7 +93,7 @@ function tunePerf(now) {
 }
 function loop() {
   const dt = Math.min(clock.getDelta(), 0.05), t = clock.elapsedTime;
-  updateNPCs(dt); updateAuto(dt); updateRoom(t); updateQuiz(dt); updateFly(dt); updateKantin(t); updateBattle(dt, t); updateRace(dt); updateSports(dt); checkBreakBell(); updateHome(t); updateSideJamaah(t); updateLate(dt); updateUpacara(dt);
+  updateNPCs(dt); updateAuto(dt); updateRoom(t); updateDoorMarks(t); updateQuiz(dt); updateFly(dt); updateKantin(t); updateBattle(dt, t); updateRace(dt); updateSports(dt); checkBreakBell(); updateHome(t); updateSideJamaah(t); updateLate(dt); updateUpacara(dt);
   updateFootball(dt, ['istirahat1', 'santai', 'pulang'].includes(phase) && zone === 'luar');
   const animating = updateAnim(player, dt);
   if (player.busy > 0) player.busy -= dt;
@@ -256,6 +256,7 @@ setPlayer(meP());
 setClassCam(); setMsCam();
 populate(); populateRuang();
 today = DATA.sched[state.cls][dayIdx()].blocks;
+buildDoorMarks();
 goOutside(0, 63, Math.PI); paused = true;
 hud();
 window.__audio = Audio;
