@@ -161,7 +161,7 @@ function loop() {
   renderer.render(scene, camera);
   requestAnimationFrame(loop);
 }
-addEventListener('resize', () => { setCam(); setClassCam(); setMsCam(); setHomeCam(); renderer.setSize(innerWidth, innerHeight); });
+addEventListener('resize', () => { setCam(); setClassCam(); setMsCam(); setHomeCam(); renderer.setSize(innerWidth, innerHeight); if (zone === 'rumah') homeView(true); });
 
 // ---------- editor avatar (layar awal) ----------
 const AVR = {};

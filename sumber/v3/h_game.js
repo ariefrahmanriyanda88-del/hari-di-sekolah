@@ -48,6 +48,7 @@ function toast(t) { const el = $('toast'); el.textContent = t; el.classList.add(
 
 function goOutside(x, z, rotY = 0) {
   zone = 'luar'; interior = null;
+  if (document.body.classList.contains('homescene')) homeView(false);
   if (player.sitting) sitPose(player, false);
   player.position.set(x, 0, z); player.rotation.y = rotY; player.rotation.x = 0;
   camera.position.copy(CAM_OFF).add(player.position);

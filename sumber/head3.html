@@ -110,6 +110,8 @@
   #modal.low{background:rgba(20,30,40,.12)}
   #modal.low .card{max-height:56vh;overflow:auto}
   #modal.low .sched{max-height:30vh}
+  body.homescene #modal.low .card{max-height:44vh}
+  @media (orientation:landscape){body.homescene #modal.low{justify-content:flex-end;align-items:center;padding:12px 16px}body.homescene #modal.low .card{max-height:88vh;width:min(44vw,420px)}}
   .pick input{display:block;width:100%;margin-top:6px;font:inherit;font-weight:900;font-size:17px;padding:10px;border:3px solid #2b2b2b;border-radius:12px;background:#fff;user-select:text;-webkit-user-select:text}
   .pick input.err{border-color:#e0623e;background:#fff0ec}
   #cls{max-width:46vw;overflow:hidden;text-overflow:ellipsis}

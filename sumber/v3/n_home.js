@@ -85,6 +85,14 @@ function setupFamily() {
   [ayah, ibu].forEach((p) => { addSpoon(p); p.eater = true; p.phase = Math.random() * 6; p.rate = 0.9; });
 }
 const homeCam = new THREE.Vector3(), homeLook = new THREE.Vector3();
+// adegan rumah: geser gambar agar wajah Ayah & Ibu tidak tertutup jendela percakapan
+function homeView(on) {
+  document.body.classList.toggle('homescene', on);
+  if (!on) { camera.clearViewOffset(); return; }
+  const w = innerWidth, h = innerHeight;
+  if (w > h) camera.setViewOffset(w, h, w * 0.24, 0, w, h);     // mendatar: keluarga di kiri, jendela di kanan
+  else camera.setViewOffset(w, h, 0, h * 0.17, w, h);           // tegak: keluarga di atas, jendela di bawah
+}
 function setHomeCam() { const p = innerWidth < innerHeight; homeCam.set(p ? 6 : 5, p ? 9 : 6.5, p ? 12 : 8).add(RUMAH); homeLook.set(0, p ? -0.6 : 0.6, 0).add(RUMAH); }
 function updateHome(t) {
   if (zone !== 'rumah') return;
@@ -96,7 +104,7 @@ function homeMorning() {
   player.visible = true; sitPose(player, false);
   player.position.set(RUMAH.x - 1.3, 0, RUMAH.z + 1.3); player.rotation.y = Math.PI; sitPose(player, true); addSpoon(player);
   camera.position.copy(homeCam); camera.lookAt(homeLook);
-  $('modal').classList.add('low');
+  $('modal').classList.add('low'); homeView(true);
   bubble(ibu, `Ayo sarapan dulu, ${state.nama}, sebelum berangkat.`, 2800);
   const meal = () => {
     modal(`<div class="tag">🏠 Pagi di rumah · 06.10</div><div class="big">Sarapan bersama keluarga</div><p class="muted">Ayah dan Ibu sudah menunggu di meja makan.</p>`, [
@@ -143,7 +151,7 @@ function homeMorning() {
   meal();
 }
 function leaveHome(how) {
-  closeModal(); paused = true; $('modal').classList.remove('low');
+  closeModal(); paused = true; $('modal').classList.remove('low'); homeView(false);
   if (player.spoon) { player.armR.remove(player.spoon); player.spoon = null; }
   fade(how === 'motor' ? 'Memakai helm & menyalakan motor…' : 'Berangkat ke sekolah…', 800, () => {
     sitPose(player, false);
