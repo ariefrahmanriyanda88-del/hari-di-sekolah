@@ -193,7 +193,7 @@ const TU_STAFF = [
 if (SCHOOL.demo) ['Ustadz Darmawan', 'Ustadzah Nurul', 'Ustadz Hanafi', 'Ustadzah Siti', 'Ustadz Bahar', 'Ustadzah Mutia'].forEach((p, i) => (TU_STAFF[i][0] = p));
 // gedung diperluas: lebar 34, dalam 24 · ruangan di belakang (z -12..0), lobi lapang di depan (z 0..12)
 const tur = makeHall(TUR, 34, 24, 0xe6eef3, '#dde6ec', '#cfdbe3');
-const TU_SPOTS = {}, TU_Q = -5.4, TU_LOKET = [4.0, 12.5];
+const TU_SPOTS = {}, TU_Q = -6.0, TU_LOKET = [4.0, 12.5];
 {
   const { add } = tur, H = 3.0, wl = 0xd5e0e8, tag = (t, x, y, z, sz = 0.42) => { const l = label(t, 0, 0, 0, sz); scene.remove(l); l.position.set(x, y, z); tur.g.add(l); };
   const wallX = (z, x1, x2, g1, g2) => {                  // dinding depan ruangan dengan pintu di g1..g2
@@ -231,8 +231,8 @@ const TU_SPOTS = {}, TU_Q = -5.4, TU_LOKET = [4.0, 12.5];
   tag('Ruang Tamu TU', -13.6, 2.4, 8.6, 0.4);
   for (let i = 0; i < 5; i++) add(8.6 + i * 1.1, 0.25, 6.4, 0.9, 0.5, 0.9, 0x8a3b5c, true);
   tag('Kursi tunggu bendahara', 10.8, 1.5, 6.4, 0.3);
-  TU_SPOTS.tu = spot(TUR, -5, -4.0, tur.g); TU_SPOTS.tu2 = spot(TUR, -13, -4.0, tur.g); TU_SPOTS.tamu = spot(TUR, -11.6, 5.2, tur.g);
-  TU_SPOTS.spp = spot(TUR, 4.0, -0.9, tur.g); TU_SPOTS.lkms = spot(TUR, 12.5, -0.9, tur.g);
+  TU_SPOTS.tu = spot(TUR, -5, -6.4, tur.g); TU_SPOTS.tu2 = spot(TUR, -13, -6.4, tur.g);   // di depan meja petugas, bukan di pintu TU_SPOTS.tamu = spot(TUR, -11.6, 5.2, tur.g);
+  TU_SPOTS.spp = spot(TUR, 4.0, -4.3, tur.g); TU_SPOTS.lkms = spot(TUR, 12.5, -4.3, tur.g);   // antre di belakang murid, dekat loket
 }
 let tuPeople = [], tuQueue = [];
 function enterTU() {

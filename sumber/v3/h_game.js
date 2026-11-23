@@ -417,11 +417,16 @@ function enterRuang(putri) {
     if (GURU) guruDeskObj(h);
   });
 }
-let lastTrig = null, leaving = false;
+let lastTrig = null, leaving = false, spotCool = null;
 function computeHit() {
   const px = player.position.x, pz = player.position.z;
   if (objective && objective.has && objective.zone === zone && Math.hypot(px - objective.x, pz - objective.z) < 2.2) return 'obj';
-  if (zone === 'room' || zone === 'masjidin') { for (const s of roomSpots) if (Math.hypot(px - s.x, pz - s.z) < 1.3) return 'spot:' + s.id; return null; }
+  if (zone === 'room' || zone === 'masjidin') {
+    // titik aksi yang baru dipakai tidak memicu lagi sampai pemain menjauh (agar bisa keluar tanpa tertahan pilihan)
+    if (spotCool && Math.hypot(px - spotCool.x, pz - spotCool.z) > 3.2) spotCool = null;
+    for (const s of roomSpots) if (Math.hypot(px - s.x, pz - s.z) < 1.3 && !(spotCool && spotCool.id === s.id)) return 'spot:' + s.id;
+    return null;
+  }
   if (zone === 'perpus') { for (let i = 0; i < SHELVES.length; i++) { const s = SHELVES[i]; if (Math.hypot(px - (LIB.x + s.x), pz - (LIB.z + s.z)) < 1.7) return 'shelf:' + i; } return null; }
   if (zone !== 'luar') return null;
   for (const d of doorsOut) if (Math.hypot(px - d.x, pz - d.z) < d.r) return d.id;
@@ -439,7 +444,7 @@ function checkTriggers() {
   if (hit === 'ruangPA' || hit === 'ruangPI') { paused = true; return enterRuang(hit === 'ruangPI'); }
   if (hit === 'lab') { paused = true; return enterLabRoom(); }
   if (hit === 'perpus') { paused = true; return enterLibrary(); }
-  if (hit.startsWith('spot:')) return roomAction(hit.slice(5));
+  if (hit.startsWith('spot:')) { const sp = roomSpots.find((q) => q.id === hit.slice(5)); if (sp) spotCool = { id: sp.id, x: sp.x, z: sp.z }; return roomAction(hit.slice(5)); }
   if (hit === 'uks') { paused = true; return enterUKS(); }
   if (hit === 'kepsek') { paused = true; return enterKepsek(); }
   if (hit === 'tu') { paused = true; return enterTU(); }
