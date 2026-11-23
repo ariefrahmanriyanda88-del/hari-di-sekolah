@@ -8,8 +8,11 @@ $('cam').addEventListener('click', (e) => { camIdx = (camIdx + 1) % CAMS.length;
 $('mute').addEventListener('click', (e) => { Audio.start(); e.currentTarget.textContent = Audio.toggle() ? '🔊' : '🔇'; });
 const joy = { active: false, id: null, sx: 0, sy: 0, dx: 0, dy: 0 };
 const jb = $('joy'), jk = $('knob'), cv = renderer.domElement;
+const LAND = () => innerWidth > innerHeight && matchMedia('(pointer:coarse)').matches;
 cv.addEventListener('pointerdown', (e) => {
   if (paused) return;
+  if (LAND() && e.clientX > innerWidth * 0.5) return;        // mendatar: setengah kiri untuk jempol kiri (berjalan)
+  document.body.classList.add('joying');
   joy.active = true; joy.id = e.pointerId; joy.sx = e.clientX; joy.sy = e.clientY; joy.dx = joy.dy = 0;
   jb.style.left = e.clientX + 'px'; jb.style.top = e.clientY + 'px'; jb.classList.add('show'); jk.style.transform = 'translate(-50%,-50%)';
   cv.setPointerCapture(e.pointerId);
@@ -20,7 +23,15 @@ cv.addEventListener('pointermove', (e) => {
   if (L > M) { dx = (dx / L) * M; dy = (dy / L) * M; }
   joy.dx = dx / M; joy.dy = dy / M; jk.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
 });
-const endJoy = (e) => { if (e.pointerId === joy.id) { joy.active = false; jb.classList.remove('show'); } };
+const endJoy = (e) => { if (e.pointerId === joy.id) { joy.active = false; jb.classList.remove('show'); document.body.classList.remove('joying'); } };
+// layar penuh + kunci posisi mendatar (HP)
+function goLandscape() {
+  const el = document.documentElement;
+  const p = el.requestFullscreen ? el.requestFullscreen({ navigationUI: 'hide' }) : null;
+  if (p && p.then) p.then(() => screen.orientation && screen.orientation.lock && screen.orientation.lock('landscape').catch(() => {})).catch(() => {});
+}
+$('fsbtn').onclick = () => { if (document.fullscreenElement) document.exitFullscreen(); else goLandscape(); };
+$('rotok').onclick = () => document.body.classList.add('rotok');
 cv.addEventListener('pointerup', endJoy); cv.addEventListener('pointercancel', endJoy);
 
 function blocked(x, z) {
@@ -200,6 +211,8 @@ let onlineDone = '';
 $('startbtn').onclick = async () => {
   const nm = $('nama').value.trim();
   if (!nm) { $('nama').classList.add('err'); $('nama').focus(); return; }
+  if (matchMedia('(pointer:coarse)').matches) goLandscape();
+  document.body.classList.add('playing');
   if (window.HDS && !SCHOOL.demo) {
     const kode = $('kode').value.trim().toUpperCase().replace(/\s/g, ''), key = kode + '|' + sel.value + '|' + nm;
     if (kode && onlineDone !== key) {
