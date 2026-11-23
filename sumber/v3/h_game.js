@@ -448,7 +448,7 @@ function checkTriggers() {
   if (hit === 'uks') { paused = true; return enterUKS(); }
   if (hit === 'kepsek') { paused = true; return enterKepsek(); }
   if (hit === 'tu') { paused = true; return enterTU(); }
-  if (hit === 'koperasi') return toast('🛒 Koperasi Sekolah: alat tulis, seragam, dan buku. Segera dibuka!');
+  if (hit === 'koperasi') { paused = true; return enterKoperasi(); }
   if (hit === 'yayasan') { paused = true; return enterYayasan(); }
   if (hit.startsWith('shelf:')) return openShelf(+hit.slice(6));
   if (hit === 'voli' || hit === 'basket') return ['istirahat1', 'santai', 'pulang', 'guru'].includes(phase) ? (playingSport === hit ? null : joinSport(hit)) : toast(`Lapangan ${hit === 'voli' ? 'voli' : 'basket'}: bisa ikut main saat jam istirahat / waktu santai`);

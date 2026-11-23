@@ -28,6 +28,7 @@ const GURU_PLACES = [
   ['🕌 Masjid', () => doorTo(meP() ? 'masjidPI' : 'masjidPA', 2.5, 0)],
   ['💧 Tempat wudhu', () => doorTo(meP() ? 'wudhuPI' : 'wudhuPA', 0, 0)],
   ['⚽ Lapangan', () => goOutside(-30, -80, Math.PI)],
+  ['🛒 Koperasi Sekolah', () => doorTo('koperasi', 2.5, 0)],
   [`🏢 Gedung ${YYS_NAMA}`, () => { const d = YYS_DOOR(); goOutside(d.x, d.z - 3, 0); }],
 ];
 function doorTo(id, dz, rot) { const d = doorsOut.find((q) => q.id === id); if (d) goOutside(d.x, d.z + dz, rot); }

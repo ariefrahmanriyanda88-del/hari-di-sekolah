@@ -333,6 +333,7 @@ function enterMasjidWalk() {
 }
 function roomAction(id) {
   if (id.startsWith('yys-')) return yysAction(id);
+  if (id.startsWith('kop-')) return kopAction(id);
   if (id === 'wudhu') return wudhuSteps(afterWudhuDone);
   if (id.startsWith('toilet-')) return toiletAction(id);
   if (id === 'keps-tamu') return kepsTamu();
