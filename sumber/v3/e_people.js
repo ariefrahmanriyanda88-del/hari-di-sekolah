@@ -31,7 +31,7 @@ function avatarModel(putri, a) {
     : { skin: AV.skin[a.skin], hair: a.hair, hairC: AV.hairC[a.hairC], peci: AV.peci[a.peci], bag: AV.bag[a.bag], face };
 }
 const avatarOf = (putri) => { try { return (state.avatar && state.avatar[putri ? 'P' : 'L']) || null; } catch (e) { return null; } };   // state belum ada saat awal dimuat
-const makePlayer = (putri) => makePerson(avatarModel(putri, avatarOf(putri)));
+const makePlayer = (putri) => (GURU ? makePerson(teacherModel(GURU.jk, 0)) : makePerson(avatarModel(putri, avatarOf(putri))));
 let player = makePlayer(false);
 scene.add(player);
 function setPlayer(putri) {

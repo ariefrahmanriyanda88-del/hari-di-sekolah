@@ -149,10 +149,16 @@ function shell() {
   const tabs = [['soal', '📝', 'Soal'], ['materi', '📚', 'Materi'], ['nilai', '📊', 'Nilai'], ['kode', '🔑', 'Kode kelas']];
   if (isAdmin()) tabs.push(['guru', '👥', 'Guru']);
   app.innerHTML = `
-  <header><div><b>${esc(S.guru.panggilan || S.guru.nama)}</b><span>${isAdmin() ? 'Admin sekolah' : 'Guru'}${B.demo ? ' · demo' : ''}</span></div><span class="hb"><a class="btn small" href="./">🎮 Game</a><button class="btn small" id="out">Keluar</button></span></header>
+  <header><div><b>${esc(S.guru.panggilan || S.guru.nama)}</b><span>${isAdmin() ? 'Admin sekolah' : 'Guru'}${B.demo ? ' · demo' : ''}</span></div><span class="hb"><a class="btn small" id="asguru" href="#" title="Masuk ke game sebagai tokoh ustadz/ustadzah">🧑‍🏫 Masuk game sebagai guru</a><a class="btn small" href="./">🎮 Game</a><button class="btn small" id="out">Keluar</button></span></header>
   <nav>${tabs.map(([k, i, t]) => `<button data-t="${k}" class="${S.tab === k ? 'on' : ''}"><i>${i}</i>${t}<em id="badge-${k}"></em></button>`).join('')}</nav>
   <main id="view"></main>`;
   $('#out').onclick = () => { S.guru = null; B.logout(); };
+  $('#asguru').onclick = (e) => {
+    e.preventDefault();
+    const nm = S.guru.panggilan && S.guru.panggilan !== 'Admin' ? S.guru.panggilan : (S.guru.nama !== 'Admin' ? S.guru.nama : '');
+    const jk = /^ustadzah/i.test(nm) || (GURUS[S.guru.nama] && GURUS[S.guru.nama].g === 'P') ? 'P' : 'L';
+    window.open(gameUrl() + '?s=iqra&guru=1#n=' + encodeURIComponent(nm) + '&jk=' + jk, '_blank');
+  };
   $$('nav button').forEach((b) => (b.onclick = () => { S.tab = b.dataset.t; S.edit = null; S.editM = null; shell(); }));
   ({ soal: tabSoal, materi: tabMateri, nilai: tabNilai, kode: tabKode, guru: tabGuru })[S.tab]();
   if (isAdmin()) B.q('guru', [['status', '==', 'menunggu']]).then((g) => { const el = $('#badge-guru'); g = g.filter((x) => (x.email || '').toLowerCase() !== ADMIN); if (el) el.textContent = g.length || ''; }).catch(() => {});

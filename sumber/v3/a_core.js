@@ -20,6 +20,8 @@ if (SCHOOL.demo) {
 }
 
 // ---------- konversi koordinat denah (piksel) ke dunia 3D ----------
+// mode guru: main.html?guru=1#n=<nama>&jk=L|P (dibuka dari Panel Guru)
+const GURU = (() => { try { const q = new URLSearchParams(location.search); if (q.get('guru') !== '1') return null; const h = new URLSearchParams(location.hash.slice(1)); return { nama: h.get('n') || '', jk: h.get('jk') === 'P' ? 'P' : 'L' }; } catch (e) { return null; } })();
 const P = (x, z) => [x, z]; // koordinat dunia langsung (1 unit ≈ 1 meter)
 
 // ---------- renderer & scene ----------

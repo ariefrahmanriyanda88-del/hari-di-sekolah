@@ -21,6 +21,8 @@
   .chip{background:#fff;border:3px solid #2b2b2b;border-radius:12px;padding:5px 9px;font-weight:900;font-size:13px;white-space:nowrap;box-shadow:0 3px 0 #2b2b2b}
   #obj{position:fixed;top:52px;left:8px;max-width:min(92vw,420px);background:#ffd84d;border:3px solid #2b2b2b;border-radius:14px;padding:8px 12px;font-weight:800;font-size:15px;box-shadow:0 3px 0 #2b2b2b;pointer-events:none}
   #obj:before{content:"🎯 Tugas: ";}
+  #gurubtn{position:fixed;left:8px;bottom:calc(14px + env(safe-area-inset-bottom));z-index:6;font:900 13px Nunito,system-ui,sans-serif;background:#2f6b4a;color:#fff;border:3px solid #2b2b2b;border-radius:12px;padding:7px 12px;box-shadow:0 3px 0 #2b2b2b;cursor:pointer}
+  body:not(.playing) #gurubtn{display:none!important}
   #obj{font-size:12.5px;line-height:1.35;padding:5px 10px;border-width:2px;box-shadow:0 2px 0 #2b2b2b;max-width:min(60vw,380px);opacity:.95;max-height:4.4em;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;pointer-events:auto;touch-action:pan-y;scrollbar-width:thin;z-index:5}
   body:has(#modal.show) #obj,body:has(#dlg.show) #obj{display:none!important}
   #loc{position:fixed;bottom:76px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,.92);border:3px solid #2b2b2b;border-radius:999px;padding:6px 14px;font-weight:800;font-size:14px;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
@@ -209,6 +211,7 @@
     #modal .sched .les{font-size:12px;padding:5px 8px}#modal .doa .ar{font-size:19px}#modal .doa{padding:7px 9px}
     #start .card{max-height:94vh;overflow:auto}
     #score{top:40px;font-size:14px}
+    #gurubtn{left:auto;right:158px;top:6px;bottom:auto;font-size:12px;padding:6px 10px}
   }
 </style>
 </head>
@@ -216,6 +219,7 @@
 <div id="app"></div>
 <div id="top"><span class="chip" id="day">Hari ke-1</span><span class="chip" id="cls"></span><span class="chip" id="clock">06:30</span><span class="chip" id="pts">⭐ 0</span></div>
 <div id="obj"></div>
+<button id="gurubtn" type="button" style="display:none">📋 Menu Guru</button>
 <div id="loc"></div>
 <button id="talk" type="button"></button>
 <button id="mute" type="button" aria-label="Musik">🔊</button>
@@ -246,7 +250,8 @@
   <div class="schoolpick"><span id="schoolname">🏫 SMAIT IQRA' · Kota Bengkulu</span><button type="button" id="schoolswap">Ganti sekolah</button></div>
   <div id="schoollist"><a href="?s=iqra"><b>🏫 SMAIT IQRA' Kota Bengkulu</b><span>Untuk warga sekolah · guru & jadwal asli · pakai kode kelas</span></a><a href="?s=umum"><b>🌐 SMA Nusantara (Sekolah Umum)</b><span>Terbuka untuk siapa saja · guru fiktif · soal contoh</span></a></div>
   <label class="pick">Nama kamu<input id="nama" type="text" maxlength="18" placeholder="Ketik namamu…" autocomplete="off"></label>
-  <label class="pick">Pilih kelasmu<select id="clssel"></select></label>
+  <label class="pick" id="gurujkwrap" style="display:none">Tampil sebagai<select id="gurujk"><option value="L">Ustadz</option><option value="P">Ustadzah</option></select></label>
+  <label class="pick"><span id="clslbl">Pilih kelasmu</span><select id="clssel"></select></label>
   <button class="sbtn" id="avbtn" type="button" style="width:100%;margin:6px 0 4px">🎨 Atur avatarku</button>
   <label class="pick" id="kodewrap" style="display:none">Kode kelas dari guru<input id="kode" type="text" maxlength="8" placeholder="mis. K7XQ2M" autocomplete="off" autocapitalize="characters" style="text-transform:uppercase;letter-spacing:.15em"><span id="kodeerr" style="color:#ffb4a8;font-size:12px"></span></label>
   <label class="pick">Mulai dari hari<select id="daysel"></select></label>

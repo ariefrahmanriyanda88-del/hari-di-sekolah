@@ -14,14 +14,14 @@ function house(x, z, wall, roof, name, w = 10, d = 8) {
   if (name) label(name, x, 7.6, z, 1.0);
   return b;
 }
-[[-62, 0xf3e0c8, 0xb0503a], [-46, 0xdde8f3, 0x3b5e9e], [-14, 0xf6dde4, 0x8a3b5c], [14, 0xe8f0d8, 0x3a6e4a], [30, 0xf3e3c3, 0xc98a5a], [46, 0xdde8f3, 0x6b7079], [62, 0xf6dcc4, 0xb0503a]]
+[[-62, 0xf3e0c8, 0xb0503a], [-46, 0xdde8f3, 0x3b5e9e], [-14, 0xf6dde4, 0x8a3b5c], [50, 0xdde8f3, 0x6b7079], [64, 0xf6dcc4, 0xb0503a]]   // x 6..40: Gedung Yayasan
   .forEach(([x, w, r]) => house(x, 84, w, r, 'Rumah warga'));
 const myHouse = house(HOME.x, HOME.z, 0xfff1d6, 0x2f8a5c, '');
 const homeLabel = label('Rumah', HOME.x, 7.6, HOME.z, 1.1, true);
 {
   const w = building(76, 78, 84, 86, 3.2, 0xffe3a3, 0xe0623e); door(80, 77.95, 'N'); label('Warung', 80, 6, 82, 1.0);
   for (let x = -90; x < 95; x += 16) { box(x, 2.5, 74, 0.18, 5, 0.18, 0x555b63); const l = new THREE.Mesh(new THREE.SphereGeometry(0.35, 10, 8), new THREE.MeshBasicMaterial({ color: 0xfff1b8 })); l.position.set(x, 5.1, 74); scene.add(l); }
-  [[-54, 92], [-22, 94], [6, 93], [38, 94], [70, 92], [-80, 86], [92, 88]].forEach(([x, z]) => tree(x, z));
+  [[-54, 92], [-22, 94], [2, 93], [44, 98], [72, 94], [-80, 86], [92, 88]].forEach(([x, z]) => tree(x, z));
   doorOut('rumah', HOME.x, HOME.z - 6, 1.8);
   places.push({ n: 'Rumah', x: HOME.x, z: HOME.z - 6, r: 7 }, { n: 'Jalan raya', x: 0, z: 66, r: 8 }, { n: 'Warung', x: 80, z: 76, r: 6 });
 }

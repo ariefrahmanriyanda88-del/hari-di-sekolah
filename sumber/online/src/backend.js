@@ -19,6 +19,7 @@ function makeFirebase(cfg) {
     demo: false,
     onUser: (cb) => onAuthStateChanged(auth, (u) => cb(wrapUser(u))),
     user: () => wrapUser(auth.currentUser),
+    ready: () => (auth.authStateReady ? auth.authStateReady() : Promise.resolve()),
     daftar: async (e, p) => { const c = await createUserWithEmailAndPassword(auth, e, p); await sendEmailVerification(c.user); return wrapUser(c.user); },
     login: (e, p) => signInWithEmailAndPassword(auth, e, p),
     logout: () => signOut(auth),
@@ -56,6 +57,7 @@ function makeMock(adminEmail) {
     demo: true,
     onUser: (cb) => { listeners.push(cb); setTimeout(() => cb(me()), 0); return () => {}; },
     user: me,
+    ready: () => Promise.resolve(),
     daftar: async (e, p) => {
       if (Object.values(db.users).some((u) => u.email === e)) err('auth/email-already-in-use');
       if ((p || '').length < 6) err('auth/weak-password');

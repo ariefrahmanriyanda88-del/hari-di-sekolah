@@ -5,7 +5,7 @@
 const MODES = { arena: '🗺️ Arena petualangan', battle: '⚔️ Battle', balap: '🏎️ Balap' };
 let ONLINE_MODE = {};
 function lapor(lesson, mode, benar, total, skor) {
-  if (!window.HDS || !window.HDS.aktif || !total) return;
+  if (GURU || !window.HDS || !window.HDS.aktif || !total) return;      // mode guru: nilai percobaan tidak masuk rekap
   const o = { mapel: lesson.s, mode, benar: Math.round(benar), total: Math.round(total), nilai: Math.round(benar / total * 100), skor: Math.round(skor || 0), jenis: lesson.lab ? 'latihan' : 'tugas', jam: lesson.lab ? '' : (lesson.a || ''), hariGame: state.day || 1, hari: dayName() };
   window.HDS.kirimNilai(o).then(() => toast('📤 Nilai terkirim ke guru'), () => toast('⚠️ Nilai belum terkirim (cek internet)'));
 }

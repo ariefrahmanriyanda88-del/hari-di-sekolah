@@ -53,6 +53,24 @@ const HDS = {
       throw e;
     }
   },
+  // mode guru: memuat soal & materi kelas tanpa kode kelas; nilai percobaan tidak dikirim
+  async masukGuru(kelas) {
+    if (B.ready) await B.ready();                                   // tunggu sesi login guru dipulihkan (jangan menimpa dengan akun anonim)
+    if (!B.user()) await B.anon();
+    const docs = (await B.q('soal', [['kelas', 'array-contains-any', [kelas, 'semua']]])).filter((d) => d.aktif !== false);
+    const bank = {}, mode = {}, books = [];
+    docs.filter((d) => d.jenis === 'materi').forEach((d) => {
+      const pages = String(d.isi || '').split(/\n\s*---+\s*\n/).map((x) => x.trim()).filter(Boolean).map(pageHtml);
+      if (pages.length) books.push({ id: 'G_' + d.id, mapel: d.mapel, t: d.judul || 'Materi', oleh: d.guruNama || '', p: pages });
+    });
+    docs.sort((a, b) => (a.diubahMs || 0) - (b.diubahMs || 0)).forEach((d) => {
+      const qs = toBank(d.items || []); if (!qs.length) return;
+      bank[d.mapel] = (bank[d.mapel] || []).concat(qs);
+      if (d.mode && d.mode !== 'auto') mode[d.mapel] = d.mode;
+    });
+    this.aktif = false;
+    return { bank, mode, books, mapel: Object.keys(bank) };
+  },
   kirimNilai(o) {
     if (!this.aktif) return Promise.resolve(false);
     const m = this.murid, u = B.user();

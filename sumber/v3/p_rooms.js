@@ -324,6 +324,7 @@ function enterMasjidWalk() {
   });
 }
 function roomAction(id) {
+  if (id.startsWith('yys-')) return yysAction(id);
   if (id === 'wudhu') return wudhuSteps(afterWudhuDone);
   if (id.startsWith('toilet-')) return toiletAction(id);
   if (id === 'keps-tamu') return kepsTamu();
@@ -494,13 +495,14 @@ function blockedAhead(v, z) {
 }
 function updateTraffic(dt) {
   const pagi = phase === 'datang' && minutes < LATE_AT, sore = phase === 'pulang';
-  const want = zone === 'luar' && (pagi || sore) && !paused;
+  const light = !!GURU && !pagi && !sore;                       // mode guru: jalan tetap hidup (kendaraan lewat)
+  const want = zone === 'luar' && (pagi || sore || light) && !paused;
   if (!want) { if (TRF.on && zone === 'luar' && !pagi && !sore) trafficClear(); return; }
   if (!TRF.on) {                                                    // langsung ramai saat pemain keluar
     TRF.on = true;
-    [-80, -55, -30].forEach((x, k) => spawnVehicle(k === 1 ? 'lewat' : pagi ? 'antar' : 'jemput', x));
+    [-80, -55, -30].forEach((x, k) => spawnVehicle(k === 1 || light ? 'lewat' : pagi ? 'antar' : 'jemput', x));
     [70, 35, -15].forEach((x) => { spawnVehicle('lewat', x); const v = TRF.veh[TRF.veh.length - 1]; if (v && v.dir > 0) { v.g.position.z = LANE_E; } });
-    for (let k = 0; k < 9; k++) {
+    for (let k = 0; k < (light ? 0 : 9); k++) {
       const m = kid(TRF.k++ + 3), side = k % 2 ? 1 : -1; scene.add(m); npcs.push(m);
       if (pagi) { m.position.set(side * (6 + k * 4), 0, 58.2); walkPed(m, toGate(side)); }
       else { m.position.set(side * (1.5 + k * 0.4), 0, 50 - k * 1.5); walkPed(m, [[side * 1.2, 55], [side * 4, 58.2], [side * 75, 58.2]]); }
@@ -509,8 +511,8 @@ function updateTraffic(dt) {
   TRF.t -= dt;
   if (TRF.t <= 0) {
     TRF.t = 1.4 + Math.random() * 1.6;
-    if (TRF.veh.length < 8) spawnVehicle(Math.random() < 0.35 ? 'lewat' : pagi ? 'antar' : 'jemput');
-    if (TRF.peds.length < 16) {
+    if (TRF.veh.length < (light ? 4 : 8)) spawnVehicle(light || Math.random() < 0.35 ? 'lewat' : pagi ? 'antar' : 'jemput');
+    if (TRF.peds.length < 16 && !light) {
       const m = kid(TRF.k++ + 3), side = Math.random() < 0.5 ? -1 : 1; scene.add(m); npcs.push(m);
       if (pagi) { m.position.set(side * 70, 0, 58.2); walkPed(m, toGate(side)); }
       else { m.position.set(side * 1.5, 0, 44); walkPed(m, [[side * 1.2, 55], [side * 4, 58.2], [side * 75, 58.2]]); }

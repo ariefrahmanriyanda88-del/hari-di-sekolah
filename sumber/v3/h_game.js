@@ -124,6 +124,7 @@ function selectLesson(b) {
     [['🙋 Hadir ✓ (+5)', () => { addPts(5); lessonDone(b); }, 'main'], ['Kembali', classHub, 'small']]);
 }
 function lessonDone(b) {
+  if (GURU) { toast('Selesai mencoba · nilai tidak dikirim ke rekap'); return classHub(); }
   dayDone.add(b.a);
   const n = lessons().length, d = dayDone.size;
   if (phase === 'datang' && n >= 2 && d === 1) return istirahat1();
@@ -436,9 +437,10 @@ function checkTriggers() {
   if (hit === 'uks') { paused = true; return enterUKS(); }
   if (hit === 'kepsek') { paused = true; return enterKepsek(); }
   if (hit === 'tu') { paused = true; return enterTU(); }
+  if (hit === 'yayasan') { paused = true; return enterYayasan(); }
   if (hit.startsWith('shelf:')) return openShelf(+hit.slice(6));
-  if (hit === 'voli' || hit === 'basket') return ['istirahat1', 'santai', 'pulang'].includes(phase) ? (playingSport === hit ? null : joinSport(hit)) : toast(`Lapangan ${hit === 'voli' ? 'voli' : 'basket'}: bisa ikut main saat jam istirahat / waktu santai`);
-  if (hit === 'bola') return ['istirahat1', 'santai', 'pulang'].includes(phase) ? (playingBall ? null : joinBall()) : toast('Lapangan: bisa ikut main bola saat jam istirahat / waktu santai');
+  if (hit === 'voli' || hit === 'basket') return ['istirahat1', 'santai', 'pulang', 'guru'].includes(phase) ? (playingSport === hit ? null : joinSport(hit)) : toast(`Lapangan ${hit === 'voli' ? 'voli' : 'basket'}: bisa ikut main saat jam istirahat / waktu santai`);
+  if (hit === 'bola') return ['istirahat1', 'santai', 'pulang', 'guru'].includes(phase) ? (playingBall ? null : joinBall()) : toast('Lapangan: bisa ikut main bola saat jam istirahat / waktu santai');
   if (hit.startsWith('kantin')) return toast('Kantin dibuka saat jam istirahat pertama');
   if (hit.startsWith('masjid')) { if (phase === 'zuhur' || (phase === 'pulang' && objective && /Ashar/.test(objective.text))) return toast('Berwudhu dulu sebelum masuk masjid'); if (hit !== (isPutri(state.cls) ? 'masjidPI' : 'masjidPA')) return toast(`Gunakan Pintu ${side()}`); paused = true; return enterMasjidWalk(); }
   if (hit.startsWith('wudhu') || hit.startsWith('toilet')) {

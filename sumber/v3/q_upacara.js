@@ -15,7 +15,7 @@ function updateLate(dt) {
   if (phase !== 'datang' || zone !== 'luar' || lateDone) return;
   const outside = player.position.z > 56.5;
   if (outside && !paused) minutes += dt * 0.5;                 // di luar gerbang waktu berjalan lebih cepat
-  if (minutes >= LATE_AT && !gateClosed && outside) { setGate(true); toast('⏰ Pukul 07.15: gerbang sekolah sudah ditutup!'); }
+  if (minutes >= LATE_AT && !gateClosed && outside && !GURU) { setGate(true); toast('⏰ Pukul 07.15: gerbang sekolah sudah ditutup!'); }
   if (gateClosed && outside && Math.abs(player.position.x) < 8 && player.position.z < 60.5 && !paused) lateScene();
 }
 function lateScene() {
