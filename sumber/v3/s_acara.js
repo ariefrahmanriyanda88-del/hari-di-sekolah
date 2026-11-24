@@ -434,9 +434,9 @@ const SCENES = {
         later(3000, () => {
           if (GURU) {
             const m = murid.find((q) => (q.position.x > 0) === me);
-            return say([{ p: m, t: `Selamat Hari Guru, ${state.nama}! Terima kasih sudah sabar mengajar kami. Ini kartu ucapan dari kelas kami.`, e: 'senang', ch: [
+            return say([{ p: m, t: 'Selamat Hari Guru, Ustadz dan Ustadzah semuanya! Terima kasih sudah sabar mengajar dan membimbing kami. Ini kartu ucapan dari kami untuk seluruh guru.', e: 'senang', ch: [
               ['😊 "MasyaAllah, terima kasih, anak-anak. Semoga ilmunya berkah."', () => guruTutupHG(kep)],
-              ['🤲 "Jazakumullahu khairan. Kami doakan kalian sukses dunia akhirat."', () => guruTutupHG(kep)]] }]);
+              ['🤲 "Jazakumullahu khairan. Kami semua mendoakan kalian sukses dunia akhirat."', () => guruTutupHG(kep)]] }]);
           }
           const g = gurusSama[0] || wali;
           say([{ p: g, t: 'Terima kasih, anak-anak. Kalian mengingat jasa guru; itu tanda adab yang baik.', e: 'senang', ch: [
