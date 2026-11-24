@@ -73,7 +73,7 @@ function upacaraScene(opt) {
     for (let i = 0; i < 6; i++) add(teacherModel(i % 2 ? 'P' : 'L', i), 36, 18 + i * 1.6, -Math.PI / 2);
     const pembina = add(teacherModel('L', 0), 0, 17.2, 0); pembina.position.y = 0.62; nameTag(pembina, `${KEPS_STAFF[0].p} · Pembina Upacara`, 0.5);
     const pemimpin = add(studentModel(false, 3), 0, 19.6, Math.PI);
-    const pas = [-1.2, 0, 1.2].map((dx) => add({ shirt: 0xffffff, bottom: 0xffffff, tie: false }, -9 + dx, 18.4, Math.PI));
+    const pas = [-1.2, 0, 1.2].map((dx) => add({ shirt: 0xffffff, bottom: 0xffffff, tie: false }, -5.2 + dx, 17.4, Math.PI));
     player.position.set(me ? 21 : -21, 0, 23); player.rotation.y = Math.PI;
     const pt = innerWidth < innerHeight; upCam.set(0, pt ? 72 : 30, pt ? 44 : 46); upLook.set(0, 0, pt ? 22 : 21);
     camera.position.copy(upCam); camera.lookAt(upLook);

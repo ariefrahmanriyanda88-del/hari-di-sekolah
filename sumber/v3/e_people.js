@@ -108,7 +108,8 @@ function fixedNPC(x, z, rotY, model, opts) {
 }
 // satpam berjaga di depan sekolah
 const SATPAM = SCHOOL.demo ? ['Pak Joko', 'Pak Darto', 'Pak Udin', 'Pak Rahmat', 'Pak Slamet'] : ['Ustadz Radiansyah', 'Ustadz Tanzili', 'Pak Man', 'Ustadz Irul', 'Pakde Mukhtar'];
-[[18, 54, Math.PI], [-7.5, 54.2, Math.PI], [7.5, 54.2, Math.PI], [-12, 58.4, Math.PI / 2], [12, 58.4, -Math.PI / 2]].forEach(([x, z, r], i) =>
+// titik jaga terbuka (tidak tertutup pohon/pagar): depan pos satpam, kiri-kanan gerbang (dalam), trotoar depan gerbang, dan tepi zebra cross
+[[8.4, 48.6, -Math.PI / 2], [-4.4, 52.8, 0], [4.4, 52.8, 0], [-4.6, 58.1, 0], [8.4, 59.3, 0]].forEach(([x, z, r], i) =>
   fixedNPC(x, z, r, { shirt: 0x37474f, bottom: 0x263238, peci: 0x263238, tie: false, face: { brow: 1, mouth: i % 2 } }, { kind: 'satpam', name: SATPAM[i], tag: `${SATPAM[i]} · Satpam` }));
 
 // ---------- isi orang sesuai kelas yang dipilih (rombel sendiri) ----------

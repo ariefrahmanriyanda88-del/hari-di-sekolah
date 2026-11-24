@@ -27,7 +27,7 @@ function acAdd(model, x, z, rot, tag) {
   scene.add(p); acaraPeople.push(p); return p;
 }
 function acCamSet(px, py, pz, lx, ly, lz) { const k = portraitV() ? 1.5 : 1; acCam.set(lx + (px - lx) * k, ly + (py - ly) * k, lz + (pz - lz) * k); acLook.set(lx, ly, lz); }
-function updateAcara(dt) { if (zone !== 'acara') return; camera.position.lerp(acCam, 1 - Math.pow(0.01, dt)); camera.lookAt(acLook); updateLomba(dt); }
+function updateAcara(dt) { LBL_UPC.visible = zone !== 'acara' && zone !== 'upacara'; if (zone !== 'acara') return; camera.position.lerp(acCam, 1 - Math.pow(0.01, dt)); camera.lookAt(acLook); updateLomba(dt); }
 const run = (list) => list.forEach(([t, fn]) => later(t, fn));
 function placePlayer(x, z, rot) { player.position.set(x, 0, z); player.rotation.y = rot; player.base = player.position.clone(); player.baseRot = rot; sitPose(player, false); }
 const pemimpinAgama = () => { const s = KEPS_STAFF.find((k) => /syar/i.test(k.j)) || KEPS_STAFF[0]; return s.p; };
@@ -390,41 +390,57 @@ const SCENES = {
     });
   },
   hariGuru() {
-    fade('Peringatan Hari Guru Nasional', 900, () => {
+    fade('Upacara Hari Guru Nasional', 900, () => {
       zone = 'acara'; minutes = 7 * 60 + 30; hud(); acaraClear();
-      const me = meP(), gd = me ? 'P' : 'L';
-      const pool = Object.keys(TEACH).filter((t) => TEACH[t].g === gd && TEACH[t].p.toLowerCase() !== String(state.nama).toLowerCase()).slice(0, 5).map((t) => TEACH[t].p);
-      const gurus = [];
-      for (let i = 0; i < 5; i++) {
-        const x = -6 + i * 3;
-        if (GURU && i === 2) { placePlayer(x, 17, 0); gurus.push(player); continue; }
-        gurus.push(acAdd(teacherModel(gd, i), x, 17, 0, pool[i] || 'Ustadz'));
-      }
-      const kep = acAdd(teacherModel(KEPS_STAFF[0].g || 'L', 0), -10.5, 17, 0, `${KEPS_STAFF[0].p} · Kepala Sekolah`);
+      walkers.forEach((n) => { n.visible = false; n.path = null; });
+      const me = meP(), meName = String(state.nama).toLowerCase();
+      // podium kepala sekolah di atas mimbar, di depan tiang bendera
+      const pod = new THREE.Group(); pod.name = 'podium';
+      [[0, 0.62 + 0.55, 18.05, 0.9, 1.1, 0.6, 0x6b4a2b], [0, 1.78, 18.0, 1.0, 0.08, 0.7, 0x8a5a2b], [0, 1.45, 18.37, 0.6, 0.35, 0.02, 0x2f6b4a]].forEach(([x, y, z, w, h, d, c]) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat(c)); m.position.set(x, y, z); pod.add(m); });
+      scene.add(pod); acaraPeople.push(pod);
+      const kep = acAdd(teacherModel(KEPS_STAFF[0].g || 'L', 0), 0, 17.3, 0, `${KEPS_STAFF[0].p} · Kepala Sekolah`); kep.position.y = 0.62; kep.base.y = 0.62;
+      // semua guru berbaris: ustadz di sisi putra (kiri lapangan), ustadzah di sisi putri (kanan), diberi jarak
+      const L = Object.keys(TEACH).filter((t) => TEACH[t].g === 'L').map((t) => TEACH[t].p), P = Object.keys(TEACH).filter((t) => TEACH[t].g === 'P').map((t) => TEACH[t].p);
+      let placed = false;
+      const row = (list, sign) => list.slice(0, 14).forEach((nm, i) => {
+        const x = sign * (4.6 + (i % 7) * 1.9), z = 17.4 + Math.floor(i / 7) * 1.6;
+        if (GURU && nm.toLowerCase() === meName) { placePlayer(x, z, 0); placed = true; return; }
+        acAdd(teacherModel(sign < 0 ? 'L' : 'P', i), x, z, 0, i % 7 === 0 || i % 7 === 6 ? nm : null);
+      });
+      row(L, -1); row(P, 1);
+      if (GURU && !placed) placePlayer(me ? 4.6 + 7 * 1.9 : -4.6 - 7 * 1.9, 17.4, 0);
+      // murid: putra di depan barisan ustadz, putri di depan barisan ustadzah; tengah dikosongkan beberapa langkah
       const murid = [];
-      for (let r = 0; r < 2; r++) for (let c = 0; c < 6; c++) { if (!GURU && r === 0 && c === 2) continue; murid.push(acAdd(studentModel(me, r * 6 + c), -7.5 + c * 3, 23 + r * 2.2, Math.PI)); }
-      if (!GURU) placePlayer(-1.5, 23, Math.PI);
-      const ketua = murid[0];
-      acCamSet(0, 9, 34, 0, 1, 19);
-      caption('🌹 Selamat Hari Guru Nasional · 25 November');
+      for (let s = 0; s < 2; s++) for (let r = 0; r < 3; r++) for (let c = 0; c < 6; c++) {
+        const putri = s === 1, x = (putri ? 1 : -1) * (5 + c * 2), z = 22.6 + r * 1.9;
+        if (!GURU && putri === me && r === 0 && c === 2) continue;
+        murid.push(acAdd(studentModel(putri, s * 18 + r * 6 + c), x, z, Math.PI));
+      }
+      if (!GURU) placePlayer((me ? 1 : -1) * (5 + 2 * 2), 22.6, Math.PI);
+      const ketua = murid.find((m, i) => i === (me ? 18 : 0)) || murid[0];
+      acCamSet(0, 11, 37, 0, 1, 19.5);
+      caption('🌹 Upacara Hari Guru Nasional · 25 November');
+      const wali = acaraPeople.find((p) => p.tagEl && p.tagEl.textContent && p !== kep) || kep;
       later(900, () => say([
         { p: kep, t: 'Bismillah. Hari ini kita memperingati Hari Guru Nasional. Guru adalah orang tua kedua kalian di sekolah.', e: 'senang' },
         { p: kep, t: 'Kepada seluruh ustadz dan ustadzah, terima kasih atas kesabaran dan keikhlasan dalam mendidik. Semoga menjadi amal jariyah.' },
         { p: ketua, t: 'Mewakili teman-teman, kami mengucapkan terima kasih kepada semua ustadz dan ustadzah. Mohon maaf bila kami sering membuat repot.', e: 'senang' },
-      ], () => {
+      ], () => himneGuru(() => {
         caption('💐 Murid memberikan bunga dan ucapan kepada para guru');
-        murid.slice(0, 5).forEach((m, i) => later(i * 500, () => { const g = gurus[i]; if (g === player) return; playAnim(m, 'salim', 1.3); bubble(m, `Selamat Hari Guru, ${g.tagEl ? g.tagEl.textContent : 'Ustadz'}!`, 1800); later(900, () => bubble(g, 'Terima kasih, Nak. Baarakallahu fiik.', 1600)); }));
-        later(3200, () => {
+        const gurusSama = acaraPeople.filter((p) => p.armR && p !== kep && p.rotation.y === 0 && (p.position.x < 0) === !me);
+        murid.filter((m) => (m.position.x > 0) === me).slice(0, 5).forEach((m, i) => later(i * 450, () => { const g = gurusSama[i]; if (!g) return; playAnim(m, 'salim', 1.3); bubble(m, 'Selamat Hari Guru!', 1700); later(800, () => bubble(g, 'Terima kasih, Nak.', 1500)); }));
+        later(3000, () => {
           if (GURU) {
-            const m = murid[2];
+            const m = murid.find((q) => (q.position.x > 0) === me);
             return say([{ p: m, t: `Selamat Hari Guru, ${state.nama}! Terima kasih sudah sabar mengajar kami. Ini kartu ucapan dari kelas kami.`, e: 'senang', ch: [
               ['😊 "MasyaAllah, terima kasih, anak-anak. Semoga ilmunya berkah."', () => guruTutupHG(kep)],
-              ['🤲 "Jazakumullahu khairan. Ustadz/Ustadzah doakan kalian sukses dunia akhirat."', () => guruTutupHG(kep)]] }]);
+              ['🤲 "Jazakumullahu khairan. Kami doakan kalian sukses dunia akhirat."', () => guruTutupHG(kep)]] }]);
           }
-          say([{ p: gurus[2], t: 'Terima kasih, anak-anak. Kalian mengingat jasa guru; itu tanda adab yang baik.', e: 'senang', ch: [
-            ['💌 Beri kartu ucapan', () => giftGuru(gurus[2], 'kartu ucapan', kep)], ['🌹 Beri bunga', () => giftGuru(gurus[2], 'bunga', kep)], ['🤲 Doakan guru', () => giftGuru(gurus[2], 'doa', kep)]] }]);
+          const g = gurusSama[0] || wali;
+          say([{ p: g, t: 'Terima kasih, anak-anak. Kalian mengingat jasa guru; itu tanda adab yang baik.', e: 'senang', ch: [
+            ['💌 Beri kartu ucapan', () => giftGuru(g, 'kartu ucapan', kep)], ['🌹 Beri bunga', () => giftGuru(g, 'bunga', kep)], ['🤲 Doakan guru', () => giftGuru(g, 'doa', kep)]] }]);
         });
-      }));
+      })));
     });
   },
   hariIbu() {
@@ -507,3 +523,19 @@ function singleTap(title, max, done) {
   lombaUI(true); $('lombaCount').textContent = '';
 }
 function tunggalDone() { if (!lomba || lomba.done) return; lomba.done = true; lombaUI(false); player.armL.rotation.x = player.armR.rotation.x = 0; const d = lomba.single; lomba = null; d(); }
+
+// ---------- Himne Guru: diputar dari berkas himne-guru.mp3 (diunggah sekolah) bila tersedia ----------
+let himneAudio = null;
+function himneGuru(done) {
+  caption('🎵 Paduan suara menyanyikan Himne Guru · semua peserta berdiri tegap');
+  let selesai = false;
+  const fin = () => { if (selesai) return; selesai = true; try { himneAudio && himneAudio.pause(); } catch (e) { /* abaikan */ } Audio.duck && Audio.duck(false); closeModal(); caption(''); done(); };
+  try {
+    himneAudio = new window.Audio('himne-guru.mp3'); himneAudio.volume = 0.9;
+    Audio.duck && Audio.duck(true);
+    himneAudio.onended = fin;
+    himneAudio.onerror = () => { later(6000, fin); };                 // berkas belum diunggah: cukup keterangan
+    himneAudio.play().catch(() => later(6000, fin));
+  } catch (e) { later(6000, fin); }
+  later(900, () => { if (!selesai) { modal('<div class="tag">🎵 Himne Guru</div><p class="muted">Paduan suara sedang bernyanyi.</p>', [['⏭ Lewati lagu', fin, 'small']]); $('modal').classList.add('low'); } });
+}

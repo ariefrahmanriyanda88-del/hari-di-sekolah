@@ -151,11 +151,12 @@ const UPC = { ax: -40, az: 15.5, bx: 40, bz: 29 };
 plane(UPC.ax, UPC.az, UPC.bx, UPC.bz, 0xcfd8c4, 0.045);
 [[UPC.ax, UPC.az, UPC.bx, UPC.az + 0.2], [UPC.ax, UPC.bz - 0.2, UPC.bx, UPC.bz], [UPC.ax, UPC.az, UPC.ax + 0.2, UPC.bz], [UPC.bx - 0.2, UPC.az, UPC.bx, UPC.bz]].forEach(([a, b, c, e]) => plane(a, b, c, e, 0xffffff, 0.07));
 box(0, 0.3, 17.2, 6, 0.6, 2.2, 0x9b6b3c); box(0, 0.62, 17.2, 5.6, 0.06, 1.8, 0xb98652);          // mimbar pembina
-const flagPole = box(-9, 5, 16.6, 0.2, 10, 0.2, 0xdddddd);
-box(-9, 0.2, 16.6, 1.4, 0.4, 1.4, 0xcfd6dc);
+// tiang bendera di tengah, tepat di belakang mimbar pembina
+const flagPole = box(0, 5, 15.7, 0.2, 10, 0.2, 0xdddddd);
+box(0, 0.2, 15.7, 1.4, 0.4, 1.4, 0xcfd6dc);
 const flag = new THREE.Group(); { const r = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.6, 0.03), mat(0xe53935)); r.position.set(0.95, 0.3, 0); flag.add(r); const w = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.6, 0.03), mat(0xffffff)); w.position.set(0.95, -0.3, 0); flag.add(w); }
-flag.position.set(-9, 9.3, 16.6); scene.add(flag);
-label('Lapangan Upacara', 0, 3.6, 22, 1.4);
+flag.position.set(0, 9.3, 15.7); scene.add(flag);
+const LBL_UPC = label('Lapangan Upacara', 0, 3.6, 22, 1.4);
 // pepohonan
 const treeGeoT = new THREE.CylinderGeometry(0.25, 0.35, 1.6, 6);
 const treeGeoL = new THREE.IcosahedronGeometry(1.5, 0);
