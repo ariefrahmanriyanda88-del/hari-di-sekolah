@@ -12,7 +12,7 @@ i=s.rfind('<script>')
 import time, json, re
 V=str(int(time.time()))
 # pemeriksa versi: bila ada versi baru di server, halaman memuat ulang sendiri (mengatasi cache browser)
-CHK='<script>(function(){var V="'+V+'";try{var u=new URL(location.href);if(u.searchParams.get("v")===V)return;fetch("version.json?t="+Date.now(),{cache:"no-store"}).then(function(r){return r.json()}).then(function(j){if(j.v&&j.v!==V){u.searchParams.set("v",j.v);location.replace(u.toString())}}).catch(function(){})}catch(e){}})();</script>'
+CHK='<script>(function(){var V="'+V+'";try{var u=new URL(location.href);if(u.searchParams.get("v")===V)return;fetch("version.json?t="+Date.now(),{cache:"no-store"}).then(function(r){return r.json()}).then(function(j){if(j.v&&j.v!==V&&u.searchParams.get("v")!==j.v){u.searchParams.set("v",j.v);location.replace(u.toString())}}).catch(function(){})}catch(e){}})();</script>'
 s=s[:i]+'<script src="config.js?v='+V+'"></script>\n<script src="online.js?v='+V+'"></script>\n'+s[i:]
 s=s.replace('<head>','<head>\n'+CHK,1)
 open('dist/main.html','w').write(s)
