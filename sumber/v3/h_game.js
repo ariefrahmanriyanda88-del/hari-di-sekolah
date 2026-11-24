@@ -442,7 +442,7 @@ function computeHit() {
   if (zone === 'perpus') { for (let i = 0; i < SHELVES.length; i++) { const s = SHELVES[i]; if (Math.hypot(px - (LIB.x + s.x), pz - (LIB.z + s.z)) < 1.7) return 'shelf:' + i; } return null; }
   if (zone !== 'luar') return null;
   for (const d of doorsOut) if (Math.hypot(px - d.x, pz - d.z) < d.r) return d.id;
-  for (const c in classDoors) if (c !== state.cls && Math.hypot(px - classDoors[c].x, pz - classDoors[c].z) < 1.4) return 'cls:' + c;
+  for (const c in classDoors) if (Math.hypot(px - classDoors[c].x, pz - classDoors[c].z) < 1.4) return c === state.cls ? 'myCls' : 'cls:' + c;
   return null;
 }
 function checkTriggers() {
@@ -465,7 +465,8 @@ function checkTriggers() {
   if (hit.startsWith('shelf:')) return openShelf(+hit.slice(6));
   if (hit === 'voli' || hit === 'basket') return ['istirahat1', 'santai', 'pulang', 'guru'].includes(phase) ? (playingSport === hit ? null : joinSport(hit)) : toast(`Lapangan ${hit === 'voli' ? 'voli' : 'basket'}: bisa ikut main saat jam istirahat / waktu santai`);
   if (hit === 'bola') return ['istirahat1', 'santai', 'pulang', 'guru'].includes(phase) ? (playingBall ? null : joinBall()) : toast('Lapangan: bisa ikut main bola saat jam istirahat / waktu santai');
-  if (hit.startsWith('kantin')) return toast('Kantin dibuka saat jam istirahat pertama');
+  if (hit.startsWith('kantin')) return kantinPintu(hit);
+  if (hit === 'myCls') return kelasPintu();
   if (hit.startsWith('masjid')) { if (phase === 'zuhur' || (phase === 'pulang' && objective && /Ashar/.test(objective.text))) return toast('Berwudhu dulu sebelum masuk masjid'); if (hit !== (meP() ? 'masjidPI' : 'masjidPA')) return toast(`Gunakan Pintu ${side()}`); paused = true; return enterMasjidWalk(); }
   if (hit.startsWith('wudhu') || hit.startsWith('toilet')) {
     const mine = hit.endsWith(meP() ? 'PI' : 'PA');
@@ -485,4 +486,28 @@ function checkBreakBell() {
   const go = () => setObjective(`🔔 Bel masuk! Kembali ke kelas <b>${state.cls}</b>`, classDoors[state.cls], knockClass);
   modal(`<div class="tag">🔔 Bel masuk</div><div class="big">Istirahat selesai</div><p>Kembali ke kelas ${esc(state.cls)} untuk pelajaran berikutnya.</p>`,
     [['Ayo ke kelas', () => { closeModal(); if (['kantin', 'ruang', 'perpus', 'room', 'masjidin'].includes(zone)) leaveInterior(); go(); }, 'main']]);
+}
+
+// ---------- pintu kantin & kelas sendiri selalu bisa dipakai pada waktunya (tidak bergantung tugas aktif) ----------
+function kantinPintu(hit) {
+  if (hit !== (meP() ? 'kantinPI' : 'kantinPA')) return toast(`Ini kantin ${hit.endsWith('PI') ? 'putri' : 'putra'}. Gunakan kantin ${side().toLowerCase()}`);
+  if (GURU) { paused = true; return enterKantin('jajan'); }
+  if (phase === 'istirahat1') { paused = true; return enterKantin(); }
+  if (phase === 'santai' || phase === 'pulang') {
+    if (isRamadan()) return toast('🌙 Sedang berpuasa: kantin tidak melayani makan siang');
+    paused = true;
+    return modal(`<div class="tag">🍛 Kantin ${side()}</div><div class="big">Mau apa di kantin?</div>`, [
+      ['🍛 Makan siang', () => { closeModal(); lunchMode = true; enterKantin(true); }, 'main'],
+      ['🛍️ Belanja jajanan', () => { closeModal(); lunchMode = false; enterKantin('jajan'); }, 'main'],
+      ['Tidak jadi', () => { closeModal(); paused = false; }, 'small'],
+    ]);
+  }
+  toast('Kantin dibuka saat jam istirahat dan setelah sholat Zuhur');
+}
+function kelasPintu() {
+  if (GURU) { paused = true; return guruKnock(); }
+  if (phase === 'pulang' || dayDone.size >= lessons().length) return toast('Pelajaran hari ini sudah selesai');
+  if (phase === 'zuhur') return toast('Sekarang waktunya sholat Zuhur berjamaah di masjid');
+  if (phase === 'istirahat1') { breakEnd = 0; phase = 'kelas2'; }                // masuk kelas lebih awal dari istirahat
+  paused = true; knockClass();
 }
