@@ -46,6 +46,7 @@ function startEventDay(ev) {
     [['▶ Mulai kegiatan', () => { closeModal(); paused = false; SCENES[ev.scene](ev); }, 'main']]), 700);
 }
 function endEvent(msg) {
+  if (player.tagEl) player.tagEl.style.visibility = '';
   acaraClear(); caption(''); player.base = null; sitPose(player, false); pose && 0;
   walkers.forEach((n) => (n.visible = true));
   zone = 'luar'; goOutside(0, 46, Math.PI); minutes = 15 * 60; hud();
@@ -405,9 +406,10 @@ const SCENES = {
       const row = (list, sign) => list.slice(0, 14).forEach((nm, i) => {
         const x = sign * (4.6 + (i % 7) * 1.9), z = 17.4 + Math.floor(i / 7) * 1.6;
         if (GURU && nm.toLowerCase() === meName) { placePlayer(x, z, 0); placed = true; return; }
-        acAdd(teacherModel(sign < 0 ? 'L' : 'P', i), x, z, 0, i % 7 === 0 || i % 7 === 6 ? nm : null);
+        acAdd(teacherModel(sign < 0 ? 'L' : 'P', i), x, z, 0, null).name = nm;   // tanpa nama di atas kepala; hanya kepala sekolah yang bernama
       });
       row(L, -1); row(P, 1);
+      if (player.tagEl) player.tagEl.style.visibility = 'hidden';           // nama guru (pemain) juga disembunyikan saat upacara
       if (GURU && !placed) placePlayer(me ? 4.6 + 7 * 1.9 : -4.6 - 7 * 1.9, 17.4, 0);
       // murid: putra di depan barisan ustadz, putri di depan barisan ustadzah; tengah dikosongkan beberapa langkah
       const murid = [];
@@ -420,7 +422,7 @@ const SCENES = {
       const ketua = murid.find((m, i) => i === (me ? 18 : 0)) || murid[0];
       acCamSet(0, 11, 37, 0, 1, 19.5);
       caption('🌹 Upacara Hari Guru Nasional · 25 November');
-      const wali = acaraPeople.find((p) => p.tagEl && p.tagEl.textContent && p !== kep) || kep;
+      const wali = acaraPeople.find((p) => p.name && p !== kep) || kep;
       later(900, () => say([
         { p: kep, t: 'Bismillah. Hari ini kita memperingati Hari Guru Nasional. Guru adalah orang tua kedua kalian di sekolah.', e: 'senang' },
         { p: kep, t: 'Kepada seluruh ustadz dan ustadzah, terima kasih atas kesabaran dan keikhlasan dalam mendidik. Semoga menjadi amal jariyah.' },
@@ -470,7 +472,7 @@ const SCENES = {
 };
 function giftGuru(g, what, kep) {
   playAnim(player, 'salim', 1.4);
-  const nm = g.tagEl ? g.tagEl.textContent : 'Ustadz';
+  const nm = g.name || (g.tagEl ? g.tagEl.textContent : 'Ustadz');
   const line = what === 'doa' ? `Semoga Allah membalas kebaikan ${nm} dengan surga. Jazakumullahu khairan.` : `Ini ${what} untuk ${nm}. Terima kasih sudah mengajar kami dengan sabar.`;
   if (!GURU) { addPts(6); toast('+6 ⭐ Menghormati guru'); }
   say([{ p: player, t: line }, { p: g, t: 'MasyaAllah, terima kasih, Nak. Doa kalian sangat berarti. Belajarlah dengan sungguh-sungguh, ya.', e: 'senang' }], () => guruTutupHG(kep));
@@ -526,16 +528,29 @@ function tunggalDone() { if (!lomba || lomba.done) return; lomba.done = true; lo
 
 // ---------- Himne Guru: diputar dari berkas himne-guru.mp3 (diunggah sekolah) bila tersedia ----------
 let himneAudio = null;
+// pilihan: bernyanyi bersama (±2 menit, bisa dilewati kapan saja) atau langsung lewati
 function himneGuru(done) {
-  caption('🎵 Paduan suara menyanyikan Himne Guru · semua peserta berdiri tegap');
+  caption('🎵 Menyanyikan Himne Guru');
+  modal('<div class="tag">🎵 Himne Guru</div><div class="big">Menyanyikan Himne Guru</div><p class="muted">Lagunya sekitar 2 menit. Mau bernyanyi bersama atau lewati?</p>',
+    [['🎤 Bernyanyi bersama', () => { closeModal(); nyanyiHimne(done); }, 'main'], ['⏭ Lewati lagu', () => { closeModal(); caption(''); done(); }]]);
+}
+function nyanyiHimne(done) {
+  caption('🎵 Semua peserta berdiri tegap dan menyanyikan Himne Guru bersama-sama');
   let selesai = false;
-  const fin = () => { if (selesai) return; selesai = true; try { himneAudio && himneAudio.pause(); } catch (e) { /* abaikan */ } Audio.duck && Audio.duck(false); closeModal(); caption(''); done(); };
+  const fin = () => {
+    if (selesai) return; selesai = true;
+    try { himneAudio && himneAudio.pause(); } catch (e) { /* abaikan */ }
+    Audio.duck(false); clearInterval(nada); closeModal(); caption(''); done();
+  };
+  const orang = acaraPeople.filter((p) => p.armR);
+  const nada = setInterval(() => { const p = pick(orang); if (p) bubble(p, '🎵', 1400); }, 900);   // tanda sedang bernyanyi
   try {
-    himneAudio = new window.Audio('himne-guru.mp3'); himneAudio.volume = 0.9;
-    Audio.duck && Audio.duck(true);
+    himneAudio = new window.Audio('himne-guru.mp3'); himneAudio.volume = 0.95;
+    Audio.duck(true);
     himneAudio.onended = fin;
-    himneAudio.onerror = () => { later(6000, fin); };                 // berkas belum diunggah: cukup keterangan
+    himneAudio.onerror = () => later(6000, fin);
     himneAudio.play().catch(() => later(6000, fin));
   } catch (e) { later(6000, fin); }
-  later(900, () => { if (!selesai) { modal('<div class="tag">🎵 Himne Guru</div><p class="muted">Paduan suara sedang bernyanyi.</p>', [['⏭ Lewati lagu', fin, 'small']]); $('modal').classList.add('low'); } });
+  if (!GURU) { addPts(4); toast('+4 ⭐ Menyanyikan Himne Guru dengan khidmat'); }
+  later(600, () => { if (!selesai) { modal('<div class="tag">🎵 Himne Guru</div><p class="muted">Sedang bernyanyi bersama…</p>', [['⏭ Lewati / lanjutkan acara', fin, 'small']]); $('modal').classList.add('low'); } });
 }

@@ -4,7 +4,7 @@ cd online
 npx esbuild src/guru-app.js --bundle --minify --format=iife --loader:.json=json --outfile=dist/guru.js --log-level=warning
 npx esbuild src/online-game.js --bundle --minify --format=iife --outfile=dist/online.js --log-level=warning
 [ -f dist/config.js ] || cp src/config.js dist/config.js
-cp ../azan.mp3 dist/azan.mp3; cp firestore.rules dist/firestore.rules
+cp ../azan.mp3 dist/azan.mp3; cp ../himne-guru.mp3 dist/himne-guru.mp3; cp firestore.rules dist/firestore.rules
 # game: sisipkan config.js + online.js sebelum skrip game
 python3 - <<'PY'
 s=open('/home/claude/game/hari3.html').read()
