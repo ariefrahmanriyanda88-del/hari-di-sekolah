@@ -381,5 +381,33 @@ PLACES.forEach(([n, , , x, z], i) => {
 });
 show(2);
 </script>
+<!-- musik latar website: mulai otomatis bila diizinkan browser, atau setelah sentuhan/klik pertama -->
+<audio id="bgm" src="musik-web.mp3" loop preload="auto"></audio>
+<button id="musikbtn" type="button" aria-label="Musik latar">🎵 Musik</button>
+<style>
+#musikbtn{position:fixed;right:14px;bottom:calc(14px + env(safe-area-inset-bottom));z-index:50;font:800 14px Nunito,system-ui,sans-serif;padding:9px 14px;border-radius:999px;border:2px solid #2b2b2b;background:#fff8e6;box-shadow:0 3px 0 #2b2b2b;cursor:pointer}
+#musikbtn.off{opacity:.75;background:#eee}
+#musikbtn.on::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:#2f8a5c;margin-right:6px;vertical-align:middle;animation:mbp 1.2s ease-in-out infinite}
+@keyframes mbp{50%{transform:scale(1.6);opacity:.5}}
+@media (prefers-reduced-motion:reduce){#musikbtn.on::before{animation:none}}
+</style>
+<script>
+(function () {
+  var a = document.getElementById('bgm'), b = document.getElementById('musikbtn'), VOL = 0.35, mati = false;
+  try { mati = localStorage.getItem('hds-web-musik') === 'mati'; } catch (e) {}
+  function tampil(on) { b.textContent = on ? '🎵 Musik nyala' : '🔇 Musik mati'; b.className = on ? 'on' : 'off'; }
+  function naik() { a.volume = 0; var v = 0, t = setInterval(function () { v += 0.03; a.volume = Math.min(VOL, v); if (v >= VOL) clearInterval(t); }, 80); }
+  function main() { return a.play().then(function () { naik(); tampil(true); return true; }).catch(function () { tampil(false); return false; }); }
+  function pertama(e) { if (e && e.target && e.target.closest && e.target.closest('#musikbtn')) return; ['pointerdown', 'keydown', 'touchstart', 'scroll'].forEach(function (e) { removeEventListener(e, pertama, true); }); if (!mati && a.paused) main(); }
+  tampil(false); if (!mati) b.textContent = '🎵 Putar musik';
+  if (!mati) main().then(function (ok) { if (!ok) ['pointerdown', 'keydown', 'touchstart', 'scroll'].forEach(function (e) { addEventListener(e, pertama, { capture: true, passive: true }); }); });
+  b.addEventListener('click', function (e) {
+    e.stopPropagation();
+    if (a.paused) { mati = false; main(); } else { a.pause(); mati = true; tampil(false); }
+    try { localStorage.setItem('hds-web-musik', mati ? 'mati' : 'nyala'); } catch (er) {}
+  });
+  document.addEventListener('visibilitychange', function () { if (document.hidden) a.pause(); else if (!mati && b.className === 'on') a.play().catch(function () {}); });
+})();
+</script>
 </body>
 </html>

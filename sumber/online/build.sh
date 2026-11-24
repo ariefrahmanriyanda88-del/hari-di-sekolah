@@ -22,4 +22,4 @@ g=re.sub(r'src="(guru\.js|config\.js)"', lambda m: 'src="'+m.group(1)+'?v='+V+'"
 open('dist/guru.html','w').write(g)
 json.dump({'v':V}, open('dist/version.json','w'))
 PY
-cp src/landing.html dist/index.html; mkdir -p dist/templat; cp src/templat/* dist/templat/; mkdir -p dist/img; cp src/img/*.webp dist/img/; ls dist
+cp src/landing.html dist/index.html; cp src/musik-web.mp3 dist/musik-web.mp3; mkdir -p dist/templat; cp src/templat/* dist/templat/; mkdir -p dist/img; cp src/img/*.webp dist/img/; ls dist
