@@ -14,7 +14,8 @@ const save = () => { try { localStorage.setItem(SAVE_KEY, JSON.stringify(state))
 let breakEnd = 0;
 let zone = 'luar', phase = 'datang', paused = true, minutes = 410, dayScore = 0, today = [], objective = null, interior = null;
 const dayDone = new Set();
-const dayIdx = () => ((state.start || 0) + state.day - 1) % 5;
+// hari dalam minggu dari tanggal kalender 2027 (Senin = 0 … Jumat = 4)
+const dayIdx = () => { if (state && state.tgl) { const w = toD(state.tgl).getDay(); return w >= 1 && w <= 5 ? w - 1 : 0; } return ((state.start || 0) + state.day - 1) % 5; };
 const dayName = () => HARI[dayIdx()];
 const lessons = () => today.filter((b) => b.s);
 const zuhurAt = () => Math.min(lessons().length, Math.max(2, Math.ceil(lessons().length / 2)));
@@ -25,7 +26,8 @@ const $ = (id) => document.getElementById(id);
 
 function hud() {
   const h = Math.floor(minutes / 60), m = Math.floor(minutes % 60);
-  $('day').textContent = `Hari ke-${state.day} · ${dayName()}`;
+  const ev = state.tgl && calEvent(state.tgl);
+  $('day').textContent = state.tgl ? `📅 ${tglLabel()}${ev && ev.scene ? ' ★' : isRamadan() ? ' 🌙' : ''}` : `Hari ke-${state.day} · ${dayName()}`;
   $('cls').textContent = `${state.nama || 'Siswa'} · ${state.cls}`;
   $('clock').textContent = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
   $('pts').textContent = `⭐ ${state.points}`;
@@ -73,6 +75,10 @@ const intOff = () => { const v = innerWidth < innerHeight ? new THREE.Vector3(0,
 
 // ---------- mulai hari ----------
 function startDay() {
+  ensurePlayable();
+  const ev = calEvent(state.tgl);
+  if (ev && ev.scene) return startEventDay(ev);                    // hari peringatan: adegan khusus
+  if (isRamadan()) setTimeout(() => toast('🌙 Bulan Ramadan: berpuasa, tidak ada MBG. Isi istirahat dengan tadarus.'), 3500);
   takeBag();
   today = DATA.sched[state.cls][dayIdx()].blocks;
   dayDone.clear(); phase = 'datang'; minutes = 6 * 60 + 50; dayScore = 0;
@@ -140,6 +146,8 @@ function lessonDone(b) {
 // ---------- istirahat pertama: kantin & MBG ----------
 function istirahat1() {
   phase = 'istirahat1'; minutes = 10 * 60; Audio.sfx('bell');
+  if (isRamadan()) return modal(`<div class="tag">🔔 Bel istirahat · 🌙 Ramadan</div><div class="big">Sedang berpuasa</div><p>Tidak ada MBG selama Ramadan. Isi istirahat dengan tadarus, membaca di perpustakaan, atau beristirahat.</p>`,
+    [['📖 Tadarus sebentar', () => { closeModal(); paused = true; exitClass(() => { if (!GURU) { addPts(3); toast("+3 ⭐ Tadarus Al-Qur'an saat istirahat"); } freeBreak(); }); }, 'main'], ['🌳 Istirahat', () => { closeModal(); paused = true; exitClass(freeBreak); }]]);
   modal(`<div class="tag">🔔 Bel istirahat pertama</div><div class="big">Waktunya makan!</div><p>Ayo ke <b>Kantin ${side()}</b> untuk makan MBG bersama teman-teman.</p>`,
     [['🍽️ Makan MBG di kantin', () => { closeModal(); paused = true; exitClass(() => setObjective(`Istirahat: makan MBG di <b>Kantin ${side()}</b>`, kantinDoor(), () => enterKantin())); }, 'main'],
      ['🙅 Tidak makan MBG', () => { closeModal(); paused = true; exitClass(() => { toast('Tidak apa-apa. Jangan lupa makan bekalmu dan minum yang cukup, ya'); freeBreak(); }); }]]);
@@ -310,6 +318,7 @@ function afterZuhur() {
 let lunchMode = false;
 function santaiObj() { setObjective(`Waktu santai (main bola, ke taman, perpustakaan…). Lalu kembali ke kelas <b>${state.cls}</b>`, classDoors[state.cls], knockClass); }
 function lunchChoice() {
+  if (isRamadan()) { setTimeout(() => toast('🌙 Sedang berpuasa: waktu ISHOMA diisi istirahat dan tadarus'), 900); return santaiObj(); }
   setTimeout(() => modal(`<div class="tag">🍛 ISHOMA · selesai sholat Zuhur</div><div class="big">Mau ke mana sekarang?</div><p>Masih ada waktu istirahat. Boleh makan siang atau jajan di <b>Kantin ${side()}</b>.</p>`, [
     ['🍛 Makan siang di kantin', () => { closeModal(); lunchMode = true; setObjective(`Makan siang di <b>Kantin ${side()}</b>`, kantinDoor(), () => enterKantin(true)); }, 'main'],
     ['🛍️ Belanja jajanan di kantin', () => { closeModal(); lunchMode = false; setObjective(`Belanja jajanan di <b>Kantin ${side()}</b>`, kantinDoor(), () => enterKantin('jajan')); }, 'main'],
@@ -395,13 +404,16 @@ function asharQuick() {
 }
 function goHome() {
   minutes = 16 * 60;
-  modal(`<div class="tag">Hari ke-${state.day} · ${dayName()} selesai</div><div class="big">+${dayScore} ⭐ hari ini</div>
+  modal(`<div class="tag">${state.tgl ? tglLabel(state.tgl, true) : `Hari ke-${state.day} · ${dayName()}`} selesai</div><div class="big">+${dayScore} ⭐ hari ini</div>
     <p>Pulang ke rumah, istirahat, lalu tidur. Permainan disimpan.</p>`, [['🌙 Tidur & Simpan', sleep, 'main']]);
 }
 function sleep() {
   $('modal').classList.remove('show');
-  state.day += 1; save();
-  const f = $('fade'); f.querySelector('span').textContent = `Zzz… Hari ke-${state.day} · ${dayName()}`;
+  state.day += 1;
+  const nx = nextPlayDate(state.tgl || '2027-01-04'); state.tgl = nx.tgl; save();
+  if (nx.lewat.length) setTimeout(() => toast(`🗓️ Libur dilewati: ${nx.lewat.slice(0, 3).join(' · ')}${nx.lewat.length > 3 ? ' …' : ''}`), 2600);
+  const ne = calEvent(state.tgl);
+  const f = $('fade'); f.querySelector('span').textContent = `Zzz… ${tglLabel(state.tgl, true)}${ne ? ' · ' + ne.t : ''}`;
   f.classList.add('show');
   setTimeout(startDay, 900);
   setTimeout(() => { f.classList.remove('show'); paused = false; }, 2200);

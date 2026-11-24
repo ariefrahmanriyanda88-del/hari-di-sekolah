@@ -52,9 +52,11 @@ function lateQuran(i) {
 // ---------- upacara ----------
 function upacaraObjective() { setObjective('📣 Hari Senin: berbaris di <b>Lapangan Upacara</b> pukul 07.20', { x: -20, z: 21 }, upacaraScene); }
 const upCam = new THREE.Vector3(), upLook = new THREE.Vector3();
-function upacaraScene() {
+function upacaraScene(opt) {
+  opt = opt && opt.title ? opt : {};                                  // opt: { title, amanat[3], after } untuk upacara hari nasional
+  const judul = opt.title || 'Upacara Bendera Hari Senin', AM = opt.amanat || ['Anak-anakku sekalian, jagalah sholat lima waktu tepat pada waktunya, berjamaah di masjid.', 'Hormati guru dan orang tua. Datanglah tepat waktu, karena disiplin adalah awal keberhasilan.', "Jaga adab: putra dan putri saling menjaga batas, jujur, dan rajin membaca Al-Qur'an. Barakallahu fiikum."];
   paused = true;
-  fade('Upacara Bendera Hari Senin', 900, () => {
+  fade(judul, 900, () => {
     zone = 'upacara'; hud(); minutes = 7 * 60 + 20;
     walkers.forEach((n) => { n.visible = false; n.path = null; });   // semua warga sekolah ikut upacara: tidak ada yang berkeliaran
     cerePeople.forEach((p) => scene.remove(p)); cerePeople = [];
@@ -81,18 +83,19 @@ function upacaraScene() {
     if (player.bag && player.bag.visible) { room.userData.bag.material = player.bag.material; room.userData.bag.visible = true; setBags(false); }   // tas sudah ditaruh di kelas sebelum upacara
     const hormat = (on) => [player, ...cerePeople.filter((p) => p !== pembina)].forEach((p) => { p.armR.rotation.x = on ? -2.5 : 0; p.armR.rotation.z = on ? 0.9 : 0; });
     const steps = [
-      [0, () => caption('Upacara Bendera Hari Senin · barisan disiapkan')],
+      [0, () => caption(`${judul} · barisan disiapkan`)],
       [2500, () => { caption('Pemimpin upacara: "Kepada Pembina Upacara, hormat… grak!"'); bubble(pemimpin, 'Hormat… grak!', 1800); hormat(true); }],
       [4500, () => hormat(false)],
       [5500, () => { caption('Pengibaran bendera Merah Putih diiringi lagu Indonesia Raya'); hormat(true); flagRise = 0.001; }],
       [15500, () => { hormat(false); caption('Mengheningkan cipta'); cerePeople.forEach((p) => (p.rotation.x = 0.15)); player.rotation.x = 0.15; }],
       [18500, () => { cerePeople.forEach((p) => (p.rotation.x = 0)); player.rotation.x = 0; caption('Pembacaan teks Pancasila, diikuti seluruh peserta'); bubble(pembina, 'Pancasila… Satu: Ketuhanan Yang Maha Esa…', 2600); }],
-      [21500, () => amanat('Anak-anakku sekalian, jagalah sholat lima waktu tepat pada waktunya, berjamaah di masjid.')],
-      [26000, () => amanat('Hormati guru dan orang tua. Datanglah tepat waktu, karena disiplin adalah awal keberhasilan.')],
-      [30500, () => amanat("Jaga adab: putra dan putri saling menjaga batas, jujur, dan rajin membaca Al-Qur'an. Barakallahu fiikum.")],
+      [21500, () => amanat(AM[0])],
+      [26000, () => amanat(AM[1])],
+      [30500, () => amanat(AM[2])],
       [35500, () => { caption('Doa'); bubble(pembina, 'Mari berdoa menurut agama Islam… Aamiin.', 2200); }],
       [38500, () => { caption('Upacara selesai. Barisan dibubarkan.'); bubble(pemimpin, 'Bubar… jalan!', 1600); }],
       [41000, () => {
+        if (opt.after) { caption(''); cerePeople.forEach((p) => scene.remove(p)); cerePeople = []; flagRise = 0; flag.position.y = 9.3; if (!GURU) { addPts(8); toast('+8 ⭐ Mengikuti upacara dengan tertib'); } zone = 'acara'; return opt.after(); }
         walkers.forEach((n) => { n.visible = true; });
         caption(''); cerePeople.forEach((p) => scene.remove(p)); cerePeople = []; upacaraDone = true; flagRise = 0; flag.position.y = 9.3;
         addPts(8); toast('+8 ⭐ Mengikuti upacara dengan tertib');

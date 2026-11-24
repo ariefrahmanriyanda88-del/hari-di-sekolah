@@ -93,7 +93,7 @@ function tunePerf(now) {
 }
 function loop() {
   const dt = Math.min(clock.getDelta(), 0.05), t = clock.elapsedTime;
-  updateNPCs(dt); updateAuto(dt); updateRoom(t); updateDoorMarks(t); updateQuiz(dt); updateFly(dt); updateKantin(t); updateBattle(dt, t); updateRace(dt); updateSports(dt); checkBreakBell(); updateHome(t); updateSideJamaah(t); updateLate(dt); updateUpacara(dt);
+  updateNPCs(dt); updateAuto(dt); updateRoom(t); updateDoorMarks(t); updateAcara(dt); updateQuiz(dt); updateFly(dt); updateKantin(t); updateBattle(dt, t); updateRace(dt); updateSports(dt); checkBreakBell(); updateHome(t); updateSideJamaah(t); updateLate(dt); updateUpacara(dt);
   updateFootball(dt, ['istirahat1', 'santai', 'pulang'].includes(phase) && zone === 'luar');
   const animating = updateAnim(player, dt);
   if (player.busy > 0) player.busy -= dt;
@@ -146,7 +146,7 @@ function loop() {
   else if (zone === 'kelas') { camera.position.lerp(classCam, 1 - Math.pow(0.01, dt)); camera.lookAt(classLook); }
   else if (zone === 'rumah') { camera.position.lerp(homeCam, 1 - Math.pow(0.01, dt)); camera.lookAt(homeLook); }
   else if (zone === 'masjid') { camera.position.lerp(msCam, 1 - Math.pow(0.01, dt)); camera.lookAt(msLook); }
-  else if (['pesawat', 'battle', 'balap', 'upacara'].includes(zone)) { /* kamera diatur oleh mode game masing-masing */ }
+  else if (['pesawat', 'battle', 'balap', 'upacara', 'acara'].includes(zone)) { /* kamera diatur oleh mode game masing-masing */ }
   else {
     const off = zone === 'luar' ? tmp.copy(CAM_OFF).multiplyScalar(player.busy > 0 ? 0.42 : 1) : zone === 'kuis' ? tmp.copy(quizCam()) : tmp.copy(intOff());
     off.add(player.position);
@@ -193,14 +193,13 @@ $('avdone').onclick = () => { $('avatar').classList.remove('show'); save(); setP
 // ---------- layar awal ----------
 const sel = $('clssel');
 sel.innerHTML = DATA.classes.map((c) => `<option ${c === state.cls ? 'selected' : ''}>${c}</option>`).join('');
-const dsel = $('daysel');
-dsel.innerHTML = HARI.map((h, i) => `<option value="${i}">${h}</option>`).join('');
-dsel.value = String(dayIdx());
+const dsel = $('daysel');                                          // tanggal mulai (kalender 2027)
+dsel.value = state.tgl || '2027-01-04';
 $('nama').value = state.nama || '';
 $('nama').oninput = () => $('nama').classList.remove('err');
 function startLabel() {
   const same = sel.value === state.cls && state.day > 1 && $('nama').value.trim() === state.nama;
-  $('startbtn').textContent = same ? `Lanjutkan Hari ke-${state.day}` : 'Mulai Hari Pertama';
+  $('startbtn').textContent = same ? `Lanjutkan · ${state.tgl ? tglLabel(state.tgl) : 'Hari ke-' + state.day}` : 'Mulai Hari Pertama';
   $('resetbtn').style.display = same ? '' : 'none';
 }
 sel.onchange = startLabel; $('nama').addEventListener('input', startLabel); startLabel();
@@ -226,9 +225,9 @@ $('startbtn').onclick = async () => {
   if (GURU) {                                                       // ---- mode guru ----
     GURU.jk = $('gurujk').value; const nmG = guruNama(nm);
     if (window.HDS && window.HDS.masukGuru && !SCHOOL.demo) { try { const r = await window.HDS.masukGuru(sel.value); Object.assign(QBANK, r.bank); ONLINE_MODE = r.mode; addOnlineBooks(r.books); setTimeout(() => toast(r.mapel.length ? `✅ Soal guru dimuat: ${r.mapel.join(', ')}` : 'Belum ada soal online untuk kelas ini'), 1500); } catch (e) {} }
-    state = { day: 1, points: 0, cls: sel.value, nama: nmG, avatar: state.avatar }; state.start = +dsel.value;
+    state = { day: 1, points: 0, cls: sel.value, nama: nmG, avatar: state.avatar }; state.tgl = dsel.value || '2027-01-04'; ensurePlayable();
     Audio.start(); Audio.loadUrl('azan.mp3'); setPlayer(GURU.jk === 'P');
-    builtFor = ''; populate(); populateRuang(); startGuruDay();
+    builtFor = ''; populate(); populateRuang(); { const e = calEvent(state.tgl); e && e.scene ? startEventDay(e) : startGuruDay(); }
     $('start').classList.add('hide'); paused = false; return;
   }
   if (window.HDS && !SCHOOL.demo) {
@@ -246,7 +245,7 @@ $('startbtn').onclick = async () => {
   }
   if (sel.value !== state.cls || nm !== state.nama) state = { day: 1, points: 0, cls: sel.value, kode: state.kode, avatar: state.avatar };
   state.nama = nm;
-  state.start = ((+dsel.value - (state.day - 1)) % 5 + 5) % 5;
+  if (dsel.value) state.tgl = dsel.value; ensurePlayable();
   Audio.start(); Audio.loadUrl('azan.mp3'); save(); setPlayer(meP());
   builtFor = ''; populate(); populateRuang(); startDay();
   $('start').classList.add('hide'); paused = false;
@@ -255,11 +254,13 @@ $('resetbtn').onclick = () => { state = { day: 1, points: 0, cls: sel.value, nam
 setPlayer(meP());
 setClassCam(); setMsCam();
 populate(); populateRuang();
+if (!state.tgl) state.tgl = '2027-01-04';
 today = DATA.sched[state.cls][dayIdx()].blocks;
 buildDoorMarks();
+$('day').onclick = () => openCalendar();
 goOutside(0, 63, Math.PI); paused = true;
 hud();
 window.__audio = Audio;
 window.__scene = scene;
-window.__dbg = { kop: () => enterKoperasi(), greet: (nm) => { nearNPC = npcs.find((n) => n.name === nm); openGreet(); }, tu: () => enterTU(), ruang: (p) => enterRuang(!!p), gk: (m) => { const f = today.find((b) => b.s); guruEnterClass(m, f); }, st: () => ({ paused, zone, hit: computeHit(), obj: objective && [objective.x, objective.z, objective.zone], p: [player.position.x, player.position.z] }), yayasan: () => enterYayasan(), balai: () => enterBalai(true), guruMenu: () => guruMenu(), kep: (i) => startKeperluan(KEPERLUAN[i]), masjid: () => masjidScene(() => {}), obj: (t) => setObjective(t, null, null), knock: () => knockClass(), lunch: () => lunchChoice(), jajan: () => enterKantin('jajan'), makanSiang: () => { lunchMode = true; enterKantin(true); }, sunnah: () => { minutes = 13 * 60; phase = 'santai'; hasWudhu = true; dhuhaScene(); }, doWudhu: () => doWudhu('Zuhur'), enterToilet: () => enterToilet(), enterKantin: () => enterKantin(), mbgGame: () => mbgGame(), eatScene: () => eatScene(), istirahat1: () => istirahat1(), enterLibrary: () => enterLibrary(), openShelf: (i) => openShelf(i), colAt: (x, z) => colliders.filter((c) => c.r ? Math.hypot(c.cx - x, c.cz - z) < c.r + 0.6 : x > c.x1 - 0.6 && x < c.x2 + 0.6 && z > c.z1 - 0.6 && z < c.z2 + 0.6), joinBall: () => joinBall(), joinSport: (k) => joinSport(k), match: () => match, jump: () => doJump(), setPhase2: (p) => (phase = p), upacara: () => upacaraScene(), walkersVis: () => walkers.filter((n) => n.visible).length, enterRuang: (p) => enterRuang(p), enterClass: () => enterClass('Silakan masuk'), roomAction: (id) => roomAction(id), enterKepsek: () => enterKepsek(), enterTU: () => enterTU(), goOutside: (x, z, r) => goOutside(x, z, r), camera, setZone: (z) => (zone = z),  get paused() { return paused; }, blocked: (x, z) => blocked(x, z), bb: (x, z) => bodyBlocked(player, x, z), get fly() { return fly; }, get race() { return race; }, get battle() { return battle; }, sb: (s) => startBattle(today.find((b) => b.s === s), QBANK[s], () => {}), sr: (s) => startRace(today.find((b) => b.s === s), QBANK[s], () => {}), openLab: () => openLab(), get quiz() { return quiz; }, get state() { return state; }, get zone() { return zone; }, get phase() { return phase; }, get objective() { return objective; }, lessonDone: (a) => lessonDone(today.find((b) => b.a === a)), today: () => today, setPhase: (p) => (phase = p), classDoors, doorsOut, KANTIN, KT_SEAT, QZ };
+window.__dbg = { pawai: () => pawaiScene(), lomba: (k) => { acaraEv = calEvent('2027-08-17'); startLomba(k); }, scene: (k) => { acaraEv = CAL_EVENTS.find((e) => e.scene === k); SCENES[k](acaraEv); }, S: () => state, tgl: (d) => jumpToDate(d), cal: () => openCalendar(), tap: () => lombaTap(), kop: () => enterKoperasi(), greet: (nm) => { nearNPC = npcs.find((n) => n.name === nm); openGreet(); }, tu: () => enterTU(), ruang: (p) => enterRuang(!!p), gk: (m) => { const f = today.find((b) => b.s); guruEnterClass(m, f); }, st: () => ({ paused, zone, hit: computeHit(), obj: objective && [objective.x, objective.z, objective.zone], p: [player.position.x, player.position.z] }), yayasan: () => enterYayasan(), balai: () => enterBalai(true), guruMenu: () => guruMenu(), kep: (i) => startKeperluan(KEPERLUAN[i]), masjid: () => masjidScene(() => {}), obj: (t) => setObjective(t, null, null), knock: () => knockClass(), lunch: () => lunchChoice(), jajan: () => enterKantin('jajan'), makanSiang: () => { lunchMode = true; enterKantin(true); }, sunnah: () => { minutes = 13 * 60; phase = 'santai'; hasWudhu = true; dhuhaScene(); }, doWudhu: () => doWudhu('Zuhur'), enterToilet: () => enterToilet(), enterKantin: () => enterKantin(), mbgGame: () => mbgGame(), eatScene: () => eatScene(), istirahat1: () => istirahat1(), enterLibrary: () => enterLibrary(), openShelf: (i) => openShelf(i), colAt: (x, z) => colliders.filter((c) => c.r ? Math.hypot(c.cx - x, c.cz - z) < c.r + 0.6 : x > c.x1 - 0.6 && x < c.x2 + 0.6 && z > c.z1 - 0.6 && z < c.z2 + 0.6), joinBall: () => joinBall(), joinSport: (k) => joinSport(k), match: () => match, jump: () => doJump(), setPhase2: (p) => (phase = p), upacara: () => upacaraScene(), walkersVis: () => walkers.filter((n) => n.visible).length, enterRuang: (p) => enterRuang(p), enterClass: () => enterClass('Silakan masuk'), roomAction: (id) => roomAction(id), enterKepsek: () => enterKepsek(), enterTU: () => enterTU(), goOutside: (x, z, r) => goOutside(x, z, r), camera, setZone: (z) => (zone = z),  get paused() { return paused; }, blocked: (x, z) => blocked(x, z), bb: (x, z) => bodyBlocked(player, x, z), get fly() { return fly; }, get race() { return race; }, get battle() { return battle; }, sb: (s) => startBattle(today.find((b) => b.s === s), QBANK[s], () => {}), sr: (s) => startRace(today.find((b) => b.s === s), QBANK[s], () => {}), openLab: () => openLab(), get quiz() { return quiz; }, get state() { return state; }, get zone() { return zone; }, get phase() { return phase; }, get objective() { return objective; }, lessonDone: (a) => lessonDone(today.find((b) => b.a === a)), today: () => today, setPhase: (p) => (phase = p), classDoors, doorsOut, KANTIN, KT_SEAT, QZ };
 loop();

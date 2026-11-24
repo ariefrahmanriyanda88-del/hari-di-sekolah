@@ -105,8 +105,10 @@ function homeMorning() {
   player.position.set(RUMAH.x - 1.3, 0, RUMAH.z + 1.3); player.rotation.y = Math.PI; sitPose(player, true); addSpoon(player);
   camera.position.copy(homeCam); camera.lookAt(homeLook);
   $('modal').classList.add('low'); homeView(true);
-  bubble(ibu, `Ayo sarapan dulu, ${state.nama}, sebelum berangkat.`, 2800);
+  const puasa = isRamadan();
+  bubble(ibu, puasa ? `Semangat puasanya, ${state.nama}. Tadi sahurnya cukup, kan?` : `Ayo sarapan dulu, ${state.nama}, sebelum berangkat.`, 2800);
   const meal = () => {
+    if (puasa) return modal(`<div class="tag">🌙 Pagi di bulan Ramadan</div><div class="big">Sedang berpuasa</div><p class="muted">Sudah makan sahur dan sholat Subuh bersama keluarga. Saatnya berpamitan ke sekolah.</p>`, [['🤝 Berpamitan', pamit, 'main'], ['⏩ Lewati adegan pagi', () => leaveHome('jalan'), 'small']]);
     modal(`<div class="tag">🏠 Pagi di rumah · 06.10</div><div class="big">Sarapan bersama keluarga</div><p class="muted">Ayah dan Ibu sudah menunggu di meja makan.</p>`, [
       ['🤲 Baca doa sebelum makan', () => modal(`<div class="tag">Doa sebelum makan</div><div class="doa"><span class="ar">اَللّٰهُمَّ بَارِكْ لَنَا فِيْمَا رَزَقْتَنَا وَقِنَا عَذَابَ النَّارِ</span><i>Allahumma baarik lanaa fiimaa razaqtanaa wa qinaa ‘adzaaban naar</i></div>`, [['Bismillah, makan', eat, 'main']]), 'main'],
       ['⏩ Lewati adegan pagi', () => leaveHome('jalan'), 'small'],
@@ -125,7 +127,7 @@ function homeMorning() {
   };
   const done = () => modal(`<div class="tag">Doa sesudah makan</div><div class="doa"><span class="ar">اَلْحَمْدُ لِلّٰهِ الَّذِيْ أَطْعَمَنَا وَسَقَانَا وَجَعَلَنَا مُسْلِمِيْنَ</span><i>Alhamdulillahilladzii ath‘amanaa wa saqaanaa wa ja‘alanaa muslimiin</i></div>`, [['🤲 Aamiin', pamit, 'main']]);
   const pamit = () => {
-    addPts(3); toast('+3 ⭐ Sarapan & berdoa bersama keluarga');
+    addPts(3); toast(isRamadan() ? '+3 ⭐ Sahur & berpamitan dengan keluarga' : '+3 ⭐ Sarapan & berdoa bersama keluarga');
     sitPose(player, false); sitPose(ayah, false); sitPose(ibu, false);
     player.position.set(RUMAH.x, 0, RUMAH.z + 2.6); player.rotation.y = Math.PI;
     ayah.position.set(RUMAH.x - 1, 0, RUMAH.z + 1.2); ayah.rotation.y = 0;
