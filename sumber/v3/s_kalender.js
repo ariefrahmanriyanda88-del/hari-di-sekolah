@@ -4,7 +4,13 @@
 //  1 Ramadan, Idulfitri, dan Iduladha mengikuti Keputusan Menteri Agama (tanggal di sini perkiraan).
 //  scene: adegan peringatan yang dimainkan di sekolah. Tanpa scene = hari libur (dilewati).
 // =====================================================================
+const CAL_START = '2026-11-24', CAL_END = '2027-12-31';
 const CAL_EVENTS = [
+  // sisa 2026 (SKB 3 Menteri No. 1497/2/5 Tahun 2025) + peringatan sekolah
+  ['2026-11-25', 'Hari Guru Nasional', 'sekolah', 'hariGuru'],
+  ['2026-12-22', 'Hari Ibu', 'sekolah', 'hariIbu'],
+  ['2026-12-24', 'Cuti bersama Natal', 'cuti'],
+  ['2026-12-25', 'Hari Raya Natal', 'libur'],
   ['2027-01-01', 'Tahun Baru 2027 Masehi', 'libur'],
   ['2027-01-05', "Isra Mi'raj Nabi Muhammad ﷺ 1448 H", 'libur', 'israMiraj'],
   ['2027-02-05', 'Cuti bersama Tahun Baru Imlek', 'cuti'],
@@ -33,6 +39,7 @@ const CAL_EVENTS = [
   ['2027-10-28', 'Hari Sumpah Pemuda', 'sekolah', 'sumpahPemuda'],
   ['2027-11-10', 'Hari Pahlawan', 'sekolah', 'pahlawan'],
   ['2027-11-25', 'Hari Guru Nasional', 'sekolah', 'hariGuru'],
+  ['2027-12-22', 'Hari Ibu', 'sekolah', 'hariIbu'],
   ['2027-12-24', 'Cuti bersama Natal', 'cuti'],
   ['2027-12-25', 'Hari Raya Natal', 'libur'],
   ['2027-12-26', "Isra Mi'raj Nabi Muhammad ﷺ 1449 H", 'libur', 'israMiraj'],
@@ -53,42 +60,45 @@ function nextPlayDate(s) {
   const lewat = [];
   let n = addDays(s, 1);
   for (let i = 0; i < 400 && !playable(n); i++) { const e = calEvent(n); if (e) lewat.push(`${tglLabel(n)}: ${e.t}`); n = addDays(n, 1); }
-  if (n > '2027-12-31') n = '2027-01-04';
+  if (n > CAL_END) n = '2026-11-25';
   return { tgl: n, lewat };
 }
-function ensurePlayable() { if (!state.tgl || state.tgl < '2027-01-01' || state.tgl > '2027-12-31') state.tgl = '2027-01-04'; if (!playable(state.tgl)) state.tgl = nextPlayDate(state.tgl).tgl; }
+// tanggal hari ini (WIB) sebagai bawaan; dibatasi rentang kalender
+function todayWIB() { const d = new Date(Date.now() + 7 * 3600e3); const s = d.toISOString().slice(0, 10); return s < CAL_START ? CAL_START : s > CAL_END ? CAL_START : s; }
+function ensurePlayable() { if (!state.tgl || state.tgl < CAL_START || state.tgl > CAL_END) state.tgl = todayWIB(); if (!playable(state.tgl)) state.tgl = nextPlayDate(state.tgl).tgl; }
 
 // ---------- tampilan kalender (bulan) ----------
 let calMonth = 0;
 function openCalendar() {
   if (paused && !$('modal').classList.contains('show') && zone !== 'luar') return;
-  calMonth = toD(state.tgl || '2027-01-04').getMonth();
+  const d0 = toD(state.tgl || todayWIB()); calMonth = d0.getFullYear() * 12 + d0.getMonth();
   drawCalendar();
 }
 function drawCalendar() {
-  const y = 2027, m = calMonth, first = new Date(y, m, 1), days = new Date(y, m + 1, 0).getDate();
+  const y = Math.floor(calMonth / 12), m = calMonth % 12, first = new Date(y, m, 1), days = new Date(y, m + 1, 0).getDate();
   const lead = (first.getDay() + 6) % 7;                                   // Senin di kolom pertama
   let cells = '';
   for (let i = 0; i < lead; i++) cells += '<div class="cd e"></div>';
   for (let d = 1; d <= days; d++) {
     const s = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`, e = calEvent(s), wd = new Date(y, m, d).getDay();
-    const cls = ['cd', e ? (e.scene ? 'ev' : 'lb') : (wd === 0 ? 'lb' : ''), s === state.tgl ? 'now' : '', isRamadan(s) ? 'rm' : ''].join(' ');
+    const cls = ['cd', s < CAL_START ? 'e' : '', e ? (e.scene ? 'ev' : 'lb') : (wd === 0 ? 'lb' : ''), s === state.tgl ? 'now' : '', isRamadan(s) ? 'rm' : ''].join(' ');
     cells += `<button type="button" class="${cls}" data-d="${s}">${d}${e && e.scene ? '<i>★</i>' : ''}</button>`;
   }
-  const list = CAL_EVENTS.filter((e) => toD(e.d).getMonth() === m).map((e) => `<div class="cl ${e.scene ? 'ev' : 'lb'}" data-d="${e.d}"><b>${toD(e.d).getDate()}</b> ${esc(e.t)}${e.scene ? ' <span>▶ ada adegan</span>' : e.k === 'cuti' ? ' <small>(cuti bersama)</small>' : ''}</div>`).join('')
+  const list = CAL_EVENTS.filter((e) => toD(e.d).getMonth() === m && toD(e.d).getFullYear() === y).map((e) => `<div class="cl ${e.scene ? 'ev' : 'lb'}" data-d="${e.d}"><b>${toD(e.d).getDate()}</b> ${esc(e.t)}${e.scene ? ' <span>▶ ada adegan</span>' : e.k === 'cuti' ? ' <small>(cuti bersama)</small>' : ''}</div>`).join('')
     || '<p class="muted">Tidak ada hari libur di bulan ini.</p>';
-  modal(`<div class="tag">📅 Kalender 2027 · ${tglLabel(state.tgl, true)}</div>
-    <div class="calhead"><button type="button" id="calp">‹</button><b>${BLN27[m]} 2027</b><button type="button" id="caln">›</button></div>
+  modal(`<div class="tag">📅 Kalender · ${tglLabel(state.tgl, true)}</div>
+    <div class="calhead"><button type="button" id="calp">‹</button><b>${BLN27[m]} ${y}</b><button type="button" id="caln">›</button></div>
     <div class="calgrid">${['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'].map((h) => `<div class="ch">${h}</div>`).join('')}${cells}</div>
     <div class="callist">${list}</div>
-    <p class="muted" style="font-size:11px">★ hari peringatan dengan adegan · merah: libur · hijau muda: bulan Ramadan. Libur nasional sesuai SKB 3 Menteri 2027; awal Ramadan, Idulfitri, dan Iduladha menunggu penetapan Kementerian Agama.</p>`,
+    <p class="muted" style="font-size:11px">★ hari peringatan dengan adegan · merah: libur · hijau muda: bulan Ramadan. Libur nasional sesuai SKB 3 Menteri 2026 & 2027; awal Ramadan, Idulfitri, dan Iduladha menunggu penetapan Kementerian Agama.</p>`,
     [['Tutup', closeModal, 'small']]);
-  $('calp').onclick = () => { calMonth = (calMonth + 11) % 12; drawCalendar(); };
-  $('caln').onclick = () => { calMonth = (calMonth + 1) % 12; drawCalendar(); };
+  const lo = 2026 * 12 + 10, hi = 2027 * 12 + 11;                 // November 2026 – Desember 2027
+  $('calp').onclick = () => { calMonth = calMonth <= lo ? hi : calMonth - 1; drawCalendar(); };
+  $('caln').onclick = () => { calMonth = calMonth >= hi ? lo : calMonth + 1; drawCalendar(); };
   document.querySelectorAll('.calgrid button.cd, .callist .cl').forEach((b) => (b.onclick = () => calDay(b.dataset.d)));
 }
 function calDay(s) {
-  const e = calEvent(s), canPlay = playable(s);
+  const e = calEvent(s), canPlay = playable(s) && s >= CAL_START;
   modal(`<div class="tag">📅 ${tglLabel(s, true)}</div><div class="big">${e ? esc(e.t) : isWeekend(s) ? 'Akhir pekan' : 'Hari sekolah biasa'}</div>
     <p>${e && e.scene ? EVENT_INFO[e.scene] || 'Ada kegiatan peringatan di sekolah.' : e ? 'Hari libur: sekolah tidak ada kegiatan.' : isWeekend(s) ? 'Sekolah libur.' : isRamadan(s) ? 'Sekolah seperti biasa di bulan Ramadan (berpuasa, tidak ada MBG).' : 'Jadwal pelajaran seperti biasa.'}</p>`,
     (canPlay ? [[e && e.scene ? '▶ Mainkan adegan peringatan ini' : '▶ Lompat ke tanggal ini', () => { closeModal(); jumpToDate(s); }, 'main']] : []).concat([['‹ Kembali ke kalender', drawCalendar], ['Tutup', closeModal, 'small']]));

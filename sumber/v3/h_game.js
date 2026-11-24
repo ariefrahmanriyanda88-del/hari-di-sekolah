@@ -410,7 +410,7 @@ function goHome() {
 function sleep() {
   $('modal').classList.remove('show');
   state.day += 1;
-  const nx = nextPlayDate(state.tgl || '2027-01-04'); state.tgl = nx.tgl; save();
+  const nx = nextPlayDate(state.tgl || todayWIB()); state.tgl = nx.tgl; save();
   if (nx.lewat.length) setTimeout(() => toast(`🗓️ Libur dilewati: ${nx.lewat.slice(0, 3).join(' · ')}${nx.lewat.length > 3 ? ' …' : ''}`), 2600);
   const ne = calEvent(state.tgl);
   const f = $('fade'); f.querySelector('span').textContent = `Zzz… ${tglLabel(state.tgl, true)}${ne ? ' · ' + ne.t : ''}`;

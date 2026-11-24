@@ -194,7 +194,7 @@ $('avdone').onclick = () => { $('avatar').classList.remove('show'); save(); setP
 const sel = $('clssel');
 sel.innerHTML = DATA.classes.map((c) => `<option ${c === state.cls ? 'selected' : ''}>${c}</option>`).join('');
 const dsel = $('daysel');                                          // tanggal mulai (kalender 2027)
-dsel.value = state.tgl || '2027-01-04';
+dsel.value = state.tgl && state.tgl >= CAL_START ? state.tgl : todayWIB();
 $('nama').value = state.nama || '';
 $('nama').oninput = () => $('nama').classList.remove('err');
 function startLabel() {
@@ -225,7 +225,7 @@ $('startbtn').onclick = async () => {
   if (GURU) {                                                       // ---- mode guru ----
     GURU.jk = $('gurujk').value; const nmG = guruNama(nm);
     if (window.HDS && window.HDS.masukGuru && !SCHOOL.demo) { try { const r = await window.HDS.masukGuru(sel.value); Object.assign(QBANK, r.bank); ONLINE_MODE = r.mode; addOnlineBooks(r.books); setTimeout(() => toast(r.mapel.length ? `✅ Soal guru dimuat: ${r.mapel.join(', ')}` : 'Belum ada soal online untuk kelas ini'), 1500); } catch (e) {} }
-    state = { day: 1, points: 0, cls: sel.value, nama: nmG, avatar: state.avatar }; state.tgl = dsel.value || '2027-01-04'; ensurePlayable();
+    state = { day: 1, points: 0, cls: sel.value, nama: nmG, avatar: state.avatar }; state.tgl = dsel.value || todayWIB(); ensurePlayable();
     Audio.start(); Audio.loadUrl('azan.mp3'); setPlayer(GURU.jk === 'P');
     builtFor = ''; populate(); populateRuang(); { const e = calEvent(state.tgl); e && e.scene ? startEventDay(e) : startGuruDay(); }
     $('start').classList.add('hide'); paused = false; return;
@@ -254,7 +254,7 @@ $('resetbtn').onclick = () => { state = { day: 1, points: 0, cls: sel.value, nam
 setPlayer(meP());
 setClassCam(); setMsCam();
 populate(); populateRuang();
-if (!state.tgl) state.tgl = '2027-01-04';
+if (!state.tgl || state.tgl < CAL_START) state.tgl = todayWIB();
 today = DATA.sched[state.cls][dayIdx()].blocks;
 buildDoorMarks();
 $('day').onclick = () => openCalendar();

@@ -13,7 +13,8 @@ const EVENT_INFO = {
   hardiknas: 'Upacara peringatan Hari Pendidikan Nasional.',
   sumpahPemuda: 'Upacara peringatan Hari Sumpah Pemuda.',
   pahlawan: 'Upacara peringatan Hari Pahlawan.',
-  hariGuru: 'Peringatan Hari Guru: murid memberi ucapan dan hadiah sederhana untuk para guru.',
+  hariGuru: 'Peringatan Hari Guru: sambutan kepala sekolah, ucapan perwakilan murid, pemberian bunga dan kartu untuk para guru, doa, lalu foto bersama.',
+  hariIbu: 'Peringatan Hari Ibu: nasihat berbakti kepada ibu, menulis surat untuk ibu, dan doa untuk kedua orang tua.',
 };
 // ---------- panggung adegan ----------
 let acaraPeople = [], acaraEv = null;
@@ -391,31 +392,84 @@ const SCENES = {
   hariGuru() {
     fade('Peringatan Hari Guru Nasional', 900, () => {
       zone = 'acara'; minutes = 7 * 60 + 30; hud(); acaraClear();
-      const me = meP(), names = Object.keys(TEACH).filter((t) => TEACH[t].g === (me ? 'P' : 'L')).slice(0, 5).map((t) => TEACH[t].p);
-      const gurus = names.map((n, i) => acAdd(teacherModel(me ? 'P' : 'L', i), -6 + i * 3, 17, 0, n));
-      for (let r = 0; r < 2; r++) for (let c = 0; c < 6; c++) if (!(r === 0 && c === 2)) acAdd(studentModel(me, r * 6 + c), -7.5 + c * 3, 23 + r * 2.2, Math.PI);
-      placePlayer(-1.5, 23, Math.PI);
+      const me = meP(), gd = me ? 'P' : 'L';
+      const pool = Object.keys(TEACH).filter((t) => TEACH[t].g === gd && TEACH[t].p.toLowerCase() !== String(state.nama).toLowerCase()).slice(0, 5).map((t) => TEACH[t].p);
+      const gurus = [];
+      for (let i = 0; i < 5; i++) {
+        const x = -6 + i * 3;
+        if (GURU && i === 2) { placePlayer(x, 17, 0); gurus.push(player); continue; }
+        gurus.push(acAdd(teacherModel(gd, i), x, 17, 0, pool[i] || 'Ustadz'));
+      }
+      const kep = acAdd(teacherModel(KEPS_STAFF[0].g || 'L', 0), -10.5, 17, 0, `${KEPS_STAFF[0].p} · Kepala Sekolah`);
+      const murid = [];
+      for (let r = 0; r < 2; r++) for (let c = 0; c < 6; c++) { if (!GURU && r === 0 && c === 2) continue; murid.push(acAdd(studentModel(me, r * 6 + c), -7.5 + c * 3, 23 + r * 2.2, Math.PI)); }
+      if (!GURU) placePlayer(-1.5, 23, Math.PI);
+      const ketua = murid[0];
       acCamSet(0, 9, 34, 0, 1, 19);
-      caption('🌹 Selamat Hari Guru Nasional');
-      later(800, () => {
-        if (GURU) {
-          const m = acaraPeople[acaraPeople.length - 1];
-          return say([{ p: m, t: `Selamat Hari Guru, ${state.nama}! Terima kasih sudah sabar mengajar kami. Ini kartu ucapan dari kelas kami.`, e: 'senang' },
-            { p: player, t: 'MasyaAllah, terima kasih, anak-anak. Semoga ilmu yang kalian pelajari bermanfaat dan berkah.', e: 'senang' }], () => endEvent('Selamat Hari Guru Nasional. Terima kasih telah mendidik dengan ikhlas.'));
-        }
-        say([{ p: gurus[2], t: 'Terima kasih, anak-anak. Hari ini kalian mengingat jasa guru. Itu tanda adab yang baik.', e: 'senang', ch: [
-          ['💌 Beri kartu ucapan', () => giftGuru(gurus[2], 'kartu ucapan')], ['🌹 Beri bunga', () => giftGuru(gurus[2], 'bunga')], ['🤲 Doakan guru', () => giftGuru(gurus[2], 'doa')]] }]);
-      });
+      caption('🌹 Selamat Hari Guru Nasional · 25 November');
+      later(900, () => say([
+        { p: kep, t: 'Bismillah. Hari ini kita memperingati Hari Guru Nasional. Guru adalah orang tua kedua kalian di sekolah.', e: 'senang' },
+        { p: kep, t: 'Kepada seluruh ustadz dan ustadzah, terima kasih atas kesabaran dan keikhlasan dalam mendidik. Semoga menjadi amal jariyah.' },
+        { p: ketua, t: 'Mewakili teman-teman, kami mengucapkan terima kasih kepada semua ustadz dan ustadzah. Mohon maaf bila kami sering membuat repot.', e: 'senang' },
+      ], () => {
+        caption('💐 Murid memberikan bunga dan ucapan kepada para guru');
+        murid.slice(0, 5).forEach((m, i) => later(i * 500, () => { const g = gurus[i]; if (g === player) return; playAnim(m, 'salim', 1.3); bubble(m, `Selamat Hari Guru, ${g.tagEl ? g.tagEl.textContent : 'Ustadz'}!`, 1800); later(900, () => bubble(g, 'Terima kasih, Nak. Baarakallahu fiik.', 1600)); }));
+        later(3200, () => {
+          if (GURU) {
+            const m = murid[2];
+            return say([{ p: m, t: `Selamat Hari Guru, ${state.nama}! Terima kasih sudah sabar mengajar kami. Ini kartu ucapan dari kelas kami.`, e: 'senang', ch: [
+              ['😊 "MasyaAllah, terima kasih, anak-anak. Semoga ilmunya berkah."', () => guruTutupHG(kep)],
+              ['🤲 "Jazakumullahu khairan. Ustadz/Ustadzah doakan kalian sukses dunia akhirat."', () => guruTutupHG(kep)]] }]);
+          }
+          say([{ p: gurus[2], t: 'Terima kasih, anak-anak. Kalian mengingat jasa guru; itu tanda adab yang baik.', e: 'senang', ch: [
+            ['💌 Beri kartu ucapan', () => giftGuru(gurus[2], 'kartu ucapan', kep)], ['🌹 Beri bunga', () => giftGuru(gurus[2], 'bunga', kep)], ['🤲 Doakan guru', () => giftGuru(gurus[2], 'doa', kep)]] }]);
+        });
+      }));
     });
   },
+  hariIbu() {
+    fade('Peringatan Hari Ibu · 22 Desember', 900, () => {
+      zone = 'acara'; minutes = 7 * 60 + 30; hud(); acaraClear();
+      const me = meP();
+      const us = acAdd(teacherModel('P', 2), 0, 17.5, 0, (KEPS_STAFF.find((k) => k.g === 'P') || { p: 'Ustadzah' }).p + ' · Pembina');
+      for (let r = 0; r < 2; r++) for (let c = 0; c < 6; c++) { if (!GURU && r === 0 && c === 2) continue; acAdd(studentModel(me, r * 6 + 30 + c), -7.5 + c * 3, 22.5 + r * 2.2, Math.PI); }
+      if (GURU) placePlayer(4, 17.5, 0); else placePlayer(-1.5, 22.5, Math.PI);
+      acCamSet(0, 9, 33, 0, 1, 19.5);
+      caption('💐 Selamat Hari Ibu');
+      later(900, () => say([
+        { p: us, t: 'Anak-anakku, hari ini kita memperingati Hari Ibu. Ibu mengandung, melahirkan, dan merawat kita dengan penuh kasih sayang.', e: 'senang' },
+        { p: us, t: 'Rasulullah ﷺ menyebut "ibumu" tiga kali ketika ditanya siapa yang paling berhak kita perlakukan dengan baik, baru kemudian ayahmu.' },
+        { p: us, t: 'Hari ini, tulislah surat untuk ibu kalian. Sampaikan terima kasih, maaf, dan doa. Nanti berikan kepada ibu di rumah.' },
+      ], () => {
+        if (GURU) return endEvent('Selamat Hari Ibu. Semoga Allah merahmati para ibu kita.');
+        modal(`<div class="tag">✉️ Surat untuk Ibu</div><div class="big">Apa yang ingin kamu tulis?</div>`, [
+          ['💗 "Terima kasih, Ibu, sudah merawatku dengan sabar setiap hari."', () => suratIbu()],
+          ['🙏 "Maafkan aku, Bu, kalau sering membantah dan membuat Ibu sedih."', () => suratIbu()],
+          ['🤲 "Ya Allah, sayangilah Ibu sebagaimana Ibu menyayangiku di waktu kecil."', () => suratIbu()],
+        ]);
+      }));
+    });
+  },
+
 };
-function giftGuru(g, what) {
+function giftGuru(g, what, kep) {
   playAnim(player, 'salim', 1.4);
   const nm = g.tagEl ? g.tagEl.textContent : 'Ustadz';
   const line = what === 'doa' ? `Semoga Allah membalas kebaikan ${nm} dengan surga. Jazakumullahu khairan.` : `Ini ${what} untuk ${nm}. Terima kasih sudah mengajar kami dengan sabar.`;
   if (!GURU) { addPts(6); toast('+6 ⭐ Menghormati guru'); }
-  say([{ p: player, t: line }, { p: g, t: 'MasyaAllah, terima kasih, Nak. Doa kalian sangat berarti. Belajarlah dengan sungguh-sungguh, ya.', e: 'senang' }],
-    () => endEvent('Selamat Hari Guru Nasional. Guru adalah pewaris ilmu.'));
+  say([{ p: player, t: line }, { p: g, t: 'MasyaAllah, terima kasih, Nak. Doa kalian sangat berarti. Belajarlah dengan sungguh-sungguh, ya.', e: 'senang' }], () => guruTutupHG(kep));
+}
+function guruTutupHG(kep) {
+  say([{ p: kep, t: 'Mari kita tutup dengan doa, lalu foto bersama. Semoga guru dan murid sama-sama diberkahi Allah.', e: 'senang' }], () => {
+    caption('📸 Foto bersama guru dan murid'); const f = $('fade'); f.querySelector('span').textContent = '📸 Cekrek!'; f.style.background = '#fff';
+    f.classList.add('show'); setTimeout(() => { f.classList.remove('show'); f.style.background = ''; }, 350);
+    later(1600, () => { caption(''); endEvent('Selamat Hari Guru Nasional. Guru adalah pewaris ilmu; hormati dan doakan mereka.'); });
+  });
+}
+function suratIbu() {
+  closeModal();
+  modal(`<div class="tag">🤲 Doa untuk kedua orang tua</div><div class="doa"><span class="ar">رَبِّ اغْفِرْ لِيْ وَلِوَالِدَيَّ وَارْحَمْهُمَا كَمَا رَبَّيَانِيْ صَغِيْرًا</span><i>Rabbighfir lii wa liwaalidayya warhamhumaa kamaa rabbayaanii shaghiiraa</i><small>Artinya: Ya Tuhanku, ampunilah aku dan kedua orang tuaku, dan sayangilah keduanya sebagaimana mereka menyayangiku di waktu kecil.</small></div>`,
+    [['🤲 Aamiin', () => { closeModal(); addPts(6); toast('+6 ⭐ Berbakti kepada orang tua'); bubble(player, 'Nanti suratnya kuberikan ke Ibu.', 2000); later(2200, () => endEvent('Selamat Hari Ibu. Jangan lupa berikan suratmu dan peluk ibumu hari ini.')); }, 'main']]);
 }
 function bukaBersama() {
   fade('Menjelang berbuka · halaman sekolah', 900, () => {
