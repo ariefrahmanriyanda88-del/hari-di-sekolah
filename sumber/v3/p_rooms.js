@@ -79,10 +79,12 @@ const LAB_FREE = LAB_PCS.find((p) => p.r === 2 && p.c === 3);
 const LAB_SPOT = spot(LABR, LAB_FREE.x, LAB_FREE.z + 0.9, labr.g);
 let labPeople = [];
 function enterLabRoom() {
-  labPeople.forEach((p) => scene.remove(p)); labPeople = [];
+  labPeople.forEach((p) => { scene.remove(p); const i = npcs.indexOf(p); if (i >= 0) npcs.splice(i, 1); }); labPeople = [];
   const putri = meP();
   LAB_PCS.forEach((p, i) => { if (p === LAB_FREE || i % 3 === 1) return; const m = makePerson(studentModel(putri, i)); m.position.set(LABR.x + p.x, 0, LABR.z + p.z); m.rotation.y = Math.PI; sitPose(m, true); m.armL.rotation.x = m.armR.rotation.x = -1.2; scene.add(m); labPeople.push(m); });
-  const g = makePerson(teacherModel(putri ? 'P' : 'L', 4)); g.position.set(LABR.x - 8.8, 0, LABR.z - 4.4); g.rotation.y = 0; nameTag(g, putri ? 'Ustadzah TIK' : 'Ustadz TIK', 0.5); scene.add(g); labPeople.push(g);
+  const labNm = SCHOOL.demo ? 'Ustadz Laboran' : 'Ustadz Syabirin';                // penjaga Lab Komputer
+  const g = makePerson(teacherModel('L', 4)); g.position.set(LABR.x - 8.8, 0, LABR.z - 4.4); g.rotation.y = 0; nameTag(g, `${labNm} · Penjaga Lab`, 0.5);
+  Object.assign(g, { fixed: true, kind: 'guru', putri: false, sapaan: 'Ustadz', name: labNm, greetDay: 0, homeRot: 0 }); npcs.push(g); scene.add(g); labPeople.push(g);
   const dd = doorsOut.find((d) => d.id === 'lab');
   enterHall('Lab Komputer', LABR, 14, { x: dd.x, z: dd.z + 1.5, rot: 0 }, () => {
     roomSpots = [{ ...LAB_SPOT, id: 'lab-pc' }];

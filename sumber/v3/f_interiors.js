@@ -238,8 +238,12 @@ function populateKantin() {
 }
 // ---------- ruang Ustadz / ruang Ustadzah ----------
 // ruang guru: SETIAP guru punya meja sendiri dengan papan nama
+// pimpinan (kepala sekolah & waka), staf TU & bendahara, serta penjaga lab tidak punya meja di ruang guru:
+// mereka cukup berada di kantornya masing-masing
+const BUKAN_RUANG_GURU = new Set(['Ustadz Rusli', 'Ustadz Mudiar', 'Ustadzah Retmi', 'Ustadzah Rustiyani', 'Ustadz Hendri', 'Ustadz Rahmat',
+  'Ustadz Dede', 'Ustadzah Ridanty', 'Ustadz Rifzen', 'Ustadzah Santi', 'Ustadz Sakti', 'Ustadzah Sakinah', 'Ustadz Syabirin']);
 function buildRuang(origin, putri) {
-  const list = Object.keys(TEACH).filter((t) => TEACH[t].g === (putri ? 'P' : 'L'))
+  const list = Object.keys(TEACH).filter((t) => TEACH[t].g === (putri ? 'P' : 'L') && !BUKAN_RUANG_GURU.has(TEACH[t].p))
     .sort((a, b) => TEACH[a].p.localeCompare(TEACH[b].p, 'id'));
   const cols = putri ? 8 : 6, rows = Math.ceil(list.length / cols), DX = 3.2, DZ = 3.6;
   const W = cols * DX + 5, D = rows * DZ + 8;

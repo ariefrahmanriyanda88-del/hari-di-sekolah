@@ -49,7 +49,7 @@ function pose(p, name) {
   p.rotation.x = 0; p.legL.rotation.x = p.legR.rotation.x = 0;
   p.armL.rotation.set(0, 0, 0); p.armR.rotation.set(0, 0, 0);
   const fwd = (d) => { p.position.x += Math.sin(p.rotation.y) * d; p.position.z += Math.cos(p.rotation.y) * d; };
-  if (name === 'takbir') { p.armL.rotation.x = p.armR.rotation.x = -2.7; p.armL.rotation.z = -0.25; p.armR.rotation.z = 0.25; }
+  if (name === 'takbir') { p.armL.rotation.x = p.armR.rotation.x = -2.7; p.armL.rotation.z = 0.25; p.armR.rotation.z = -0.25; }
   if (name === 'sedekap') { p.armL.rotation.x = p.armR.rotation.x = -1.0; p.armR.rotation.z = 0.75; p.armL.rotation.z = -0.75; }
   if (name === 'rukuk') { const a = 1.3; p.rotation.x = a; p.legL.rotation.x = p.legR.rotation.x = -a; p.position.y = 0.8 * (1 - Math.cos(a)); fwd(-0.8 * Math.sin(a)); p.armL.rotation.x = p.armR.rotation.x = -0.35; }
   if (name === 'sujud') { const a = 1.75; p.rotation.x = a; p.legL.rotation.x = p.legR.rotation.x = -a - 1.4; p.position.y = 0.15; fwd(-0.9); p.armL.rotation.x = p.armR.rotation.x = -1.2; }

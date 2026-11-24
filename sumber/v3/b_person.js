@@ -67,8 +67,9 @@ function makePerson(o = {}) {
   }
   if (o.bag) g.bag = add(new THREE.BoxGeometry(0.62, 0.68, 0.28), o.bag, 0, 1.25, -0.4);
   const sleeve = o.sleeve ?? shirt;
-  g.armL = new THREE.Group(); g.armL.position.set(-0.52, 1.6, 0); g.add(g.armL);
-  g.armR = new THREE.Group(); g.armR.position.set(0.52, 1.6, 0); g.add(g.armR);
+  // tokoh menghadap +z, jadi tangan KANAN berada di sisi -x (salim, hormat, makan, salam memakai tangan kanan)
+  g.armL = new THREE.Group(); g.armL.position.set(0.52, 1.6, 0); g.add(g.armL);
+  g.armR = new THREE.Group(); g.armR.position.set(-0.52, 1.6, 0); g.add(g.armR);
   add(new THREE.BoxGeometry(0.22, 0.78, 0.22), sleeve, 0, -0.38, 0, g.armL);
   add(new THREE.BoxGeometry(0.22, 0.78, 0.22), sleeve, 0, -0.38, 0, g.armR);
   add(new THREE.SphereGeometry(0.12, 8, 6), skin, 0, -0.8, 0, g.armR);

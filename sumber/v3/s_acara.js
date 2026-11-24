@@ -125,8 +125,8 @@ function pawaiScene() {
     const walkersP = [];
     for (let i = 0; i < 16; i++) {
       const p = acAdd(studentModel(me, i), -11 + (i % 8) * 1.4, 33 + Math.floor(i / 8) * 1.2, Math.PI / 2);
-      const pole = new THREE.Mesh(new THREE.BoxGeometry(0.06, 1.6, 0.06), mat(0x6b4a2b)); pole.position.set(0.35, 1.6, 0.1); p.add(pole);
-      const fl = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.45, 0.7), mat(i % 2 ? 0x2f8a5c : 0xffffff)); fl.position.set(0.35, 2.2, 0.45); p.add(fl);
+      const pole = new THREE.Mesh(new THREE.BoxGeometry(0.06, 1.6, 0.06), mat(0x6b4a2b)); pole.position.set(-0.35, 1.6, 0.1); p.add(pole);
+      const fl = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.45, 0.7), mat(i % 2 ? 0x2f8a5c : 0xffffff)); fl.position.set(-0.35, 2.2, 0.45); p.add(fl);
       p.pi = 0; p.off = i * 1.6; walkersP.push(p);
     }
     placePlayer(-13, 33, Math.PI / 2); player.base = null;

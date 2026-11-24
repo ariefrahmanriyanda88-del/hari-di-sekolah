@@ -254,8 +254,8 @@ function updateAnim(p, dt) {
   const k = Math.sin(Math.min(1, a.t / a.dur) * Math.PI); // 0 → 1 → 0
   if (a.type === 'salim') { p.rotation.x = 0.45 * k; p.armR.rotation.x = -1.35 * k; }
   if (a.type === 'beritangan') { p.armR.rotation.x = -1.1 * k; p.rotation.x = 0.08 * k; }
-  if (a.type === 'dada') { p.armR.rotation.x = -1.0 * k; p.armR.rotation.z = 0.9 * k; }
-  if (a.type === 'lambai') { p.armR.rotation.z = 2.6 * k + Math.sin(a.t * 14) * 0.3 * k; }
+  if (a.type === 'dada') { p.armR.rotation.x = -1.0 * k; p.armR.rotation.z = 0.9 * k; }   // tangan kanan di dada
+  if (a.type === 'lambai') { p.armR.rotation.z = -(2.6 * k + Math.sin(a.t * 14) * 0.3 * k); }
   if (a.type === 'suap') { const c2 = Math.max(0, Math.sin(a.t / a.dur * Math.PI * 4 - Math.PI / 2) * 0.5 + 0.5); p.armR.rotation.x = -0.8 - 1.5 * c2; p.armR.rotation.z = 0.35 * c2; p.rotation.x = 0.1 * c2; }
   if (a.t >= a.dur) { p.anim = null; p.rotation.x = 0; p.armR.rotation.set(p.sitting ? -0.8 : 0, 0, 0); }
   return true;

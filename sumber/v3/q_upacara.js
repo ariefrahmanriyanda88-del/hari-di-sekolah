@@ -81,7 +81,7 @@ function upacaraScene(opt) {
     const amanat = (t) => { caption(`Amanat ${KEPS_STAFF[0].p} (Pembina): "${t}"`); bubble(pembina, t, 4200); };
     cerePeople.forEach((p) => p.bag && (p.bag.visible = false));
     if (player.bag && player.bag.visible) { room.userData.bag.material = player.bag.material; room.userData.bag.visible = true; setBags(false); }   // tas sudah ditaruh di kelas sebelum upacara
-    const hormat = (on) => [player, ...cerePeople.filter((p) => p !== pembina)].forEach((p) => { p.armR.rotation.x = on ? -2.5 : 0; p.armR.rotation.z = on ? 0.9 : 0; });
+    const hormat = (on) => [player, ...cerePeople.filter((p) => p !== pembina)].forEach((p) => { p.armR.rotation.x = on ? -2.5 : 0; p.armR.rotation.z = on ? 0.75 : 0; });   // hormat: tangan kanan ke dahi
     const steps = [
       [0, () => caption(`${judul} · barisan disiapkan`)],
       [2500, () => { caption('Pemimpin upacara: "Kepada Pembina Upacara, hormat… grak!"'); bubble(pemimpin, 'Hormat… grak!', 1800); hormat(true); }],
