@@ -258,6 +258,7 @@ if (!state.tgl || state.tgl < CAL_START) state.tgl = todayWIB();
 today = DATA.sched[state.cls][dayIdx()].blocks;
 buildDoorMarks();
 $('day').onclick = () => openCalendar();
+$('skipbtn').onclick = (e) => { e.stopPropagation(); skipObjective(); };
 goOutside(0, 63, Math.PI); paused = true;
 hud();
 window.__audio = Audio;

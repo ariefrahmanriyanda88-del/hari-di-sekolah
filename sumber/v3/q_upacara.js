@@ -103,10 +103,15 @@ function upacaraScene(opt) {
         setObjective(`Masuk ke kelas <b>${state.cls}</b> (Gedung ${side()})`, classDoors[state.cls], knockClass);
       }],
     ];
-    steps.forEach(([t, fn]) => setTimeout(fn, t + 500));
+    const tok = ++upTok;
+    steps.forEach(([t, fn]) => setTimeout(() => { if (tok === upTok) fn(); }, t + 500));
+    // upacara boleh dilewati
+    setTimeout(() => { if (tok !== upTok) return; modal('<div class="tag">📣 Upacara</div><p class="muted">Upacara sedang berlangsung.</p>', [['⏭ Lewati upacara', () => {
+      upTok++; closeModal(); hormat(false); player.rotation.x = 0; cerePeople.forEach((p) => (p.rotation.x = 0)); steps[steps.length - 1][1]();
+    }, 'small']]); $('modal').classList.add('low'); }, 1500);
   });
 }
-let flagRise = 0;
+let upTok = 0, flagRise = 0;
 function updateUpacara(dt) {
   if (zone !== 'upacara') return;
   if (flagRise > 0 && flag.position.y < 9.3) flag.position.y = Math.min(9.3, flag.position.y + dt * 0.85);

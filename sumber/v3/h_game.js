@@ -32,7 +32,11 @@ function hud() {
   $('clock').textContent = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
   $('pts').textContent = `⭐ ${state.points}`;
   $('obj').innerHTML = objective ? objective.text : '';
-  $('obj').style.display = objective && !['kuis', 'kelas', 'masjid', 'pesawat', 'battle', 'balap', 'rumah', 'upacara'].includes(zone) ? '' : 'none';
+  $('obj').style.display = objective && !['kuis', 'kelas', 'masjid', 'pesawat', 'battle', 'balap', 'rumah', 'upacara', 'acara'].includes(zone) ? '' : 'none';
+  // tombol lewati: setiap tugas boleh dilewati
+  const sk = $('skipbtn'), showSk = $('obj').style.display === '' && objective && objective.run;
+  sk.style.display = showSk ? '' : 'none';
+  if (showSk) requestAnimationFrame(() => { const r = $('obj').getBoundingClientRect(); sk.style.top = Math.round(r.bottom + 5) + 'px'; });
 }
 function setObjective(text, target, run, z = 'luar') { objective = { text, x: target ? target.x : 0, z: target ? target.z : 0, run, zone: z, has: !!target }; lastTrig = computeHit(); hud(); }
 
@@ -509,5 +513,20 @@ function kelasPintu() {
   if (phase === 'pulang' || dayDone.size >= lessons().length) return toast('Pelajaran hari ini sudah selesai');
   if (phase === 'zuhur') return toast('Sekarang waktunya sholat Zuhur berjamaah di masjid');
   if (phase === 'istirahat1') { breakEnd = 0; phase = 'kelas2'; }                // masuk kelas lebih awal dari istirahat
+  if (phase === 'datang') upacaraDone = true;                                     // boleh langsung masuk kelas tanpa menunggu/ikut upacara
   paused = true; knockClass();
+}
+
+// ---------- lewati tugas: langsung ke tujuan, atau lewati upacara ----------
+function skipObjective() {
+  if (!objective || !objective.run || (paused && !$('modal').classList.contains('show'))) return;
+  const o = objective;
+  closeModal();
+  if (o.run === upacaraScene) { upacaraDone = true; toast('⏭ Upacara dilewati'); return setObjective(`Masuk ke kelas <b>${state.cls}</b>`, classDoors[state.cls], knockClass); }
+  paused = true;
+  fade('⏭ Langsung ke tujuan', 500, () => {
+    if (o.has && o.zone === zone && zone === 'luar') { player.position.set(o.x, 0, o.z + 1.2); player.rotation.y = Math.PI; }
+    else if (o.has && o.zone === zone) player.position.set(o.x, 0, o.z);
+    lastTrig = 'obj'; o.run();
+  });
 }
