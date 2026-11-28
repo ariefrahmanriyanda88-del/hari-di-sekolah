@@ -83,7 +83,7 @@ function startAdventure(lesson, bank, done) {
   advParts.forEach((m) => advG.remove(m)); advParts = [];
   const h = [...lesson.s].reduce((a, c) => a + c.charCodeAt(0), 0);
   const theme = ['hutan', 'pantai', 'gua'][(h + (state.day || 1)) % 3], TH = ADV_THEME[theme];
-  const qs = pickQs(bank, Math.min(5, bank.length));
+  const qs = pickQs(bank, Math.min(5, bank.length)); REVIEW = [];
   const A = adv = { lesson, done, theme, TH, qs, hearts: 3, score: 0, correct: 0, answered: 0, over: false, go: false, fire: 0, stars: 0, faint: 0,
     p: { x: 0, y: 0, z: 0, vy: 0, face: 1, inv: 0, atk: 0, walk: 0 }, cp: { x: 0, z: 0 },
     ground: [], crates: [], foes: [], thorns: [], fruits: [], stations: [], arrows: [], fx: [], flags: [], plats: [], powers: [], starsL: [], finX: 0,
@@ -134,7 +134,7 @@ function startAdventure(lesson, bank, done) {
     st.opts = opts;
     if (st.kind === 'batu') {
       const a = cpx + 3, b = a + 7; pit(a, b); st.pit = [a, b]; st.sx = a + 3.2;
-      st.stones = opts.map((o, k) => { const m = new THREE.Mesh(new THREE.CylinderGeometry(1.05, 1.2, 1.2, 16), mat(OPT_COL[k])); m.position.set(st.sx, -0.6, LZ[k]); m.receiveShadow = true; aadd(m); alabel(o.t, st.sx, 1.5 + k * 0.05, LZ[k], 0.62); return { m, z: LZ[k], ok: o.ok }; });
+      st.stones = opts.map((o, k) => { const m = new THREE.Mesh(new THREE.CylinderGeometry(1.05, 1.2, 1.2, 16), mat(OPT_COL[k])); m.position.set(st.sx, -0.6, LZ[k]); m.receiveShadow = true; aadd(m); alabel(o.t, st.sx, 1.5 + k * 0.05, LZ[k], 0.62); return { m, z: LZ[k], ok: o.ok, t: o.t }; });
       st.bridge = abox(7, 0.3, ZB * 2 + 1.6, 0xa87a4a, (a + b) / 2, -0.15, 0); st.bridge.visible = false;
       st.end = b; x = b;
     } else if (st.kind === 'rakit') {
@@ -145,7 +145,7 @@ function startAdventure(lesson, bank, done) {
       st.gates = opts.map((o, k) => { const z = LZ[k]; const gg = new THREE.Group(); gg.position.set(st.gx, 0, z);
         [-0.95, 0.95].forEach((dz) => { const p = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.16, 3.2, 8), mat(0x8a5a33)); p.position.set(0, 1.2, dz); gg.add(p); });
         const top = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.5, 2.3), mat(OPT_COL[k])); top.position.set(0, 2.9, 0); gg.add(top); gg.top = top; aadd(gg); alabel(o.t, st.gx, 3.35, z, 0.6);
-        return { g: gg, top, z, ok: o.ok }; });
+        return { g: gg, top, z, ok: o.ok, t: o.t }; });
       st.end = b; x = b;
     } else {
       st.gx = cpx + 12;
@@ -157,7 +157,7 @@ function startAdventure(lesson, bank, done) {
         const disc = new THREE.Mesh(new THREE.CylinderGeometry(0.75, 0.75, 0.16, 20), mat(k ? 0xd65a4a : 0x3fa35a)); disc.rotation.z = Math.PI / 2; disc.position.set(tx2, 1.55, z); aadd(disc);
         const ring = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.38, 0.18, 16), mat(0xffffff)); ring.rotation.z = Math.PI / 2; ring.position.set(tx2, 1.55, z); aadd(ring);
         alabel(o.t, tx2, 2.75, z, 0.75, true);
-        return { disc, ring, x: tx2, z, ok: o.ok }; });
+        return { disc, ring, x: tx2, z, ok: o.ok, t: o.t }; });
       st.end = st.gx + 2; x = st.gx + 2;
     }
     A.stations.push(st);
@@ -273,10 +273,17 @@ function advHurt(msg, respawn) {
 }
 function curStation() { const A = adv; return A.stations.find((s) => !s.done && A.p.x > s.x0 - 6 && A.p.x < s.end + 2); }
 // jawaban: hanya sekali. Benar = poin & konfeti; salah = langsung lewat (tidak bisa diulang)
-function stationAnswer(st, ok) {
+function stationAnswer(st, ok, pilih) {
   const A = adv; if (st.done) return; st.done = true; st.ok = ok; A.answered++;
-  if (ok) { A.correct++; A.score += 200; Audio.sfx('ok'); toast('✅ Benar! +200'); advConfetti(A.p.x, 2, A.p.z); bubble(A.me, 'Alhamdulillah!', 1400); }
-  else { Audio.sfx('no'); toast('✗ Jawaban salah · lanjut ke pos berikutnya'); bubble(A.me, 'Yah, salah…', 1400); }
+  logAns(st.q, pilih, ok);
+  // tandai pilihan: hijau = jawaban benar, merah = pilihan yang salah (agar murid tahu dan bisa memperbaiki)
+  const right = st.opts.find((o) => o.ok);
+  if (st.stones) st.stones.forEach((x) => { if (x.ok) x.m.material = mat(0x7fe37f); });
+  if (st.gates) st.gates.forEach((x) => { if (x.ok) x.top.material = mat(0x7fe37f); });
+  if (st.targets) st.targets.forEach((x) => { x.disc.material = mat(x.ok ? 0x7fe37f : x.t === pilih ? 0xe0453e : 0x9a9a9a); });
+  const mark = alabel(ok ? '✓ Benar' : 'Salah · benar: ' + (right ? right.t : ''), A.p.x + 4.5, 3.4, A.p.z, 0.7, true); setTimeout(() => (mark.visible = false), 3500);
+  if (ok) { A.correct++; A.score += 200; Audio.sfx('ok'); toast('✓ Benar! +200'); advConfetti(A.p.x, 2, A.p.z); bubble(A.me, 'Alhamdulillah!', 1400); }
+  else { Audio.sfx('no'); toast('✗ Salah · jawaban benar: ' + (right ? right.t : '')); bubble(A.me, 'Yah, salah…', 1400); }
   $('qbanner').classList.remove('show'); $('qbanner').dataset.k = '';
   advHud();
 }
@@ -313,7 +320,7 @@ function updateAdv(dt) {
         if (!onRaft.done && before < onRaft.gx && R.x >= onRaft.gx) {        // gapura yang dilewati = jawaban (sekali saja)
           let k = 0; LZ.forEach((z, j) => { if (Math.abs(R.z - z) < Math.abs(R.z - LZ[k])) k = j; });
           const g = onRaft.gates[Math.min(k, onRaft.gates.length - 1)];
-          g.top.material = mat(g.ok ? 0x7fe37f : 0x9a9a9a); stationAnswer(onRaft, g.ok);
+          g.top.material = mat(g.ok ? 0x7fe37f : 0xe0453e); stationAnswer(onRaft, g.ok, g.t);
         }
       }
     }
@@ -332,7 +339,7 @@ function updateAdv(dt) {
     }
     // batu jawaban: batu pertama yang diinjak = jawaban (sekali saja)
     for (const st of A.stations) if (st.kind === 'batu' && !st.done && P.y === 0) for (const s of st.stones) if (Math.hypot(P.x - st.sx, P.z - s.z) < 1.2) {
-      s.m.material = mat(s.ok ? 0x7fe37f : 0x9a9a9a); stationAnswer(st, s.ok); st.bridge.visible = true; break;
+      s.m.material = mat(s.ok ? 0x7fe37f : 0xe0453e); stationAnswer(st, s.ok, s.t); st.bridge.visible = true; break;
     }
     if (P.inv > 0) P.inv -= dt; if (P.atk > 0) P.atk -= dt;
     // ---- duri ----
@@ -391,8 +398,7 @@ function updateAdv(dt) {
       for (const st of A.stations) if (st.kind === 'panah' && !st.done) {
         for (const tg of st.targets) if (Math.abs(ar.x - tg.x) < 0.5 && Math.abs(ar.z - tg.z) < 0.85) {       // papan pertama yang kena = jawaban
           ar.life = 0; tg.disc.rotation.x = 1.2; tg.ring.visible = false;
-          st.targets.forEach((o) => { if (o !== tg) o.disc.material = mat(0x9a9a9a); });
-          stationAnswer(st, tg.ok); break;
+          stationAnswer(st, tg.ok, tg.t); break;
         }
         if (ar.dir > 0 && ar.x > st.gx && P.x < st.gx) ar.life = 0;
       }

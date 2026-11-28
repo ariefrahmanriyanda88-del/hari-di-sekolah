@@ -170,6 +170,7 @@ function startQuiz(lesson, bank, done) {
   const n = Math.min(5, bank.length);
   const start = ((state.day - 1) * 2) % bank.length;
   const qs = []; for (let i = 0; i < n; i++) qs.push(bank[(start + i) % bank.length]);
+  REVIEW = [];
   quiz = { lesson, qs, i: 0, score: 0, combo: 0, t: 0, done, ox: null, finished: false, correct: 0 };
   buildArena(qs, SUBJ[lesson.s] || lesson.s);
   fade('Membuka tugas…', 700, () => {
@@ -200,7 +201,7 @@ function solveStation(st, ok, sec) {
   } else {      // salah: tidak boleh mengulang, gerbang tetap dibuka dan lanjut ke pos berikutnya
     quiz.combo = 0; st.solved = true; st.wrong = true; openBarrier(st.i); quiz.i = st.i + 1;
     if (st.qm) st.qm.visible = false;
-    Audio.sfx('no'); toast('✗ Jawaban salah · lanjut ke pos berikutnya');
+    Audio.sfx('no'); toast('✗ Salah · jawaban benar: ' + qRight(st.q));
   }
   quizHud();
 }
@@ -211,15 +212,16 @@ function askPG(st) {
   modal(`<div class="tag">Pos ${st.i + 1} · Pilihan ganda</div><div class="tbar"><i id="tfill"></i></div><div class="q">${q.q}</div><div id="fb"></div>`,
     opts.map((o) => [o.t, (ev) => {
       clearInterval(timer);
-      document.querySelectorAll('#mbtns button').forEach((x) => (x.disabled = true));
-      ev.currentTarget.classList.add(o.ok ? 'ok' : 'no');
-      solveStation(st, o.ok, left);
-      setTimeout(() => { closeModal(); }, 700);
+      const bs = [...document.querySelectorAll('#mbtns button')]; bs.forEach((x) => (x.disabled = true));
+      ev.currentTarget.classList.add(o.ok ? 'ok' : 'no'); ev.currentTarget.innerHTML = (o.ok ? '✓ ' : '✗ ') + ev.currentTarget.innerHTML;
+      if (!o.ok) { const r = bs[opts.findIndex((x) => x.ok)]; if (r) { r.classList.add('ok'); r.innerHTML = '✓ ' + r.innerHTML; } }
+      logAns(st.q, o.t, o.ok); solveStation(st, o.ok, left);
+      setTimeout(() => { closeModal(); }, o.ok ? 700 : 1600);
     }, 'opt']));
   const timer = setInterval(() => {
     left = 20 - (performance.now() - t0) / 1000;
     const f = $('tfill'); if (f) f.style.width = Math.max(0, left / 20 * 100) + '%';
-    if (left <= 0) { clearInterval(timer); solveStation(st, false, 0); closeModal(); }
+    if (left <= 0) { clearInterval(timer); logAns(st.q, null, false); solveStation(st, false, 0); closeModal(); }
   }, 100);
 }
 function startOX(st) {
@@ -242,7 +244,7 @@ function updateQuiz(dt) {
           const onO = Math.hypot(lx + 3.3, lz - st.z) < 2.5, onX = Math.hypot(lx - 3.3, lz - st.z) < 2.5;
           const ok = (onO && st.q.a === true) || (onX && st.q.a === false);
           $('qbanner').classList.remove('show');
-          if (!onO && !onX) toast('Waktu habis! Berdirilah di O atau X');
+          logAns(st.q, onO ? 'Benar (O)' : onX ? 'Salah (X)' : null, ok);
           solveStation(st, ok, 4); quiz.ox = null;
         }
       }
@@ -272,7 +274,7 @@ function finishQuiz() {
   modal(`<div class="tag">Tugas selesai · ${esc(SUBJ[quiz.lesson.s])}</div><div class="big">${stars}</div>
     <p><b>${quiz.correct}/${quiz.qs.length}</b> benar · skor <b>${quiz.score}</b> · waktu ${Math.floor(mine)} detik</p>
     <div class="rank">${list.map((r, i) => `<div class="${r.n.includes('(kamu)') ? 'me' : ''}"><span>${i + 1}</span>${esc(r.n)}<em>${Math.floor(r.t)}d</em></div>`).join('')}</div>
-    <p>+${pts} ⭐ masuk ke poin harian</p>`,
+    <p>+${pts} ⭐ masuk ke poin harian</p>${reviewHtml()}`,
     [[labReturn ? 'Kembali ke lab' : 'Kembali ke kelas', () => {
       closeModal(); paused = true; $('qhud').classList.remove('show'); $('top').style.display = '';
       if (labReturn) { quiz = null; return fade('Kembali ke Lab Komputer…', 600, backToLab); }

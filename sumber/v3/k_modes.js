@@ -4,6 +4,17 @@
 // =====================================================================
 const MODES = { arena: '🗺️ Arena petualangan', battle: '⚔️ Battle', balap: '🏎️ Balap', petualangan: '🌳 Petualangan' };
 let ONLINE_MODE = {};
+// ---- catatan jawaban untuk pembahasan di akhir game (tanda ✓/✗ + jawaban benar) ----
+let REVIEW = [];
+const qText = (q) => plainText(q.q || '');
+const qRight = (q) => q.t === 'ox' ? (q.a ? 'Benar' : 'Salah') : plainText((q.o || [])[0] || '');
+function logAns(q, pilih, ok) { REVIEW.push({ q: qText(q), pilih: pilih == null || pilih === '' ? '(tidak menjawab)' : plainText(String(pilih)), benar: qRight(q), ok: !!ok }); }
+function reviewHtml() {
+  if (!REVIEW.length) return '';
+  const salah = REVIEW.filter((r) => !r.ok).length;
+  const h = `<details class="rev"${salah ? ' open' : ''}><summary>📋 Pembahasan · ${REVIEW.length - salah} benar, ${salah} salah</summary>${REVIEW.map((r, i) => `<div class="ri ${r.ok ? 'ok' : 'no'}"><b>${r.ok ? '✓' : '✗'}</b><div><span>${i + 1}. ${esc(r.q)}</span><small>Jawabanmu: <em>${esc(r.pilih)}</em>${r.ok ? '' : ` · Jawaban benar: <strong>${esc(r.benar)}</strong>`}</small></div></div>`).join('')}</details>`;
+  REVIEW = []; return h;
+}
 function lapor(lesson, mode, benar, total, skor) {
   if (GURU || !window.HDS || !window.HDS.aktif || !total) return;      // mode guru: nilai percobaan tidak masuk rekap
   const o = { mapel: lesson.s, mode, benar: Math.round(benar), total: Math.round(total), nilai: Math.round(benar / total * 100), skor: Math.round(skor || 0), jenis: lesson.lab ? 'latihan' : 'tugas', jam: lesson.lab ? '' : (lesson.a || ''), hariGame: state.day || 1, hari: dayName() };
@@ -32,7 +43,7 @@ function gameResult(title, lesson, correct, total, score, list, back, mode) {
   modal(`<div class="tag">${title} · ${esc(SUBJ[lesson.s])}</div><div class="big">${stars}</div>
     <p><b>${correct}/${total}</b> benar · skor <b>${score}</b></p>
     ${list ? `<div class="rank">${list.map((r, i) => `<div class="${r.me ? 'me' : ''}"><span>${i + 1}</span>${esc(r.n)}<em>${r.v}</em></div>`).join('')}</div>` : ''}
-    <p>+${pts} ⭐ masuk ke poin harian</p>`, back);
+    <p>+${pts} ⭐ masuk ke poin harian</p>${reviewHtml()}`, back);
 }
 function returnToClass(done) {
   closeModal(); paused = true; ctl([]); $('qhud').classList.remove('show'); $('qbanner').classList.remove('show'); $('top').style.display = '';
@@ -81,6 +92,7 @@ const dragon = new THREE.Group();
 const orb = new THREE.Mesh(new THREE.SphereGeometry(0.45, 14, 10), new THREE.MeshBasicMaterial({ color: 0xffd84d })); orb.visible = false; bt.add(orb);
 function startBattle(lesson, bank, done, theme) {
   foe = theme === 'naga' ? dragon : monster; monster.visible = foe === monster; dragon.visible = foe === dragon;
+  REVIEW = [];
   battle = { theme, lesson, done, qs: shuffle(bank).slice(0, Math.min(5, bank.length)), qi: 0, hp: 100, mhp: 100, correct: 0, asked: 0, score: 0, shot: null, over: false };
   fade('Memasuki arena battle…', 700, () => {
     zone = 'battle'; hud(); Audio.setTrack('aksi'); $('modal').classList.add('low');
@@ -103,10 +115,10 @@ function battleTurn() {
   const opts = q.t === 'ox' ? [{ t: '⭕ Benar', ok: q.a === true }, { t: '❌ Salah', ok: q.a === false }] : shuffle(q.o.map((t, k) => ({ t, ok: k === 0 })));
   const t0 = performance.now(), LIM = 15;
   modal(`<div class="tag">Soal ${B.asked} dari ${B.qs.length}</div><div class="tbar"><i id="tfill"></i></div><div class="q">${q.q}</div>`,
-    opts.map((o) => [o.t, (ev) => { clearInterval(timer); document.querySelectorAll('#mbtns button').forEach((x) => (x.disabled = true)); ev.currentTarget.classList.add(o.ok ? 'ok' : 'no'); setTimeout(() => resolveTurn(o.ok, LIM - (performance.now() - t0) / 1000), 500); }, 'opt']));
+    opts.map((o, k) => [o.t, (ev) => { clearInterval(timer); const bs = [...document.querySelectorAll('#mbtns button')]; bs.forEach((x) => (x.disabled = true)); ev.currentTarget.classList.add(o.ok ? 'ok' : 'no'); if (!o.ok) { ev.currentTarget.innerHTML = '✗ ' + ev.currentTarget.innerHTML; const r = bs[opts.findIndex((x) => x.ok)]; if (r) { r.classList.add('ok'); r.innerHTML = '✓ ' + r.innerHTML; } } else ev.currentTarget.innerHTML = '✓ ' + ev.currentTarget.innerHTML; logAns(q, o.t.replace(/^[⭕❌]\s*/, ''), o.ok); setTimeout(() => resolveTurn(o.ok, LIM - (performance.now() - t0) / 1000), o.ok ? 600 : 1500); }, 'opt']));
   const timer = setInterval(() => {
     const left = LIM - (performance.now() - t0) / 1000; const f = $('tfill'); if (f) f.style.width = Math.max(0, left / LIM * 100) + '%';
-    if (left <= 0) { clearInterval(timer); resolveTurn(false, 0); }
+    if (left <= 0) { clearInterval(timer); logAns(q, null, false); toast('⏰ Waktu habis · jawaban benar: ' + qRight(q)); resolveTurn(false, 0); }
   }, 100);
 }
 function resolveTurn(ok, left) {
@@ -116,7 +128,7 @@ function resolveTurn(ok, left) {
     Audio.sfx('ok'); shoot(bPlayer, foe, () => { B.mhp -= dmg; foe.hit = 0.5; bubble(foe, `−${dmg}`, 900); battleHud(); after(); });
     playAnim(bPlayer, 'lambai', 0.6);
   } else {
-    Audio.sfx('no'); toast('✗ Jawaban salah · lanjut ke soal berikutnya'); shoot(foe, bPlayer, () => { B.hp -= Math.ceil(100 / B.qs.length); bPlayer.hit = 0.5; bubble(bPlayer, 'Aduh!', 900); battleHud(); after(); });
+    Audio.sfx('no'); toast('✗ Salah · lanjut ke soal berikutnya'); shoot(foe, bPlayer, () => { B.hp -= Math.ceil(100 / B.qs.length); bPlayer.hit = 0.5; bubble(bPlayer, 'Aduh!', 900); battleHud(); after(); });
   }
   function after() {
     setTimeout(() => {
@@ -166,6 +178,7 @@ function radd(m) { rc.add(m); raceParts.push(m); return m; }
 function startRace(lesson, bank, done) {
   raceParts.forEach((m) => rc.remove(m)); raceParts = [];
   const qs = pickQs(bank, Math.min(5, bank.length)), GAP = 140, LEN = qs.length * GAP + 120;
+  REVIEW = [];
   race = { lesson, done, qs, ci: 0, z: 0, lane: 1, x: 0, speed: 0, base: 13, boost: 0, slow: 0, correct: 0, score: 0, LEN, over: false, t: 0, cps: [], finishT: null };
   // jalan
   const road = new THREE.Mesh(new THREE.PlaneGeometry(12, LEN + 80), mat(0x4a4e54)); road.rotation.x = -Math.PI / 2; road.position.set(0, 0.02, -LEN / 2 + 30); radd(road);
@@ -218,8 +231,9 @@ function updateRace(dt) {
       if (dist < 95) { $('qbanner').innerHTML = `❓ ${cp.q.q} <span class="cd">${Math.max(0, Math.ceil(dist))}m</span><div class="lanes">${cp.txt.map((t, i) => `<span class="${i === R.lane ? 'me' : ''}" style="background:${['#3b7dd8', '#8f5fb0', '#2f8a5c'][i]}">${esc(t)}</span>`).join('')}</div>`; $('qbanner').classList.add('show'); }
       if (R.z < cp.z) {
         const ok = cp.lanes[R.lane];
-        if (ok) { R.correct++; R.boost = 2.5; R.score += 150; Audio.sfx('ok'); toast('Benar! Turbo 🔥 +150'); }
-        else { R.slow = 2; Audio.sfx('no'); toast('Jalur salah… melambat'); }
+        logAns(cp.q, cp.txt[R.lane] === '—' ? null : cp.txt[R.lane], ok);
+        if (ok) { R.correct++; R.boost = 2.5; R.score += 150; Audio.sfx('ok'); toast('✓ Benar! Turbo 🔥 +150'); }
+        else { R.slow = 2; Audio.sfx('no'); toast('✗ Salah · jawaban benar: ' + cp.txt[cp.lanes.indexOf(true)]); }
         R.ci++; $('qbanner').classList.remove('show');
       }
     }

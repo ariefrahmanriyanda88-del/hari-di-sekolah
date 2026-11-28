@@ -69,6 +69,7 @@ function startFly(code) {
   const back = { x: player.position.x, z: player.position.z };
   fade('Memulai Pesawat Ilmu…', 700, () => {
     zone = 'pesawat'; hud(); Audio.setTrack('aksi');
+    REVIEW = [];
     fly = { z: 0, x: 0, y: 6, vx: 0, vy: 0, speed: 12, want: 12, score: 0, lives: 3, objs: [], nextSpawn: -40, qs: flyQuestions(code), code, qi: 0, nextGate: -180, gate: null, back, over: false, inv: 0 };
     flyer.visible = true; flyer.position.set(0, 6, 0); flyer.rotation.set(0, 0, 0);
     player.visible = false;
@@ -138,6 +139,7 @@ function updateFly(dt) {
     if (F.gate && F.z < F.gate.z) {
       const g = F.gate; let hit = null;
       g.rings.forEach((r) => { if (Math.hypot(r.x - F.x, 7 - F.y) < 3.2) hit = r; });
+      logAns({ q: g.q.q, t: 'pg', o: [g.rings.find((r) => r.ok).s.userData.t] }, hit ? hit.s.userData.t : null, hit && hit.ok);
       if (hit && hit.ok) { F.ok = (F.ok || 0) + 1; F.score += 100; Audio.sfx('ok'); toast('Benar! +100'); }
       else { F.lives--; Audio.sfx('no'); toast(hit ? 'Jawaban salah! Benar: ' + g.rings.find((r) => r.ok).s.userData.t : 'Terlewat! Pilih salah satu cincin'); }
       g.rings.forEach((r) => { pg.remove(r.ring); pg.remove(r.s); });
@@ -161,7 +163,7 @@ function endFly() {
   if (F.code && F.qi) lapor({ s: F.code, lab: true }, 'pesawat', F.ok || 0, F.qi, F.score);
   state.best = Math.max(state.best || 0, F.score); save();
   modal(`<div class="tag">Pesawat Ilmu</div><div class="big">${F.lives > 0 ? '🏆 Misi selesai!' : '💥 Pesawat jatuh'}</div>
-    <p>Skor <b>${F.score}</b> · Rekor kamu <b>${state.best}</b></p><p>+${pts} ⭐ ke poin harian</p>`,
+    <p>Skor <b>${F.score}</b> · Rekor kamu <b>${state.best}</b></p><p>+${pts} ⭐ ke poin harian</p>${reviewHtml()}`,
     [['🔁 Main lagi', () => { closeModal(); paused = true; const c = fly.code; cleanupFly(); startFly(c); }, 'main'], ['Keluar dari lab', () => { closeModal(); paused = true; cleanupFly(); fade('Kembali…', 500, backToLab); }, 'small']]);
 }
 function cleanupFly() {
