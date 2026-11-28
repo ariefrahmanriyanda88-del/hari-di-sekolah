@@ -81,7 +81,7 @@ const dragon = new THREE.Group();
 const orb = new THREE.Mesh(new THREE.SphereGeometry(0.45, 14, 10), new THREE.MeshBasicMaterial({ color: 0xffd84d })); orb.visible = false; bt.add(orb);
 function startBattle(lesson, bank, done, theme) {
   foe = theme === 'naga' ? dragon : monster; monster.visible = foe === monster; dragon.visible = foe === dragon;
-  battle = { theme, lesson, done, qs: shuffle(bank), qi: 0, hp: 100, mhp: 100, correct: 0, asked: 0, score: 0, shot: null, over: false };
+  battle = { theme, lesson, done, qs: shuffle(bank).slice(0, Math.min(5, bank.length)), qi: 0, hp: 100, mhp: 100, correct: 0, asked: 0, score: 0, shot: null, over: false };
   fade('Memasuki arena battle…', 700, () => {
     zone = 'battle'; hud(); Audio.setTrack('aksi'); $('modal').classList.add('low');
     if (theme === 'naga') { scene.background.set(0x1b1440); scene.fog.color.set(0x1b1440); }
@@ -91,18 +91,18 @@ function startBattle(lesson, bank, done, theme) {
     nameTag(bPlayer, state.nama, 0.6);
     $('top').style.display = 'none'; $('qhud').classList.add('show'); battleHud();
     modal(`<div class="tag">${lesson.lab ? 'Latihan Lab Komputer' : 'Tugas dari ' + esc(teacherInfo(lesson.g[0]).p)}</div><div class="big">${theme === 'naga' ? '🐉 Duel Naga' : '⚔️ Battle'} ${esc(SUBJ[lesson.s])}</div>
-      <p>Kalahkan <b>${theme === 'naga' ? 'Naga Penjaga Ilmu' : 'Raksasa Lupa'}</b>! Jawab benar untuk menyerang. Jawab salah atau terlambat, kamu yang diserang.</p>`,
+      <p>Kalahkan <b>${theme === 'naga' ? 'Naga Penjaga Ilmu' : 'Raksasa Lupa'}</b>! Jawab benar untuk menyerang. Jawab salah atau terlambat, kamu yang diserang.</p><p class="muted">${battle.qs.length} soal · setiap soal hanya sekali, salah langsung lanjut ke soal berikutnya.</p>`,
       [['Mulai battle!', () => { Audio.sfx('bell'); battleTurn(); }, 'main']]);
   });
 }
 function battleHud() { if (battle) $('qhud').innerHTML = `❤️ ${state.nama} ${Math.max(0, battle.hp)} &nbsp;|&nbsp; 👾 ${Math.max(0, battle.mhp)}`; }
 function battleTurn() {
   const B = battle; if (!B || B.over) return;
-  if (B.qi >= B.qs.length) { B.qs = shuffle(B.qs); B.qi = 0; }
+  if (B.qi >= B.qs.length) return endBattle(B.correct * 2 > B.qs.length);   // setiap soal hanya sekali, tidak diulang
   const q = B.qs[B.qi++]; B.asked++;
   const opts = q.t === 'ox' ? [{ t: '⭕ Benar', ok: q.a === true }, { t: '❌ Salah', ok: q.a === false }] : shuffle(q.o.map((t, k) => ({ t, ok: k === 0 })));
   const t0 = performance.now(), LIM = 15;
-  modal(`<div class="tag">Giliran ${B.asked}</div><div class="tbar"><i id="tfill"></i></div><div class="q">${q.q}</div>`,
+  modal(`<div class="tag">Soal ${B.asked} dari ${B.qs.length}</div><div class="tbar"><i id="tfill"></i></div><div class="q">${q.q}</div>`,
     opts.map((o) => [o.t, (ev) => { clearInterval(timer); document.querySelectorAll('#mbtns button').forEach((x) => (x.disabled = true)); ev.currentTarget.classList.add(o.ok ? 'ok' : 'no'); setTimeout(() => resolveTurn(o.ok, LIM - (performance.now() - t0) / 1000), 500); }, 'opt']));
   const timer = setInterval(() => {
     const left = LIM - (performance.now() - t0) / 1000; const f = $('tfill'); if (f) f.style.width = Math.max(0, left / LIM * 100) + '%';
@@ -112,15 +112,14 @@ function battleTurn() {
 function resolveTurn(ok, left) {
   const B = battle; $('modal').classList.remove('show');
   if (ok) {
-    const dmg = 20 + Math.round(Math.max(0, left)); B.correct++; B.score += 100 + Math.round(left) * 5;
+    const dmg = Math.ceil(100 / B.qs.length); B.correct++; B.score += 100 + Math.round(left) * 5;
     Audio.sfx('ok'); shoot(bPlayer, foe, () => { B.mhp -= dmg; foe.hit = 0.5; bubble(foe, `−${dmg}`, 900); battleHud(); after(); });
     playAnim(bPlayer, 'lambai', 0.6);
   } else {
-    Audio.sfx('no'); shoot(foe, bPlayer, () => { B.hp -= 25; bPlayer.hit = 0.5; bubble(bPlayer, 'Aduh!', 900); battleHud(); after(); });
+    Audio.sfx('no'); toast('✗ Jawaban salah · lanjut ke soal berikutnya'); shoot(foe, bPlayer, () => { B.hp -= Math.ceil(100 / B.qs.length); bPlayer.hit = 0.5; bubble(bPlayer, 'Aduh!', 900); battleHud(); after(); });
   }
   function after() {
     setTimeout(() => {
-      if (B.mhp <= 0 || B.hp <= 0) return endBattle(B.mhp <= 0);
       battleTurn();
     }, 900);
   }
@@ -139,12 +138,12 @@ function updateBattle(dt, t) {
   camera.lookAt(BT.x, BT.y + (p ? -2.6 : 0.6), BT.z - 1);
 }
 function endBattle(win) {
-  const B = battle; B.over = true;
+  const B = battle; B.over = true; if (win) { B.mhp = 0; battleHud(); }
   if (win) { bubble(bPlayer, 'Alhamdulillah, menang!', 2000); }
   setTimeout(() => {
     $('modal').classList.remove('low');
     const back = [[labReturn ? 'Kembali ke lab' : 'Kembali ke kelas', () => { foe.scale.setScalar(1); scene.background.set(0xbfe3f5); scene.fog.color.set(0xbfe3f5); returnToClass(B.done); }, 'main']];
-    if (!win) back.unshift(['🔁 Coba lagi', () => { closeModal(); foe.scale.setScalar(1); startBattle(B.lesson, QBANK[B.lesson.s], B.done, B.theme); }, 'main']);
+    if (!win && B.lesson.lab) back.unshift(['🔁 Coba lagi', () => { closeModal(); foe.scale.setScalar(1); startBattle(B.lesson, QBANK[B.lesson.s], B.done, B.theme); }, 'main']);
     gameResult(win ? '⚔️ Menang!' : '⚔️ Kalah', B.lesson, B.correct, B.asked, B.score, null, back, B.theme === 'naga' ? 'naga' : 'battle');
   }, 1500);
 }

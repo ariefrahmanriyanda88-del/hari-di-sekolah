@@ -179,7 +179,7 @@ function startQuiz(lesson, bank, done) {
     camera.position.copy(player.position).add(quizCam());
     $('qhud').classList.add('show'); $('top').style.display = 'none'; quizHud();
     modal(`<div class="tag">${lesson.lab ? 'Latihan Lab Komputer' : 'Tugas dari ' + esc(teacherInfo(lesson.g[0]).p)}</div><div class="big">🎮 ${esc(SUBJ[lesson.s] || lesson.s)}</div>
-      <p>Lewati <b>${n} pos soal</b> sampai garis FINISH. Jawab benar untuk membuka gerbang merah.</p>
+      <p>Lewati <b>${n} pos soal</b> sampai garis FINISH. Setiap soal hanya dijawab <b>satu kali</b>: benar atau salah, gerbang terbuka dan kamu lanjut ke pos berikutnya.</p>
       <p class="muted">Pos ungu = pilihan ganda (injak tanda tanya)<br>Pos hijau/merah = O/X: berdiri di <b>O</b> jika benar, di <b>X</b> jika salah sebelum waktu habis.</p>`,
       [['Mulai!', () => { closeModal(); Audio.sfx('bell'); quiz.t0 = performance.now(); }, 'main']]);
   });
@@ -197,9 +197,10 @@ function solveStation(st, ok, sec) {
     if (st.qm) st.qm.visible = false;
     Audio.sfx('ok'); toast(`Benar! +${pts}${quiz.combo > 1 ? ` (combo x${quiz.combo})` : ''}`);
     bubble(player, pick(['Yes!', 'Alhamdulillah!', 'Mantap!']), 1200);
-  } else {
-    quiz.combo = 0; quiz.score = Math.max(0, quiz.score - 20);
-    Audio.sfx('no'); toast('Belum tepat, coba lagi! −20');
+  } else {      // salah: tidak boleh mengulang, gerbang tetap dibuka dan lanjut ke pos berikutnya
+    quiz.combo = 0; st.solved = true; st.wrong = true; openBarrier(st.i); quiz.i = st.i + 1;
+    if (st.qm) st.qm.visible = false;
+    Audio.sfx('no'); toast('✗ Jawaban salah · lanjut ke pos berikutnya');
   }
   quizHud();
 }
@@ -213,12 +214,12 @@ function askPG(st) {
       document.querySelectorAll('#mbtns button').forEach((x) => (x.disabled = true));
       ev.currentTarget.classList.add(o.ok ? 'ok' : 'no');
       solveStation(st, o.ok, left);
-      setTimeout(() => { closeModal(); if (!o.ok) player.position.z += 2.5; }, 700);
+      setTimeout(() => { closeModal(); }, 700);
     }, 'opt']));
   const timer = setInterval(() => {
     left = 20 - (performance.now() - t0) / 1000;
     const f = $('tfill'); if (f) f.style.width = Math.max(0, left / 20 * 100) + '%';
-    if (left <= 0) { clearInterval(timer); solveStation(st, false, 0); closeModal(); player.position.z += 2.5; }
+    if (left <= 0) { clearInterval(timer); solveStation(st, false, 0); closeModal(); }
   }, 100);
 }
 function startOX(st) {
@@ -243,7 +244,6 @@ function updateQuiz(dt) {
           $('qbanner').classList.remove('show');
           if (!onO && !onX) toast('Waktu habis! Berdirilah di O atau X');
           solveStation(st, ok, 4); quiz.ox = null;
-          if (!ok) player.position.z = QZ.z + st.z + 5.5;
         }
       }
     } else if (Math.hypot(lx, lz - st.z) < 1.8) askPG(st);
