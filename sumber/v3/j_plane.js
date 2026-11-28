@@ -40,13 +40,13 @@ function openLab() {
 }
 function labMapel(game) {
   const codes = Object.keys(QBANK).filter((k) => QBANK[k].length >= 3);
-  modal(`<div class="tag">Lab Komputer · ${LAB_GAMES.find((g) => g[0] === game)[1]}</div><p class="muted">Pilih mapel (soal latihan dari bank soal mapel; nanti guru bisa menambahkannya sendiri)</p><div class="mbg">${codes.map((k) => `<button type="button" data-k="${k}">${esc(SUBJ[k] || k)}</button>`).join('')}</div>`,
+  modal(`<div class="tag">Lab Komputer · ${LAB_GAMES.find((g) => g[0] === game)[1]}</div><p class="muted">Pilih mapel (soal latihan dari bank soal mapel; nanti guru bisa menambahkannya sendiri)</p><div class="mbg">${codes.map((k) => `<button type="button" data-k="${k}">${esc(SUBJ[k] || k)}${guruMapel(k) ? `<small style="display:block;font-weight:600;opacity:.75">${esc(guruMapel(k).p)}</small>` : ''}</button>`).join('')}</div>`,
     [['◀ Ganti permainan', openLab, 'small']]);
   document.querySelectorAll('.mbg button[data-k]').forEach((b) => (b.onclick = () => startLabGame(game, b.dataset.k)));
 }
 function startLabGame(game, code) {
   closeModal(); paused = true; labReturn = true;
-  const lesson = { s: code, a: 'lab', b: '', g: [''], lab: true }, bank = QBANK[code], done = () => {};
+  const gm = guruMapel(code), lesson = { s: code, a: 'lab', b: '', g: [gm ? gm.full : ''], gp: gm ? gm.p : '', gg: gm ? gm.g : 'L', lab: true }, bank = QBANK[code], done = () => {};
   if (game === 'pesawat') startFly(code);
   else if (game === 'battle') startBattle(lesson, bank, done);
   else if (game === 'naga') startBattle(lesson, bank, done, 'naga');
@@ -107,7 +107,7 @@ function spawnGate(z) {
     const s = label(o.t, 0, 0, 0, 1.7); scene.remove(s); s.position.set(xs[i], 11.6, z); s.userData.t = o.t; pg.add(s);
     fly.gate.rings.push({ ring, s, ok: o.ok, x: xs[i] });
   });
-  $('qbanner').innerHTML = `❓ ${q.q}<div class="lanes">${opts.map((o, i) => `<span style="background:${['#3b7dd8', '#8f5fb0', '#2f8a5c'][i]}">${['◀ ', '', ''][i]}${esc(o.t)}${['', '', ' ▶'][i]}</span>`).join('')}</div>`; $('qbanner').classList.add('show');
+  $('qbanner').innerHTML = `❓ ${q.q}<div class="lanes">${opts.map((o, i) => `<span style="background:${['#3b7dd8', '#8f5fb0', '#2f8a5c'][i]}">${['◀ ', '', ''][i]}${esc(o.t)}${['', '', ' ▶'][i]}</span>`).join('')}</div>`; $('qbanner').classList.add('show'); $('qbanner').classList.remove('mini');
 }
 function updateFly(dt) {
   if (zone !== 'pesawat' || !fly) return;

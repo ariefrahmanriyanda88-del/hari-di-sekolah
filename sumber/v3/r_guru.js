@@ -74,7 +74,7 @@ function guruYayasan() {
 function guruKelas() {
   modal(`<div class="tag">🔄 Ganti kelas uji</div>`, DATA.classes.map((c) => [c + (c === state.cls ? ' ✓' : ''), async () => {
     closeModal(); state.cls = c; today = DATA.sched[c][dayIdx()].blocks; hud();
-    if (window.HDS && window.HDS.masukGuru && !SCHOOL.demo) { try { const r = await window.HDS.masukGuru(c); Object.assign(QBANK, r.bank); ONLINE_MODE = r.mode; addOnlineBooks(r.books); } catch (e) {} }
+    if (window.HDS && window.HDS.masukGuru && !SCHOOL.demo) { try { const r = await window.HDS.masukGuru(c); Object.assign(QBANK, r.bank); ONLINE_MODE = r.mode; ONLINE_GURU = r.guru || {}; addOnlineBooks(r.books); } catch (e) {} }
     toast(`Kelas uji: ${c}`);
   }, 'left']).concat([['Kembali', guruMenu, 'small']]));
 }

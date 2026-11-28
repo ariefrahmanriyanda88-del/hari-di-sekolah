@@ -97,7 +97,8 @@ function startAdventure(lesson, bank, done) {
     const f = new THREE.Mesh(new THREE.OctahedronGeometry(0.38, 0), glow(0xff7a1f)); f.position.y = 1.25; g.add(f); g.f = f; const r = new THREE.Mesh(new THREE.TorusGeometry(0.55, 0.06, 6, 20), glow(0xffd84d)); r.position.y = 1.25; g.add(r); g.r = r; aadd(g);
     g.lbl = alabel('Panah Api', px, 2.3, 0, 0.5); A.powers.push({ g, x: px, alive: true }); };
   // pemandu di awal
-  const ti = lesson.lab || !lesson.g || !lesson.g[0] ? { g: 'L', p: SCHOOL.demo ? 'Ustadz Pemandu' : 'Ustadz Syabirin' } : teacherInfo(lesson.g[0]);
+  const gm = !lesson.lab && lesson.g && lesson.g[0] && TEACH[lesson.g[0]] ? teacherInfo(lesson.g[0]) : (lesson.gp ? { g: lesson.gg || 'L', p: lesson.gp } : guruMapel(lesson.s));
+  const ti = gm || { g: 'L', p: 'Ustadz Pemandu' };          // pemandu = guru mapel itu sendiri (juga saat latihan di Lab)
   const guide = makePerson(teacherModel(ti.g, 2)); guide.position.set(4, 0, -2.6); guide.rotation.y = 0.3; guide.name = ti.p; nameTag(guide, ti.p + ' · Pemandu', 0.5); aadd(guide); A.guide = guide;
   alabel(TH.n, 7, 4.4, -4, 1.1, true);
   let pgCount = 0;
@@ -190,7 +191,7 @@ function startAdventure(lesson, bank, done) {
       { p: guide, t: 'Ingat: setiap soal hanya dijawab SATU KALI. Batu, gapura, atau papan yang kamu pilih itulah jawabanmu. Benar atau salah, kamu langsung lanjut. Pikirkan baik-baik sebelum memilih!' },
       { p: guide, t: 'Di ujung jalan, Raksasa Lupa menjaga garis finish. Kumpulkan juga 3 🌟 Bintang Ilmu yang tersembunyi. Bismillah!' },
     ], () => { A.go = true; Audio.sfx('bell'); toast('🌳 Petualangan dimulai!'); });
-    modal(`<div class="tag">${lesson.lab ? 'Latihan Lab Komputer' : 'Tugas dari ' + esc(teacherInfo(lesson.g[0]).p)}</div><div class="big">🌳 Petualangan ${esc(SUBJ[lesson.s] || lesson.s)}</div>
+    modal(`<div class="tag">${lessonTag(lesson)}</div><div class="big">🌳 Petualangan ${esc(SUBJ[lesson.s] || lesson.s)}</div>
       <p>${qs.length} pos soal menunggumu di ${TH.n}. Jawab dengan <b>bermain</b>: injak batu, naik rakit, dan memanah!</p>
       <p class="muted">Setiap soal hanya sekali: salah langsung lanjut, tidak bisa diulang.<br>Paling seru dimainkan dengan HP mendatar (landscape) 📱↔️</p>`,
       [['▶️ Mulai petualangan', () => { closeModal(); if (matchMedia('(pointer:coarse)').matches && innerHeight > innerWidth && !document.fullscreenElement) { document.body.classList.add('rotok'); goLandscape(); } intro(); }, 'main']]);
@@ -412,7 +413,7 @@ function updateAdv(dt) {
       const key = 'q' + st.i;
       if (bn.dataset.k !== key || !bn.classList.contains('show')) {
         const hint = { batu: 'Lompat ke <b>batu</b> jawabanmu', rakit: 'Naik rakit, kemudikan ke <b>gapura</b> jawabanmu', panah: 'Sejajarkan dengan papan lalu tekan <b>🏹 Panah</b>' }[st.kind] + ' · <b>hanya sekali</b>';
-        bn.dataset.k = key;
+        bn.dataset.k = key; bn.classList.remove('mini');
         bn.innerHTML = `❓ ${st.q.q}<div class="lanes"${st.opts.length === 2 ? ' style="grid-template-columns:1fr 1fr"' : ''}>${st.opts.map((o, k) => `<span style="background:${st.kind === 'panah' ? (k ? '#d65a4a' : '#3fa35a') : OPT_CSS[k]}">${st.kind === 'panah' ? (k ? '⬇ ' : '⬆ ') : ['⬆ ', '• ', '⬇ '][k]}${esc(o.t)}</span>`).join('')}</div><div class="hint">${hint}</div>`;
         bn.classList.add('show');
       }

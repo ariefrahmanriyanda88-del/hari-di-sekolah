@@ -32,6 +32,7 @@ function goLandscape() {
 }
 $('musbtn').onclick = () => { Audio.start(); toast('🎵 Musik: ' + Audio.nextStyle()); };
 $('fsbtn').onclick = () => { if (document.fullscreenElement) document.exitFullscreen(); else goLandscape(); };
+$('qbanner').addEventListener('click', () => { if (document.body.classList.contains('qgame')) $('qbanner').classList.toggle('mini'); });
 $('rotok').onclick = () => document.body.classList.add('rotok');
 cv.addEventListener('pointerup', endJoy); cv.addEventListener('pointercancel', endJoy);
 
@@ -94,6 +95,7 @@ function tunePerf(now) {
 function loop() {
   const dt = Math.min(clock.getDelta(), 0.05), t = clock.elapsedTime;
   updateNPCs(dt); updateAuto(dt); updateRoom(t); updateDoorMarks(t); updateAcara(dt); updateQuiz(dt); updateFly(dt); updateKantin(t); updateBattle(dt, t); updateRace(dt); updateAdv(dt); updateSports(dt); checkBreakBell(); updateHome(t); updateSideJamaah(t); updateLate(dt); updateUpacara(dt);
+  { const qg = ['tualang', 'balap', 'pesawat', 'kuis'].includes(zone); if (qg !== loop.qg) { loop.qg = qg; document.body.classList.toggle('qgame', qg); if (!qg) $('qbanner').classList.remove('mini'); } }
   updateFootball(dt, ['istirahat1', 'santai', 'pulang'].includes(phase) && zone === 'luar');
   const animating = updateAnim(player, dt);
   if (player.busy > 0) player.busy -= dt;
@@ -224,7 +226,7 @@ $('startbtn').onclick = async () => {
   document.body.classList.add('playing');
   if (GURU) {                                                       // ---- mode guru ----
     GURU.jk = $('gurujk').value; const nmG = guruNama(nm);
-    if (window.HDS && window.HDS.masukGuru && !SCHOOL.demo) { try { const r = await window.HDS.masukGuru(sel.value); Object.assign(QBANK, r.bank); ONLINE_MODE = r.mode; addOnlineBooks(r.books); setTimeout(() => toast(r.mapel.length ? `✅ Soal guru dimuat: ${r.mapel.join(', ')}` : 'Belum ada soal online untuk kelas ini'), 1500); } catch (e) {} }
+    if (window.HDS && window.HDS.masukGuru && !SCHOOL.demo) { try { const r = await window.HDS.masukGuru(sel.value); Object.assign(QBANK, r.bank); ONLINE_MODE = r.mode; ONLINE_GURU = r.guru || {}; addOnlineBooks(r.books); setTimeout(() => toast(r.mapel.length ? `✅ Soal guru dimuat: ${r.mapel.join(', ')}` : 'Belum ada soal online untuk kelas ini'), 1500); } catch (e) {} }
     state = { day: 1, points: 0, cls: sel.value, nama: nmG, avatar: state.avatar }; state.tgl = dsel.value || todayWIB(); ensurePlayable();
     Audio.start(); Audio.loadUrl('azan.mp3'); setPlayer(GURU.jk === 'P');
     builtFor = ''; populate(); populateRuang(); { const e = calEvent(state.tgl); e && e.scene ? startEventDay(e) : startGuruDay(); }
@@ -236,7 +238,7 @@ $('startbtn').onclick = async () => {
       const btn = $('startbtn'); btn.disabled = true; btn.textContent = '⏳ Menghubungkan ke sekolah…';
       try {
         const r = await window.HDS.masukMurid(nm, sel.value, kode);
-        Object.assign(QBANK, r.bank); ONLINE_MODE = r.mode; addOnlineBooks(r.books); onlineDone = key;
+        Object.assign(QBANK, r.bank); ONLINE_MODE = r.mode; ONLINE_GURU = r.guru || {}; addOnlineBooks(r.books); onlineDone = key;
         setTimeout(() => toast(r.mapel.length ? `✅ Terhubung · soal dari guru: ${r.mapel.join(', ')}` : '✅ Terhubung ke kelas · nilai akan terkirim ke guru'), 1500);
       } catch (e) { btn.disabled = false; startLabel(); $('kodeerr').textContent = e.message || String(e); return; }
       btn.disabled = false;

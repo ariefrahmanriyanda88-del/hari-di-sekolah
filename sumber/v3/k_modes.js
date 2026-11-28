@@ -3,7 +3,15 @@
 //  JENIS GAME TUGAS GURU: Arena (ala ZEP), Battle, Balap
 // =====================================================================
 const MODES = { arena: '🗺️ Arena petualangan', battle: '⚔️ Battle', balap: '🏎️ Balap', petualangan: '🌳 Petualangan' };
-let ONLINE_MODE = {};
+let ONLINE_MODE = {}, ONLINE_GURU = {};
+// guru mapel untuk suatu pelajaran: pemilik paket soal (Panel Guru), atau guru di jadwal kelas
+function guruMapel(code) {
+  const on = ONLINE_GURU[code];
+  if (on) { const k = Object.keys(TEACH).find((t) => TEACH[t].p === on || t === on); return k ? { ...TEACH[k], full: k } : { g: /ustadzah/i.test(on) ? 'P' : 'L', p: on, full: '' }; }
+  for (const d of (DATA.sched[state.cls] || [])) for (const b of d.blocks || []) if (b.s === code && b.g && b.g[0] && TEACH[b.g[0]]) return { ...TEACH[b.g[0]], full: b.g[0] };
+  return null;
+}
+const lessonTag = (lesson) => lesson.lab ? `Latihan Lab Komputer${lesson.gp ? ' · bersama ' + esc(lesson.gp) : ''}` : 'Tugas dari ' + esc(teacherInfo(lesson.g[0]).p);
 // ---- catatan jawaban untuk pembahasan di akhir game (tanda ✓/✗ + jawaban benar) ----
 let REVIEW = [];
 const qText = (q) => plainText(q.q || '');
@@ -102,7 +110,7 @@ function startBattle(lesson, bank, done, theme) {
     bPlayer = makePlayer(meP()); bPlayer.position.set(-4.5, 0, -1); bPlayer.rotation.y = Math.PI / 2; bt.add(bPlayer);
     nameTag(bPlayer, state.nama, 0.6);
     $('top').style.display = 'none'; $('qhud').classList.add('show'); battleHud();
-    modal(`<div class="tag">${lesson.lab ? 'Latihan Lab Komputer' : 'Tugas dari ' + esc(teacherInfo(lesson.g[0]).p)}</div><div class="big">${theme === 'naga' ? '🐉 Duel Naga' : '⚔️ Battle'} ${esc(SUBJ[lesson.s])}</div>
+    modal(`<div class="tag">${lessonTag(lesson)}</div><div class="big">${theme === 'naga' ? '🐉 Duel Naga' : '⚔️ Battle'} ${esc(SUBJ[lesson.s])}</div>
       <p>Kalahkan <b>${theme === 'naga' ? 'Naga Penjaga Ilmu' : 'Raksasa Lupa'}</b>! Jawab benar untuk menyerang. Jawab salah atau terlambat, kamu yang diserang.</p><p class="muted">${battle.qs.length} soal · setiap soal hanya sekali, salah langsung lanjut ke soal berikutnya.</p>`,
       [['Mulai battle!', () => { Audio.sfx('bell'); battleTurn(); }, 'main']]);
   });
@@ -205,7 +213,7 @@ function startRace(lesson, bank, done) {
     zone = 'balap'; hud(); Audio.setTrack('aksi'); player.visible = false;
     $('top').style.display = 'none'; $('qhud').classList.add('show');
     ctl([['◀', () => steer(-1)], ['▶', () => steer(1)]]);
-    modal(`<div class="tag">${lesson.lab ? 'Latihan Lab Komputer' : 'Tugas dari ' + esc(teacherInfo(lesson.g[0]).p)}</div><div class="big">🏎️ Balap ${esc(SUBJ[lesson.s])}</div>
+    modal(`<div class="tag">${lessonTag(lesson)}</div><div class="big">🏎️ Balap ${esc(SUBJ[lesson.s])}</div>
       <p>Soal muncul sebelum setiap gerbang kuning. Pindah ke <b>jalur jawaban yang benar</b> dengan tombol ◀ ▶ (atau A / D).</p><p class="muted">Benar = turbo 🔥 · Salah = melambat 🐢</p>`,
       [['Gas!', () => { closeModal(); Audio.sfx('bell'); race.go = true; }, 'main']]);
   });
@@ -234,7 +242,7 @@ function updateRace(dt) {
         logAns(cp.q, cp.txt[R.lane] === '—' ? null : cp.txt[R.lane], ok);
         if (ok) { R.correct++; R.boost = 2.5; R.score += 150; Audio.sfx('ok'); toast('✓ Benar! Turbo 🔥 +150'); }
         else { R.slow = 2; Audio.sfx('no'); toast('✗ Salah · jawaban benar: ' + cp.txt[cp.lanes.indexOf(true)]); }
-        R.ci++; $('qbanner').classList.remove('show');
+        R.ci++; $('qbanner').classList.remove('show', 'mini');
       }
     }
     R.rivals.forEach((c) => {

@@ -179,7 +179,7 @@ function startQuiz(lesson, bank, done) {
     player.position.set(0, 0, 18).add(QZ); player.rotation.y = Math.PI;
     camera.position.copy(player.position).add(quizCam());
     $('qhud').classList.add('show'); $('top').style.display = 'none'; quizHud();
-    modal(`<div class="tag">${lesson.lab ? 'Latihan Lab Komputer' : 'Tugas dari ' + esc(teacherInfo(lesson.g[0]).p)}</div><div class="big">🎮 ${esc(SUBJ[lesson.s] || lesson.s)}</div>
+    modal(`<div class="tag">${lessonTag(lesson)}</div><div class="big">🎮 ${esc(SUBJ[lesson.s] || lesson.s)}</div>
       <p>Lewati <b>${n} pos soal</b> sampai garis FINISH. Setiap soal hanya dijawab <b>satu kali</b>: benar atau salah, gerbang terbuka dan kamu lanjut ke pos berikutnya.</p>
       <p class="muted">Pos ungu = pilihan ganda (injak tanda tanya)<br>Pos hijau/merah = O/X: berdiri di <b>O</b> jika benar, di <b>X</b> jika salah sebelum waktu habis.</p>`,
       [['Mulai!', () => { closeModal(); Audio.sfx('bell'); quiz.t0 = performance.now(); }, 'main']]);
