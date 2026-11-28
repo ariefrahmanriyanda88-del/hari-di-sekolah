@@ -180,6 +180,17 @@
   #qbanner .lanes{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:8px}
   #qbanner .lanes span{color:#fff;border-radius:10px;padding:6px 4px;font-size:13.5px;line-height:1.25;border:3px solid transparent}
   #qbanner .lanes span.me{border-color:#2b2b2b;box-shadow:0 0 0 2px #ffd84d}
+  #qbanner .hint{font-size:12px;font-weight:700;color:#6a5a3a;margin-top:6px}
+  body.tualang #qbanner{top:calc(48px + env(safe-area-inset-top));padding:8px 12px;font-size:15px}
+  body.tualang #ctl button{min-width:92px}
+  @media (orientation:landscape) and (max-height:620px){
+    body.tualang #qbanner{top:44px;width:min(56vw,520px);font-size:13px;padding:5px 10px;line-height:1.35;border-width:2px;box-shadow:0 2px 0 #2b2b2b}
+    body.tualang #qbanner .lanes{gap:4px;margin-top:4px}body.tualang #qbanner .lanes span{font-size:12px;padding:3px 4px}
+    body.tualang #qbanner .hint{font-size:10.5px;margin-top:3px}
+    body.tualang #qhud{top:6px;font-size:12px;padding:4px 12px}
+    body.tualang #ctl{bottom:18px}
+    body.tualang #ctl button{min-width:104px!important;height:52px!important}
+  }
   .doa b{display:block;font-size:13px;color:#e0623e;margin-bottom:4px}
   .doa small{display:block;color:#666;font-size:12.5px;margin-top:6px;line-height:1.4}
   .wudhu li{padding:2px 0;color:#999} .wudhu li.ok{color:#2f8a5c;font-weight:800} .wudhu li.now{color:#222;font-weight:900}

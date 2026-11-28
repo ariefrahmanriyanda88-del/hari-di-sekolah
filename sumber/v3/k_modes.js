@@ -2,7 +2,7 @@
 // =====================================================================
 //  JENIS GAME TUGAS GURU: Arena (ala ZEP), Battle, Balap
 // =====================================================================
-const MODES = { arena: '🗺️ Arena petualangan', battle: '⚔️ Battle', balap: '🏎️ Balap' };
+const MODES = { arena: '🗺️ Arena petualangan', battle: '⚔️ Battle', balap: '🏎️ Balap', petualangan: '🌳 Petualangan' };
 let ONLINE_MODE = {};
 function lapor(lesson, mode, benar, total, skor) {
   if (GURU || !window.HDS || !window.HDS.aktif || !total) return;      // mode guru: nilai percobaan tidak masuk rekap
@@ -10,7 +10,7 @@ function lapor(lesson, mode, benar, total, skor) {
   window.HDS.kirimNilai(o).then(() => toast('📤 Nilai terkirim ke guru'), () => toast('⚠️ Nilai belum terkirim (cek internet)'));
 }
 function modeFor(b) {
-  if (ONLINE_MODE[b.s]) return ONLINE_MODE[b.s]; const h = [...b.s].reduce((a, c) => a + c.charCodeAt(0), 0); return ['arena', 'battle', 'balap'][(h + dayIdx() + toMin(b.a)) % 3]; }
+  if (ONLINE_MODE[b.s]) return ONLINE_MODE[b.s]; const h = [...b.s].reduce((a, c) => a + c.charCodeAt(0), 0); return ['arena', 'battle', 'balap', 'petualangan'][(h + dayIdx() + toMin(b.a)) % 4]; }
 function pickQs(bank, n) { const start = ((state.day - 1) * 2) % bank.length; const r = []; for (let i = 0; i < n; i++) r.push(bank[(start + i) % bank.length]); return r; }
 function ctl(buttons) {
   const el = $('ctl'); el.innerHTML = ''; el.classList.toggle('show', !!buttons.length);

@@ -32,6 +32,7 @@ const LAB_GAMES = [
   ['naga', '🐉 Petualangan Naga (fantasi)', 'Duel sihir melawan Naga Penjaga Ilmu'],
   ['balap', '🏎️ Balap Ilmu', 'Pilih jalur jawaban yang benar untuk turbo'],
   ['arena', '🗺️ Arena Petualangan', 'Jelajahi pos soal sampai garis finish'],
+  ['petualangan', '🌳 Petualangan Hutan', 'Pecahkan peti, injak batu jawaban, naik rakit & memanah (3 nyawa)'],
 ];
 function openLab() {
   modal(`<div class="tag">Lab Komputer</div><div class="big">🎮 Arcade Edukasi</div><p class="muted">Pilih permainan, lalu pilih mapel yang ingin dilatih.</p>`,
@@ -50,6 +51,7 @@ function startLabGame(game, code) {
   else if (game === 'battle') startBattle(lesson, bank, done);
   else if (game === 'naga') startBattle(lesson, bank, done, 'naga');
   else if (game === 'balap') startRace(lesson, bank, done);
+  else if (game === 'petualangan') startAdventure(lesson, bank, done);
   else startQuiz(lesson, bank, done);
 }
 function backToLab() {

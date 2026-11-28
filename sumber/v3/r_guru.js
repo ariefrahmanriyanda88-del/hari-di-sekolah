@@ -60,6 +60,7 @@ function guruPlay(b) {
     ['🗺️ Arena petualangan', () => { closeModal(); paused = true; guruGo(() => startQuiz(b, bank, back)); }, 'main'],
     ['⚔️ Battle', () => { closeModal(); paused = true; guruGo(() => startBattle(b, bank, back)); }, 'main'],
     ['🏎️ Balap', () => { closeModal(); paused = true; guruGo(() => startRace(b, bank, back)); }, 'main'],
+    ['🌳 Petualangan', () => { closeModal(); paused = true; guruGo(() => startAdventure(b, bank, back)); }, 'main'],
     ['Kembali', guruTugas, 'small'],
   ]);
 }

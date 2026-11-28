@@ -32,7 +32,7 @@ function hud() {
   $('clock').textContent = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
   $('pts').textContent = `⭐ ${state.points}`;
   $('obj').innerHTML = objective ? objective.text : '';
-  $('obj').style.display = objective && !['kuis', 'kelas', 'masjid', 'pesawat', 'battle', 'balap', 'rumah', 'upacara', 'acara'].includes(zone) ? '' : 'none';
+  $('obj').style.display = objective && !['kuis', 'kelas', 'masjid', 'pesawat', 'battle', 'balap', 'tualang', 'rumah', 'upacara', 'acara'].includes(zone) ? '' : 'none';
   // tombol lewati: setiap tugas boleh dilewati
   const sk = $('skipbtn'), showSk = $('obj').style.display === '' && objective && objective.run;
   sk.style.display = showSk ? '' : 'none';
@@ -131,9 +131,9 @@ function selectLesson(b) {
   bubble(roomTeacher, bank ? `Hari ini ada tugas ${SUBJ[b.s]}. Semangat!` : `Perhatikan penjelasan ${SUBJ[b.s]} hari ini, ya.`, 2800);
   const head = `<div class="tag">${b.a}–${b.b} · ${esc(state.cls)}</div><div class="big">${esc(SUBJ[b.s] || b.s)}</div><p class="guru">👤 ${esc(b.g.map((x) => teacherInfo(x).p).join(' & '))}</p>`;
   if (bank) {
-    const m = modeFor(b), desc = { arena: `jelajahi ${Math.min(5, bank.length)} pos soal sampai garis FINISH`, battle: 'kalahkan Raksasa Lupa dengan jawaban yang benar', balap: 'menangkan balapan dengan memilih jalur jawaban yang benar' }[m];
+    const m = modeFor(b), desc = { arena: `jelajahi ${Math.min(5, bank.length)} pos soal sampai garis FINISH`, battle: 'kalahkan Raksasa Lupa dengan jawaban yang benar', balap: 'menangkan balapan dengan memilih jalur jawaban yang benar', petualangan: 'bertualang: injak batu jawaban, naik rakit ke gapura jawaban, dan panah papan Benar/Salah (3 nyawa)' }[m];
     modal(head + `<p>${esc(g)} memberi tugas: <b>${MODES[m]}</b><br><span class="muted">${desc}</span></p>`,
-      [[`${MODES[m].split(' ')[0]} Kerjakan tugas`, () => { closeModal(); paused = true; const fin = () => lessonDone(b); if (m === 'battle') startBattle(b, bank, fin); else if (m === 'balap') startRace(b, bank, fin); else startQuiz(b, bank, fin); }, 'main'], ['⏭ Lewati tugas (tetap tercatat hadir)', () => { closeModal(); toast('✓ Tercatat hadir. Tugasnya bisa dilatih lagi di 🎮 Lab Komputer'); lessonDone(b); }], ['Kembali', classHub, 'small']]);
+      [[`${MODES[m].split(' ')[0]} Kerjakan tugas`, () => { closeModal(); paused = true; const fin = () => lessonDone(b); if (m === 'battle') startBattle(b, bank, fin); else if (m === 'balap') startRace(b, bank, fin); else if (m === 'petualangan') startAdventure(b, bank, fin); else startQuiz(b, bank, fin); }, 'main'], ['⏭ Lewati tugas (tetap tercatat hadir)', () => { closeModal(); toast('✓ Tercatat hadir. Tugasnya bisa dilatih lagi di 🎮 Lab Komputer'); lessonDone(b); }], ['Kembali', classHub, 'small']]);
   }
   else modal(head + `<p class="muted">Belum ada tugas dari guru untuk pelajaran ini.<br>Ikuti penjelasan guru di kelas.</p>`,
     [['🙋 Hadir ✓ (+5)', () => { addPts(5); lessonDone(b); }, 'main'], ['Kembali', classHub, 'small']]);
